@@ -19,6 +19,9 @@ queue = []
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')
+    await bot.change_presence(activity=discord.Game(name="!play <song>", ), status=discord.Status.do_not_disturb)
+
+
 
 @bot.command(name='play', help='Play music from YouTube using a search term or URL')
 async def play(ctx, *, query: str):
@@ -33,25 +36,25 @@ async def play(ctx, *, query: str):
 
     voice_client = ctx.voice_client
 
-    async with ctx.typing():
-        try:
-            with yt_dlp.YoutubeDL(config.YTDL_OPTS) as ydl:
-                if "youtube.com/watch?" in query or "youtu.be/" in query:
-                    info = ydl.extract_info(query, download=False)
-                else:
-                    info = ydl.extract_info(query, download=False)['entries'][0]
+    
+    try:
+        with yt_dlp.YoutubeDL(config.YTDL_OPTS) as ydl:
+            if "youtube.com/watch?" in query or "youtu.be/" in query:
+                info = ydl.extract_info(query, download=False)
+            else:
+                info = ydl.extract_info(query, download=False)['entries'][0]
 
-                video_url = info['url']
+            video_url = info['url']
 
-                # Play the audio using FFmpeg
-                audio_source = discord.FFmpegPCMAudio(video_url, executable=FFMPEG_PATH, **config.ffmpeg_options)
-                voice_client.play(audio_source)
+            # Play the audio using FFmpeg
+            audio_source = discord.FFmpegPCMAudio(video_url, executable=FFMPEG_PATH, **config.ffmpeg_options)
+            voice_client.play(audio_source)
 
-                await ctx.send(f":notes: Now playing: {info['title']} from {info['original_url']}")
+            await ctx.send(f":notes: Now playing: {info['title']} from {info['original_url']}")
 
-        except Exception as e:
-            print(f"Error playing music: {e}")
-            await ctx.send("An error occurred while trying to play the music.")
+    except Exception as e:
+        print(f"Error playing music: {e}")
+        await ctx.send("An error occurred while trying to play the music.")
 
 @bot.command(name='stop', help='Stop playing music and disconnect from voice channel')
 async def stop(ctx):
