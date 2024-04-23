@@ -66,4 +66,17 @@ async def pause(ctx):
     elif ctx.voice_client and ctx.voice_client.is_paused():
         ctx.voice_client.resume()
         await ctx.send("Music resumed.")
+        
+
+@bot.command(name='ping', help='Check the bot\'s latency')
+async def ping(ctx):
+    await ctx.send(f'Pong! Latency: {round(bot.latency * 1000)}ms, websocket latency: {round(bot.ws.latency * 1000)}ms')
+
+
+@bot.event
+async def on_message(message):
+    if message.author.id == 473624857389694977:
+        await message.channel.send(f'Daca te cheama szabo esti gay! :frumosul:')
+    await bot.process_commands(message)
+
 bot.run(config.bot_token)
