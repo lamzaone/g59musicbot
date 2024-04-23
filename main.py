@@ -13,7 +13,7 @@ FFMPEG_PATH = os.path.join(os.getcwd(), 'ffmpeg/bin/ffmpeg.exe')
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
-
+on_windows = os.name == 'nt'
 queue = []
 
 
@@ -29,7 +29,6 @@ async def on_ready():
             settings[str(guild.id)] = {"volume": 0.5}
     with open(config.serversettings, 'w') as f:
         json.dump(settings, f, indent=4)
-    
     
 
 
@@ -65,7 +64,10 @@ async def play(ctx, *, query: str):
             ctx.bot.video_info = info
             ctx.bot.video_url = video_url
             # Play the audio using FFmpeg
-            audio_source = discord.FFmpegPCMAudio(video_url, executable=FFMPEG_PATH, **config.ffmpeg_options)
+            if on_windows:
+                audio_source = discord.FFmpegPCMAudio(video_url, executable=FFMPEG_PATH, **config.ffmpeg_options)
+            else:
+                audio_source = discord.FFmpegPCMAudio(video_url, **config.ffmpeg_options)
             audio_source = discord.PCMVolumeTransformer(audio_source, settings['volume'])
             voice_client.play(audio_source)
 
@@ -127,7 +129,7 @@ async def ping(ctx):
     await ctx.send(f'Pong! Latency: {round(bot.latency * 1000)}ms, websocket latency: {round(bot.ws.latency * 1000)}ms')
 
 @bot.command(name='seek', help='Set the playback position to a specific time in seconds')
-async def fastforward(ctx, seconds: int):
+async def seek(ctx, seconds: int):
     # Ensure there is a voice client playing music
     if ctx.voice_client and ctx.voice_client.is_playing():
         # Stop the current playback
@@ -136,10 +138,17 @@ async def fastforward(ctx, seconds: int):
         # Check if there's stored video information
         if hasattr(ctx.bot, 'video_info') and hasattr(ctx.bot, 'video_url'):
             # Add the offset in seconds to the FFmpeg options to fast forward
+            with open(config.serversettings, 'r') as f:
+                settings = json.load(f)
+                settings = settings[str(ctx.guild.id)]
             seek_time = f"-ss {seconds}"
             ffmpeg_opts = {**config.ffmpeg_options, "options": f"{config.ffmpeg_options['options']} {seek_time}"}
 
-            audio_source = discord.FFmpegPCMAudio(ctx.bot.video_url, executable=FFMPEG_PATH, **ffmpeg_opts)
+            if on_windows:
+                audio_source = discord.FFmpegPCMAudio(ctx.bot.video_url, executable=FFMPEG_PATH , **ffmpeg_opts)
+            else:
+                audio_source = discord.FFmpegPCMAudio(ctx.bot.video_url, **ffmpeg_opts)
+            audio_source = discord.PCMVolumeTransformer(audio_source, settings['volume'])
 
             ctx.voice_client.play(audio_source)
 
