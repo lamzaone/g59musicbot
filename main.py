@@ -22,18 +22,13 @@ queue = []
 async def on_ready():
     print(f'Successfully booted: {bot.user}')
     await bot.change_presence(activity=discord.Game(name="!play <song>", ), status=discord.Status.do_not_disturb)
-
-    for guild in bot.guilds:
-        if str(guild.id) not in config.serversettings:
-            # write the guild id to the settings file
-            with open(config.serversettings, 'w') as f:
-                json.dump({guild.id: {
-                    'volume': 0.5
-                }}, f, indent=4)
-    
     with open(config.serversettings, 'r') as f:
         settings = json.load(f)
-        settings = settings[str(guild.id)]
+    for guild in bot.guilds:
+        if str(guild.id) not in settings:
+            settings[str(guild.id)] = {"volume": 0.5}
+    with open(config.serversettings, 'w') as f:
+        json.dump(settings, f, indent=4)
     
     
 
@@ -102,17 +97,28 @@ async def pause(ctx):
         
 
 @bot.command(name='volume', help='Set the volume of the music')
-async def volume(ctx, volume: int):
+async def volume(ctx, volume: int = None):
     #change the settings for the guild in the settings file
     with open(config.serversettings, 'r') as f:
         settings = json.load(f)
         settings = settings[str(ctx.guild.id)]
+
+    if volume is None:
+        await ctx.send("Current volume is " + str(settings['volume'] * 100) + "%")
+        return
+    elif volume < 0 or volume > 100:
+        await ctx.send("Volume must be between 0 and 100 you dummy...")
+        return
+
+    settings['volume'] = volume / 100
+    with open(config.serversettings, 'w') as f:
+        json.dump({ctx.guild.id: settings}, f, indent=4)
+
     if ctx.voice_client and ctx.voice_client.is_playing():
-        settings['volume'] = volume / 100
-        with open(config.serversettings, 'w') as f:
-            json.dump({ctx.guild.id: settings}, f, indent=4)
         ctx.voice_client.source.volume = volume / 100
-        await ctx.send(f"Volume set to {volume}%")
+
+    await ctx.send(f"Volume set to {volume}%")
+    
 
 
 
