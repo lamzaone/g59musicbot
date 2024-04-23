@@ -4,6 +4,7 @@ import yt_dlp
 import os
 from config import config  # Make sure this import points to your bot's configuration
 import asyncio
+import json
 
 # FFmpeg path - ensure you have FFmpeg installed and update the path if needed
 FFMPEG_PATH = os.path.join(os.getcwd(), 'ffmpeg/bin/ffmpeg.exe')
@@ -21,12 +22,30 @@ queue = []
 async def on_ready():
     print(f'Successfully booted: {bot.user}')
     await bot.change_presence(activity=discord.Game(name="!play <song>", ), status=discord.Status.do_not_disturb)
+
+    for guild in bot.guilds:
+        if str(guild.id) not in config.serversettings:
+            # write the guild id to the settings file
+            with open(config.serversettings, 'w') as f:
+                json.dump({guild.id: {
+                    'volume': 0.5
+                }}, f, indent=4)
+    
+    with open(config.serversettings, 'r') as f:
+        settings = json.load(f)
+        settings = settings[str(guild.id)]
+    
     
 
 
 
 @bot.command(name='play', help='Play music from YouTube using a search term or URL')
 async def play(ctx, *, query: str):
+    # retrieve settings for the guild from the settings file
+    with open(config.serversettings, 'r') as f:
+        settings = json.load(f)
+        settings = settings[str(ctx.guild.id)]
+        print(settings)
     # Connect to the voice channel
     if not ctx.author.voice:
         await ctx.send("You must be in a voice channel to play music.")
@@ -52,7 +71,7 @@ async def play(ctx, *, query: str):
             ctx.bot.video_url = video_url
             # Play the audio using FFmpeg
             audio_source = discord.FFmpegPCMAudio(video_url, executable=FFMPEG_PATH, **config.ffmpeg_options)
-            audio_source = discord.PCMVolumeTransformer(audio_source, volume=0.5)
+            audio_source = discord.PCMVolumeTransformer(audio_source, settings['volume'])
             voice_client.play(audio_source)
 
             await ctx.send(f":notes: Now playing: {info['title']} from {info['original_url']}")
@@ -81,24 +100,21 @@ async def pause(ctx):
         ctx.voice_client.resume()
         await ctx.send("Music resumed.")
         
-@bot.command(name='volume', help='Adjust the volume level.')
-async def volume(ctx, volume: float):
-    # Ensure the input volume is a percentage (e.g., 50 for 50%)
-    volume = volume / 100  # Convert to a float from a percentage
 
+@bot.command(name='volume', help='Set the volume of the music')
+async def volume(ctx, volume: int):
+    #change the settings for the guild in the settings file
+    with open(config.serversettings, 'r') as f:
+        settings = json.load(f)
+        settings = settings[str(ctx.guild.id)]
     if ctx.voice_client and ctx.voice_client.is_playing():
-        # Re-create the audio source with the new volume
-        if bot.original_source is None:
-            bot.original_source = ctx.voice_client.source  # Original audio source
-        new_source = discord.PCMVolumeTransformer(bot.original_source, volume=volume)  # Create a new volume transformer
-
-        # Stop current playback
-        ctx.voice_client.source = new_source
+        settings['volume'] = volume / 100
+        with open(config.serversettings, 'w') as f:
+            json.dump({ctx.guild.id: settings}, f, indent=4)
+        ctx.voice_client.source.volume = volume / 100
+        await ctx.send(f"Volume set to {volume}%")
 
 
-        await ctx.send(f"Volume set to {volume * 100}%.")
-    else:
-        await ctx.send("No music is currently playing.")    
 
 @bot.command(name='ping', help='Check the bot\'s latency')
 async def ping(ctx):

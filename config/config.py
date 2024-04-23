@@ -1,10 +1,10 @@
 import discord
+import os
 
 bot_token = 'MTIzMjE3NTYwNzU2NDIxMDIxNw.GEp7Ge.HPvDBvgPN97jVMKl-jTm9YgM3W4OkkEBP5Efgc'
-serversettings = 'serversettings.json'
+serversettings = os.path.join(os.getcwd(), 'config/serversettings.json')
 ffmpeg_options = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-    # 'options': '-vn -filter:a "volume=0.5"',
     'options': '-vn',
 }
 
