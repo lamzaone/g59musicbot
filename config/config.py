@@ -5,10 +5,10 @@ bot_token = 'MTIzMjE3NTYwNzU2NDIxMDIxNw.GuY4Uq.eVvB7ohe7g9vosl9Gd1onkhAyikqYWjkD
 
 
 ### CONFIGURATION FILES
-#set server settings file path
-serversettings = 'config/serversettings.json'
-#set queues file path
-queues = 'config/queues.json'
+#get the full path for the current folder
+current_folder = os.path.dirname(os.path.abspath(__file__))
+serversettings = os.path.join(current_folder, 'serversettings.json')
+queues = os.path.join(current_folder, 'queues.json')
 
 if not os.path.exists(serversettings):
     with open(serversettings, 'w') as f:
