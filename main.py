@@ -109,10 +109,9 @@ async def play(ctx, *, query: str):
     if voice_client.is_playing():
         with open(config.queues, 'r') as f:
             queues = json.load(f)
-            queues = queues[str(ctx.guild.id)]
-        queues.append(query)
+        queues[str(ctx.guild.id)].append(query)
         with open(config.queues, 'w') as f:
-            json.dump({ctx.guild.id: queues}, f, indent=4)
+            json.dump(queues, f, indent=4)
         await ctx.send(f"Added {query} to the queue.")
         return
     
@@ -145,8 +144,7 @@ async def play(ctx, *, query: str):
             #play next song in queue
             with open(config.queues, 'r') as f:
                 queues = json.load(f)
-                queues = queues[str(ctx.guild.id)]
-            if len(queues) > 0:
+            if len(queues[str(ctx.guild.id)]) > 0:
                 await skip(ctx)
             else:
                 # ignore if already stopped
@@ -159,17 +157,17 @@ async def play(ctx, *, query: str):
         print(f"Error playing music: {e}")
         await ctx.send("An error occurred while trying to play the music.")
 
+# TODO: FIX THIS bugging out when used at more servers at once
 @bot.command(name='skip', help='Skip the currently playing music')
 async def skip(ctx):
     #check if the bot is connected to a voice channel and the queue is not empty
-    if ctx.voice_client:
+    if ctx.voice_client.is_connected() and ctx.voice_client.is_playing():
         with open(config.queues, 'r') as f:
             queues = json.load(f)
-            queues = queues[str(ctx.guild.id)]
         if len(queues) > 0:
-            query = queues.pop(0)
+            query = queues[str(ctx.guild.id)].pop(0)
             with open(config.queues, 'w') as f:
-                json.dump({ctx.guild.id: queues}, f, indent=4)
+                json.dump(queues, f, indent=4)
             ctx.voice_client.stop()
             await play(ctx, query=query)
         else:
@@ -181,9 +179,11 @@ async def skip(ctx):
 async def stop(ctx):
     if ctx.voice_client and ctx.voice_client.is_connected():
         await ctx.voice_client.disconnect()
+        with open(config.queues, 'r') as f:
+            queues = json.load(f)
+            queues[str(ctx.guild.id)] = []
         with open(config.queues, 'w') as f:
-            json.dump({ctx.guild.id: []}, f, indent=4)
-            
+            json.dump(queues, f, indent=4)
         await ctx.send("Music stopped and queue has been cleared.")
 
 @bot.command(name='pause', help='Pause the currently playing music')
