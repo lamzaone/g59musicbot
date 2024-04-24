@@ -125,7 +125,7 @@ async def play(ctx, *, query: str):
                         queues[str(ctx.guild.id)].append({"title": title, "url": url, "original_url": original_url})
                         with open(config.queues, 'w') as f:
                             json.dump(queues, f, indent=4)
-                        await ctx.send(f"Added {title} to the queue.")
+                        await ctx.send(f"Added `{title}` to the queue.")
                 return
             except Exception as e:
                 await ctx.send("An error occurred while trying to retrieve the music info.")
@@ -143,7 +143,7 @@ async def play(ctx, *, query: str):
                     queues[str(ctx.guild.id)].append({"title": title, "url": url, "original_url": original_url})
                     with open(config.queues, 'w') as f:
                         json.dump(queues, f, indent=4)
-                    await ctx.send(f"Added {title} to the queue.")
+                    await ctx.send(f"Added `{title}` to the queue.")
                 return
             except Exception as e:
                 await ctx.send("An error occurred while trying to retrieve the music info.")
@@ -171,7 +171,7 @@ async def play(ctx, *, query: str):
                         audio_source = discord.FFmpegPCMAudio(video_url, **config.ffmpeg_options)
                     audio_source = discord.PCMVolumeTransformer(audio_source, settings['volume'])
                     voice_client.play(audio_source)
-                    await ctx.send(f":notes: Now playing: {info['title']} from {info['original_url']}")
+                    await ctx.send(f":notes: Now playing: `{info['title']}` from {info['original_url']}")
                 else:
                     if on_windows:
                         audio_source = discord.FFmpegPCMAudio(query['url'], executable=FFMPEG_PATH, **config.ffmpeg_options)
@@ -181,7 +181,7 @@ async def play(ctx, *, query: str):
                     ctx.bot.video_url = query['url']
                     audio_source = discord.PCMVolumeTransformer(audio_source, settings['volume'])
                     voice_client.play(audio_source)
-                    await ctx.send(f":notes: Now playing: {query['title']} from {query['original_url']}")
+                    await ctx.send(f":notes: Now playing: `{query['title']}` from {query['original_url']}")
 
             
             # disconnect when the song is over but not when pausing
@@ -253,10 +253,12 @@ async def volume(ctx, volume: int = None):
     if volume is None:
         await ctx.send("Current volume is " + str(settings[str(ctx.guild.id)]['volume'] * 100) + "%")
         return
+    
     elif volume < 0 or volume > 100:
         await ctx.send("Volume must be between 0 and 100 you dummy...")
         return
 
+    current_volume = settings[str(ctx.guild.id)]['volume'] * 100
     settings[str(ctx.guild.id)]['volume'] = volume / 100
     with open(config.serversettings, 'w') as f:
         json.dump(settings, f, indent=4)
@@ -264,14 +266,14 @@ async def volume(ctx, volume: int = None):
     if ctx.voice_client and ctx.voice_client.is_playing():
         ctx.voice_client.source.volume = volume / 100
 
-    await ctx.send(f"Volume set to {volume}%")
+    await ctx.send(f"Volume set from `{current_volume}%` to `{volume}%`")
     
 
 
 
 @bot.command(name='ping', help='Check the bot\'s latency')
 async def ping(ctx):
-    await ctx.send(f'ping: {round(bot.latency * 1000)}ms | websocket: {round(bot.ws.latency * 1000)}ms')
+    await ctx.send(f'ping: `{round(bot.latency * 1000)}ms` | websocket: `{round(bot.ws.latency * 1000)}ms`')
 
 @bot.command(name='seek', help='Set the playback position to a specific time in seconds')
 async def seek(ctx, seconds: int):

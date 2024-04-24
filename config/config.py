@@ -37,7 +37,7 @@ ffmpeg_options = {
 
 YTDL_OPTS = {
     'format': 'bestaudio/best',
-    'restrictfilenames': True,
+    'restrictfilenames': False,
     'noplaylist': True,
     'nocheckcertificate': True,
     'ignoreerrors': False,
@@ -47,13 +47,15 @@ YTDL_OPTS = {
     'default_search': 'auto',
     'source_address': '0.0.0.0',  
     'force-ipv4': True,
-    'preferredcodec': 'mp3',
+    'preferredcodec': 'wav',
+    'preferredquality': '320',
     'cachedir': True,
+    'expiretime': 3600,
     'cookiefile': 'cookies.txt',
     'quality': 'highestaudio',
     'postprocessors': [{
         'key': 'FFmpegExtractAudio',
-        'preferredcodec': 'mp3',
+        'preferredcodec': 'wav',
         'preferredquality': '320',
     }],
     'bitdepth': 24,
