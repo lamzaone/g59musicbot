@@ -96,7 +96,6 @@ async def play(ctx, *, query: str):
     with open(config.serversettings, 'r') as f:
         settings = json.load(f)
         settings = settings[str(ctx.guild.id)]
-        print(settings)
     # Connect to the voice channel
     if not ctx.author.voice:
         await ctx.send("You must be in a voice channel to play music.")
