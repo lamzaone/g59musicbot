@@ -203,7 +203,7 @@ async def volume(ctx, volume: int = None):
         settings = json.load(f)        
 
     if volume is None:
-        await ctx.send("Current volume is " + str(settings['volume'] * 100) + "%")
+        await ctx.send("Current volume is " + str(settings[str(ctx.guild.id)]['volume'] * 100) + "%")
         return
     elif volume < 0 or volume > 100:
         await ctx.send("Volume must be between 0 and 100 you dummy...")
