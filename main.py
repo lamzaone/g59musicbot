@@ -14,7 +14,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 on_windows = os.name == 'nt'
-queue = []
+
 
 
 
@@ -22,13 +22,24 @@ queue = []
 async def on_ready():
     print(f'Successfully booted: {bot.user}')
     await bot.change_presence(activity=discord.Game(name="!play <song>", ), status=discord.Status.do_not_disturb)
+    queues = {}
+
     with open(config.serversettings, 'r') as f:
         settings = json.load(f)
+        print('successfully loaded settings')
+    
     for guild in bot.guilds:
         if str(guild.id) not in settings:
             settings[str(guild.id)] = {"volume": 0.5}
+
+        queues[str(guild.id)] = []
     with open(config.serversettings, 'w') as f:
         json.dump(settings, f, indent=4)
+        print('successfully initialized settings')
+    with open(config.queues, 'w') as f:
+        json.dump(queues, f, indent=4)
+        print('successfully initialized queues')
+    
     
 
 
@@ -51,6 +62,17 @@ async def play(ctx, *, query: str):
 
     voice_client = ctx.voice_client
 
+    # check if bot is playing music
+    if voice_client.is_playing():
+        with open(config.queues, 'r') as f:
+            queues = json.load(f)
+            queues = queues[str(ctx.guild.id)]
+        queues.append(query)
+        with open(config.queues, 'w') as f:
+            json.dump({ctx.guild.id: queues}, f, indent=4)
+        await ctx.send(f"Added {query} to the queue.")
+        return
+    
     
     try:
         with yt_dlp.YoutubeDL(config.YTDL_OPTS) as ydl:
@@ -73,20 +95,50 @@ async def play(ctx, *, query: str):
 
             await ctx.send(f":notes: Now playing: {info['title']} from {info['original_url']}")
             # disconnect when the song is over but not when pausing
+
             while voice_client.is_connected() and (voice_client.is_playing() or ctx.voice_client.is_paused()):
                 await asyncio.sleep(1)
-            await stop(ctx)
+        
+            #play next song in queue
+            with open(config.queues, 'r') as f:
+                queues = json.load(f)
+                queues = queues[str(ctx.guild.id)]
+            if len(queues) > 0:
+                await skip(ctx)
+            else:
+                await ctx.voice_client.disconnect()
 
 
     except Exception as e:
         print(f"Error playing music: {e}")
         await ctx.send("An error occurred while trying to play the music.")
 
+@bot.command(name='skip', help='Skip the currently playing music')
+async def skip(ctx):
+    #check if the bot is connected to a voice channel and the queue is not empty
+    if ctx.voice_client:
+        with open(config.queues, 'r') as f:
+            queues = json.load(f)
+            queues = queues[str(ctx.guild.id)]
+        if len(queues) > 0:
+            query = queues.pop(0)
+            with open(config.queues, 'w') as f:
+                json.dump({ctx.guild.id: queues}, f, indent=4)
+            ctx.voice_client.stop()
+            await play(ctx, query=query)
+        else:
+            ctx.voice_client.disconnect()
+            await ctx.send("Music stopped, queue is empty.")
+
+
 @bot.command(name='stop', help='Stop playing music and disconnect from voice channel')
 async def stop(ctx):
     if ctx.voice_client and ctx.voice_client.is_connected():
         await ctx.voice_client.disconnect()
-        await ctx.send("Music stopped.")
+        with open(config.queues, 'w') as f:
+            json.dump({ctx.guild.id: []}, f, indent=4)
+            
+        await ctx.send("Music stopped and queue has been cleared.")
 
 @bot.command(name='pause', help='Pause the currently playing music')
 async def pause(ctx):
