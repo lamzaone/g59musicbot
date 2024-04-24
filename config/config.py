@@ -17,8 +17,13 @@ def init():
                 with open(serversettings, 'w') as f:
                     f.write('{}')
     except FileNotFoundError:
-        with open(serversettings, 'w') as f:
-            f.write('{}')
+        print("[-] serversettings.json not found. Creating it now.")
+        try:
+            with open(serversettings, 'w') as f:
+                f.write('{}')
+            print("[+] serversettings.json created successfully")
+        except Exception as e:
+            print("[--] Error creating serversettings.json file. Check permissions on the folder.\n^-- Error: ", e)
 
     try:
         with open(queues, 'r') as f:
@@ -26,9 +31,13 @@ def init():
                 with open(queues, 'w') as f:
                     f.write('{}')
     except FileNotFoundError:
-        with open(queues, 'w') as f:
-            f.write('{}')
-
+        print("[-] queues.json  not found. Creating it now.")
+        try:
+            with open(queues, 'w') as f:
+                f.write('{}')
+            print("[+] queues.json created successfully")
+        except Exception as e:
+            print("[--] Error creating queues.json file. Check permissions on the folder.\n^-- Error: ", e)
 
 ffmpeg_options = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
