@@ -126,7 +126,7 @@ async def volume(ctx, volume: int = None):
 
 @bot.command(name='ping', help='Check the bot\'s latency')
 async def ping(ctx):
-    await ctx.send(f'Pong! Latency: {round(bot.latency * 1000)}ms, websocket latency: {round(bot.ws.latency * 1000)}ms')
+    await ctx.send(f'ping: {round(bot.latency * 1000)}ms | websocket: {round(bot.ws.latency * 1000)}ms')
 
 @bot.command(name='seek', help='Set the playback position to a specific time in seconds')
 async def seek(ctx, seconds: int):
