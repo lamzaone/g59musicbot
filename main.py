@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from utils import musicplayer
+#from utils import musicplayer
 import yt_dlp
 import os
 from config import config  # Make sure this import points to your bot's configuration
@@ -74,14 +74,16 @@ async def on_guild_join(guild):
 
 @bot.command(name='prefix', help='Change the command prefix for the bot')
 async def prefix(ctx, new_prefix: str):
-    # edit the prefix in the json file for the guild
-    with open(config.serversettings, 'r') as f:
-        settings = json.load(f)
-    settings[str(ctx.guild.id)]['prefix'] = new_prefix
-    with open(config.serversettings, 'w') as f:
-        json.dump(settings, f, indent=4)
-    bot.command_prefix = new_prefix
-    await ctx.send(f"Prefix changed to {new_prefix}")
+    await ctx.send(f"Command disabled. Use the default prefix: {bot.command_prefix}")
+
+
+    # with open(config.serversettings, 'r') as f:
+    #     settings = json.load(f)
+    # settings[str(ctx.guild.id)]['prefix'] = new_prefix
+    # with open(config.serversettings, 'w') as f:
+    #     json.dump(settings, f, indent=4)
+    # bot.command_prefix = new_prefix
+    # await ctx.send(f"Prefix changed to {new_prefix}")
 
 
 
@@ -197,6 +199,7 @@ async def play(ctx, *, query: str):
                 # ignore if already stopped
                 if voice_client.is_connected():
                     await ctx.voice_client.disconnect()
+                    # await ctx.send("Music stopped, queue is empty.")
 
 
     except Exception as e:
