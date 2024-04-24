@@ -1,8 +1,13 @@
 import discord
 import os
 
-bot_token = 'MTIzMjE3NTYwNzU2NDIxMDIxNw.GEp7Ge.HPvDBvgPN97jVMKl-jTm9YgM3W4OkkEBP5Efgc'
+bot_token = 'MTIzMjE3NTYwNzU2NDIxMDIxNw.GuY4Uq.eVvB7ohe7g9vosl9Gd1onkhAyikqYWjkDwoU_w'
+
 serversettings = os.path.join(os.getcwd(), 'config/serversettings.json')
+# check if server settings file exists, if not create it
+if not os.path.exists(serversettings):
+    with open(serversettings, 'w') as f:
+        f.write('{}')
 ffmpeg_options = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
     'options': '-vn',
@@ -21,7 +26,15 @@ YTDL_OPTS = {
     'source_address': '0.0.0.0',  
     'force-ipv4': True,
     'preferredcodec': 'mp3',
-    'cachedir': False,
+    'cachedir': True,
+    'cookiefile': 'cookies.txt',
+    'quality': 'highestaudio',
+    'postprocessors': [{
+        'key': 'FFmpegExtractAudio',
+        'preferredcodec': 'mp3',
+        'preferredquality': '320',
+    }],
+    'bitdepth': 24,
     
 }
 
