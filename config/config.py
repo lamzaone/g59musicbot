@@ -2,7 +2,6 @@ import discord
 import os
 
 bot_token = 'MTIzMjE3NTYwNzU2NDIxMDIxNw.GuY4Uq.eVvB7ohe7g9vosl9Gd1onkhAyikqYWjkDwoU_w'
-bot_id = 1232175607564210217
 
 ### CONFIGURATION FILES
 #get the full path for the current folder
@@ -10,13 +9,25 @@ current_folder = os.path.dirname(os.path.abspath(__file__))
 serversettings = os.path.join(current_folder, 'serversettings.json')
 queues = os.path.join(current_folder, 'queues.json')
 
-if not os.path.exists(serversettings):
-    with open(serversettings, 'w') as f:
-        f.write('{}')
 
-if not os.path.exists(queues):
-    with open(queues, 'w') as f:
-        f.write('{}')
+def init():
+    try:
+        with open(serversettings, 'r') as f:
+            if f.read() == '':
+                with open(serversettings, 'w') as f:
+                    f.write('{}')
+    except FileNotFoundError:
+        with open(serversettings, 'w') as f:
+            f.write('{}')
+
+    try:
+        with open(queues, 'r') as f:
+            if f.read() == '':
+                with open(queues, 'w') as f:
+                    f.write('{}')
+    except FileNotFoundError:
+        with open(queues, 'w') as f:
+            f.write('{}')
 
 
 ffmpeg_options = {

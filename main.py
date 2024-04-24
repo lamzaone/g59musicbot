@@ -20,27 +20,29 @@ on_windows = os.name == 'nt'
 
 @bot.event
 async def on_ready():
-    print(f'Successfully booted: {bot.user}')
+    print(f'Booting {bot.user}...')
     print(discord.utils.oauth_url(bot.application_id, permissions=discord.Permissions(permissions=8)))
     await bot.change_presence(activity=discord.Game(name="!play <song>", ), status=discord.Status.do_not_disturb)
+    config.init()
     queues = {}
 
     with open(config.serversettings, 'r') as f:
         settings = json.load(f)
-        print('successfully loaded settings')
-    
+        print('[+] Successfully loaded settings')    
+
     for guild in bot.guilds:
         if str(guild.id) not in settings:
-            settings[str(guild.id)] = {"volume": 0.5, "prefix": "!"}
+            settings[str(guild.id)] = { "volume": 0.5, \
+                                        "prefix": "!"}
             
 
         queues[str(guild.id)] = []
     with open(config.serversettings, 'w') as f:
         json.dump(settings, f, indent=4)
-        print('successfully initialized settings')
+        print('[+] Successfully initialized settings')
     with open(config.queues, 'w') as f:
         json.dump(queues, f, indent=4)
-        print('successfully initialized queues')
+        print('[+] Successfully initialized queues')
 
     # load prefixes from settings file
     for guild in bot.guilds:
@@ -49,20 +51,39 @@ async def on_ready():
             settings = settings[str(guild.id)]
         bot.command_prefix = settings['prefix']
 
-    
+
+@bot.event
+async def on_guild_join(guild):
+    with open(config.serversettings, 'r') as f:
+        settings = json.load(f)
+        settings[str(guild.id)] = { "volume": 0.5, \
+                                    "prefix": "!" }
+        
+    with open(config.serversettings, 'w') as f:
+        json.dump(settings, f, indent=4)
+    with open(config.queues, 'r') as f:
+        queues = json.load(f)
+        queues[str(guild.id)] = []
+    with open(config.queues, 'w') as f:
+        json.dump(queues, f, indent=4)
+    print(f'[+] Joined {guild.name} with id {guild.id}')
+    print('[+] Successfully initialized settings')
+    print('[+] Successfully initialized queues')
 
 
 @bot.command(name='prefix', help='Change the command prefix for the bot')
 async def prefix(ctx, new_prefix: str):
-    #change the settings for the guild in the settings file
+    # edit the prefix in the json file for the guild
     with open(config.serversettings, 'r') as f:
         settings = json.load(f)
-        settings = settings[str(ctx.guild.id)]
-    settings['prefix'] = new_prefix
+    settings[str(ctx.guild.id)]['prefix'] = new_prefix
     with open(config.serversettings, 'w') as f:
-        json.dump({ctx.guild.id: settings}, f, indent=4)
+        json.dump(settings, f, indent=4)
+    bot.command_prefix = new_prefix
     await ctx.send(f"Prefix changed to {new_prefix}")
-    
+
+
+
 
 
 
@@ -179,8 +200,7 @@ async def pause(ctx):
 async def volume(ctx, volume: int = None):
     #change the settings for the guild in the settings file
     with open(config.serversettings, 'r') as f:
-        settings = json.load(f)
-        settings = settings[str(ctx.guild.id)]
+        settings = json.load(f)        
 
     if volume is None:
         await ctx.send("Current volume is " + str(settings['volume'] * 100) + "%")
@@ -189,9 +209,9 @@ async def volume(ctx, volume: int = None):
         await ctx.send("Volume must be between 0 and 100 you dummy...")
         return
 
-    settings['volume'] = volume / 100
+    settings[str(ctx.guild.id)]['volume'] = volume / 100
     with open(config.serversettings, 'w') as f:
-        json.dump({ctx.guild.id: settings}, f, indent=4)
+        json.dump(settings, f, indent=4)
 
     if ctx.voice_client and ctx.voice_client.is_playing():
         ctx.voice_client.source.volume = volume / 100
