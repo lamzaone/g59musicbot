@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+#from utils import musicplayer
 import yt_dlp
 import os
 from config import config  # Make sure this import points to your bot's configuration
@@ -118,10 +119,11 @@ async def play(ctx, *, query: str):
                 with yt_dlp.YoutubeDL(config.YTDL_OPTS) as ydl:
                         info = ydl.extract_info(query, download=False)
                         original_url = info['original_url']
+                        url = info['url']
                         title = info['title']
                         with open(config.queues, 'r') as f:
                             queues = json.load(f)
-                        queues[str(ctx.guild.id)].append(original_url)
+                        queues[str(ctx.guild.id)].append({"title": title, "url": url, "original_url": original_url})
                         with open(config.queues, 'w') as f:
                             json.dump(queues, f, indent=4)
                         await ctx.send(f"Added {title} to the queue.")
@@ -136,9 +138,10 @@ async def play(ctx, *, query: str):
                     info = ydl.extract_info(query, download=False)['entries'][0]
                     original_url = info['original_url']
                     title = info['title']
+                    url = info['url']
                     with open(config.queues, 'r') as f:
                         queues = json.load(f)
-                    queues[str(ctx.guild.id)].append(original_url)
+                    queues[str(ctx.guild.id)].append({"title": title, "url": url, "original_url": original_url})
                     with open(config.queues, 'w') as f:
                         json.dump(queues, f, indent=4)
                     await ctx.send(f"Added {title} to the queue.")
@@ -152,24 +155,36 @@ async def play(ctx, *, query: str):
     try:
         with yt_dlp.YoutubeDL(config.YTDL_OPTS) as ydl:
             async with ctx.typing():
-                if "youtube.com/watch?" in query or "youtu.be/" in query:
-                    info = ydl.extract_info(query, download=False)
+                if type(query) == str:
+                    if "youtube.com/watch?" in query or "youtu.be/" in query:
+                        info = ydl.extract_info(query, download=False)
+                    else:
+                        info = ydl.extract_info(query, download=False)['entries'][0]
+
+                    video_url = info['url']
+
+                    ctx.bot.video_info = info
+                    ctx.bot.video_url = video_url
+                    # Play the audio using FFmpeg
+                    if on_windows:
+                        audio_source = discord.FFmpegPCMAudio(video_url, executable=FFMPEG_PATH, **config.ffmpeg_options)
+                    else:
+                        audio_source = discord.FFmpegPCMAudio(video_url, **config.ffmpeg_options)
+                    audio_source = discord.PCMVolumeTransformer(audio_source, settings['volume'])
+                    voice_client.play(audio_source)
+                    await ctx.send(f":notes: Now playing: {info['title']} from {info['original_url']}")
                 else:
-                    info = ydl.extract_info(query, download=False)['entries'][0]
+                    if on_windows:
+                        audio_source = discord.FFmpegPCMAudio(query['url'], executable=FFMPEG_PATH, **config.ffmpeg_options)
+                    else:
+                        audio_source = discord.FFmpegPCMAudio(query['url'], **config.ffmpeg_options)
+                    
+                    ctx.bot.video_url = query['url']
+                    audio_source = discord.PCMVolumeTransformer(audio_source, settings['volume'])
+                    voice_client.play(audio_source)
+                    await ctx.send(f":notes: Now playing: {query['title']} from {query['original_url']}")
 
-                video_url = info['url']
-
-                ctx.bot.video_info = info
-                ctx.bot.video_url = video_url
-                # Play the audio using FFmpeg
-                if on_windows:
-                    audio_source = discord.FFmpegPCMAudio(video_url, executable=FFMPEG_PATH, **config.ffmpeg_options)
-                else:
-                    audio_source = discord.FFmpegPCMAudio(video_url, **config.ffmpeg_options)
-                audio_source = discord.PCMVolumeTransformer(audio_source, settings['volume'])
-                voice_client.play(audio_source)
-
-            await ctx.send(f":notes: Now playing: {info['title']} from {info['original_url']}")
+            
             # disconnect when the song is over but not when pausing
 
             while voice_client.is_connected() and (voice_client.is_playing() or ctx.voice_client.is_paused()):
