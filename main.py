@@ -106,7 +106,10 @@ async def play(ctx, *, query: str):
             if len(queues) > 0:
                 await skip(ctx)
             else:
-                await ctx.voice_client.disconnect()
+                # ignore if already stopped
+                if voice_client.is_playing():
+                    await ctx.voice_client.disconnect()
+                    await ctx.send("Music stopped, queue is empty.")
 
 
     except Exception as e:
