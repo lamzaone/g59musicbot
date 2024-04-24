@@ -21,6 +21,7 @@ on_windows = os.name == 'nt'
 @bot.event
 async def on_ready():
     print(f'Successfully booted: {bot.user}')
+    print(discord.utils.oauth_url(bot.application_id, permissions=discord.Permissions(permissions=8)))
     await bot.change_presence(activity=discord.Game(name="!play <song>", ), status=discord.Status.do_not_disturb)
     queues = {}
 
@@ -220,3 +221,4 @@ async def on_message(message):
     await bot.process_commands(message)
 
 bot.run(config.bot_token)
+# generate invite link

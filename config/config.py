@@ -2,7 +2,7 @@ import discord
 import os
 
 bot_token = 'MTIzMjE3NTYwNzU2NDIxMDIxNw.GuY4Uq.eVvB7ohe7g9vosl9Gd1onkhAyikqYWjkDwoU_w'
-
+bot_id = 1232175607564210217
 
 ### CONFIGURATION FILES
 #get the full path for the current folder
