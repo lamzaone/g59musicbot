@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-#from utils import musicplayer
+from utils import settings as Settings
 import yt_dlp
 import os
 from config import config  # Make sure this import points to your bot's configuration
@@ -11,9 +11,8 @@ import json
 FFMPEG_PATH = os.path.join(os.getcwd(), 'ffmpeg/bin/ffmpeg.exe')
 
 # Initialize Discord bot with command prefix and intents
-intents = discord.Intents.default()
-intents.message_content = True
-bot = commands.Bot(command_prefix="!", intents=intents)
+
+bot = commands.Bot(command_prefix="!", intents=config.intents)
 on_windows = os.name == 'nt'
 
 
@@ -21,26 +20,21 @@ on_windows = os.name == 'nt'
 
 @bot.event
 async def on_ready():
-    print(f'Booting {bot.user}...')
+    print(f'Initializing {bot.user}...')
     print(discord.utils.oauth_url(bot.application_id, permissions=discord.Permissions(permissions=8)))
     await bot.change_presence(activity=discord.Game(name="!play <song>", ), status=discord.Status.do_not_disturb)
     config.init()
     queues = {}
 
-    with open(config.serversettings, 'r') as f:
-        settings = json.load(f)
-        print('[+] Successfully loaded settings')    
+    settings = Settings.get_settings_all()
 
     for guild in bot.guilds:
-        if str(guild.id) not in settings:
-            settings[str(guild.id)] = { "volume": 0.5, \
-                                        "prefix": "!"}
-            
-
+        if Settings.get_settings(guild.id) is None:
+            settings[str(guild.id)] = Settings.default_settings
         queues[str(guild.id)] = []
-    with open(config.serversettings, 'w') as f:
-        json.dump(settings, f, indent=4)
-        print('[+] Successfully initialized settings')
+
+    Settings.set_all_settings(settings)
+
     with open(config.queues, 'w') as f:
         json.dump(queues, f, indent=4)
         print('[+] Successfully initialized queues')
@@ -55,13 +49,8 @@ async def on_ready():
 
 @bot.event
 async def on_guild_join(guild):
-    with open(config.serversettings, 'r') as f:
-        settings = json.load(f)
-        settings[str(guild.id)] = { "volume": 0.5, \
-                                    "prefix": "!" }
-        
-    with open(config.serversettings, 'w') as f:
-        json.dump(settings, f, indent=4)
+    Settings.set_guild_settings(guild.id, Settings.default_settings)
+
     with open(config.queues, 'r') as f:
         queues = json.load(f)
         queues[str(guild.id)] = []
