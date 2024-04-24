@@ -7,7 +7,7 @@ Not only this music bot can be customised to your liking, but it's very easy to 
 
 Current command support:
 - Queue support -- *Adds links to a queue that plays automatically*
-- **TODO: FIX THIS: **!prefix -- *Changes the prefix used for commands on the current server*
+- **BUGGED**!prefix -- *Changes the prefix used for commands on the current server*
 - !play <song name\youtube link> -- *Plays music from YouTube*
 - !stop -- *Stops the music and clears the queue*
 - !pause -- *Pause/resume the music*
