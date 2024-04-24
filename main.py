@@ -31,7 +31,8 @@ async def on_ready():
     
     for guild in bot.guilds:
         if str(guild.id) not in settings:
-            settings[str(guild.id)] = {"volume": 0.5}
+            settings[str(guild.id)] = {"volume": 0.5, "prefix": "!"}
+            
 
         queues[str(guild.id)] = []
     with open(config.serversettings, 'w') as f:
@@ -40,7 +41,27 @@ async def on_ready():
     with open(config.queues, 'w') as f:
         json.dump(queues, f, indent=4)
         print('successfully initialized queues')
+
+    # load prefixes from settings file
+    for guild in bot.guilds:
+        with open(config.serversettings, 'r') as f:
+            settings = json.load(f)
+            settings = settings[str(guild.id)]
+        bot.command_prefix = settings['prefix']
+
     
+
+
+@bot.command(name='prefix', help='Change the command prefix for the bot')
+async def prefix(ctx, new_prefix: str):
+    #change the settings for the guild in the settings file
+    with open(config.serversettings, 'r') as f:
+        settings = json.load(f)
+        settings = settings[str(ctx.guild.id)]
+    settings['prefix'] = new_prefix
+    with open(config.serversettings, 'w') as f:
+        json.dump({ctx.guild.id: settings}, f, indent=4)
+    await ctx.send(f"Prefix changed to {new_prefix}")
     
 
 
