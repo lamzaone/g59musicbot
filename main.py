@@ -45,11 +45,11 @@ async def on_ready():
         print('[+] Successfully initialized queues')
 
     # load prefixes from settings file
-    for guild in bot.guilds:
-        with open(config.serversettings, 'r') as f:
-            settings = json.load(f)
-            settings = settings[str(guild.id)]
-        bot.command_prefix = settings['prefix']
+    # for guild in bot.guilds:
+    #     with open(config.serversettings, 'r') as f:
+    #         settings = json.load(f)
+    #         settings = settings[str(guild.id)]
+    #     bot.command_prefix = settings['prefix']
 
 
 @bot.event
