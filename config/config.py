@@ -3,11 +3,20 @@ import os
 
 bot_token = 'MTIzMjE3NTYwNzU2NDIxMDIxNw.GuY4Uq.eVvB7ohe7g9vosl9Gd1onkhAyikqYWjkDwoU_w'
 
+
+### CONFIGURATION FILES
 serversettings = os.path.join(os.getcwd(), 'config/serversettings.json')
-# check if server settings file exists, if not create it
+queues = os.path.join(os.getcwd(), 'config/queues.json')
+
 if not os.path.exists(serversettings):
     with open(serversettings, 'w') as f:
         f.write('{}')
+
+if not os.path.exists(queues):
+    with open(queues, 'w') as f:
+        f.write('{}')
+
+
 ffmpeg_options = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
     'options': '-vn',
