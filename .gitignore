@@ -1,3 +1,5 @@
 /ffmpeg/bin
 /config/serversettings.json
 /cookies.txt
+/config/__pycache__
+/config/queues.json
