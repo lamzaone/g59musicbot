@@ -21,9 +21,8 @@ def set_all_settings(settings):
     try:
         with open(config.serversettings, "w") as f:
             json.dump(settings, f, indent=4)
-            print('[+] Successfully initialized bot settings')
     except Exception as e:
-        print('[-] Error initializing bot settings: ', e)
+        print('[-] Error updating settings: ', e)
 
 
 def set_guild_settings(guild_id: int, settings):
