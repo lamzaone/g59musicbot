@@ -17,7 +17,7 @@ def init():
                 with open(serversettings, 'w') as f:
                     f.write('{}')
     except FileNotFoundError:
-        print("[-] serversettings.json not found. Creating it now.")
+        print("[-] serversettings.json not found. Attempting to create it now.")
         try:
             with open(serversettings, 'w') as f:
                 f.write('{}')
@@ -31,7 +31,7 @@ def init():
                 with open(queues, 'w') as f:
                     f.write('{}')
     except FileNotFoundError:
-        print("[-] queues.json  not found. Creating it now.")
+        print("[-] queues.json  not found. Attempting to create it now.")
         try:
             with open(queues, 'w') as f:
                 f.write('{}')
