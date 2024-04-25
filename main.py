@@ -24,14 +24,13 @@ def update():
     print('[+] Checking for updates...')
     try:
         script_dir = os.path.dirname(os.path.abspath(__file__))  # Get directory of the current script
-        git_command_base = ['git', '-C', script_dir]  # Base command with directory context
 
         # Check if the current branch is up to date with its upstream
         # This command could fail if there's no upstream or another issue with Git setup
-        diff_result = subprocess.call(git_command_base + ['diff', '--quiet', 'HEAD', '@{u}'])
+        diff_result = subprocess.call(['git' 'diff', '--quiet', 'HEAD', '@{u}'])
 
         if diff_result != 0:  # There's a difference, suggesting an update is available
-            subprocess.call(git_command_base + ['pull'])
+            subprocess.call(['git', 'pull'])
             print('[+] Successfully updated the bot')
             print('[+] Restarting bot...')
 
