@@ -4,3 +4,4 @@
 /config/__pycache__
 /config/queues.json
 /utils/__pycache__
+/config/bot_token.txt

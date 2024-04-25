@@ -23,7 +23,6 @@ async def on_ready():
     print(f'Initializing {bot.user}...')
     print(discord.utils.oauth_url(bot.application_id, permissions=discord.Permissions(permissions=8)))
     await bot.change_presence(activity=discord.Game(name="!play <song>", ), status=discord.Status.do_not_disturb)
-    config.init()
     queues = {}
 
     settings = Settings.get_settings_all()
@@ -289,11 +288,9 @@ async def on_message(message):
 
 
 
+
+
 def main(*args):
-    # Ensure the bot token is defined
-    if not config.bot_token:
-        print("[-] Bot token is not defined. Please set 'bot_token' in 'config'.")
-        return
 
     # Run the bot
     if args:
@@ -302,6 +299,7 @@ def main(*args):
     else:
         update.update(is_windows)
     try:
+        config.init()
         bot.run(config.bot_token)
     except Exception as e:
         print(f"[-] An error occurred while running the bot: {e}")

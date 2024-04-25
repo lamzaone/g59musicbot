@@ -1,16 +1,18 @@
 import discord
 import os
 
-bot_token = 'MTIzMjE3NTYwNzU2NDIxMDIxNw.GuY4Uq.eVvB7ohe7g9vosl9Gd1onkhAyikqYWjkDwoU_w'
+
 
 ### CONFIGURATION FILES
 #get the full path for the current folder
 current_folder = os.path.dirname(os.path.abspath(__file__))
 serversettings = os.path.join(current_folder, 'serversettings.json')
 queues = os.path.join(current_folder, 'queues.json')
-
+token_file = os.path.join(current_folder, 'bot_token.txt')
+bot_token=''
 
 def init():
+    global bot_token
     try:
         with open(serversettings, 'r') as f:
             if f.read() == '':
@@ -38,6 +40,30 @@ def init():
             print("[+] queues.json created successfully")
         except Exception as e:
             print("[--] Error creating queues.json file. Check permissions on the folder.\n^-- Error: ", e)
+    
+    try:
+        with open(token_file, 'r') as f:
+            bot_token = f.read()
+    except FileNotFoundError:
+        print("[-] bot_token.txt not found. Attempting to create it now.")
+        try:
+            with open(token_file, 'w') as f:
+                bot_token = input("Please enter your bot token: ")
+                f.write(bot_token)
+            print("[+] bot_token.txt created successfully")
+        except Exception as e:
+            print("[--] Error creating bot_token.txt file. Check permissions on the folder.\n^-- Error: ", e)
+    
+    if len(bot_token) < 10:
+        print("[-] Bot token is invalid. Please enter a valid bot token")
+        try:
+            with open(token_file, 'w') as f:
+                bot_token = input("Please enter your bot token: ")
+                f.write(bot_token)
+            print("[+] bot_token.txt updated successfully")
+        except Exception as e:
+            print("[--] Error updating bot_token.txt file. Check permissions on the folder.\n^-- Error: ", e)
+
 
 ffmpeg_options = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
