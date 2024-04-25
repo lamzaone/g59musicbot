@@ -25,39 +25,53 @@ def update():
     try:
         # Get the directory of the current script
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        
 
-        # Check if Git is available
-        git_check = subprocess.call(['git', '--version'])
-        if git_check != 0:
+        # Ensure Git is installed
+        if subprocess.call(['git', '--version']) != 0:
             print("[-] Git is not installed or not in the system's PATH.")
             return
 
         # Base command for Git with directory context
         git_command_base = ['git', '-C', script_dir]
 
-        # Check if the current branch is up to date with its upstream
-        # This command might fail if there's no upstream or if Git has issues
-        diff_result = subprocess.call(git_command_base + ['diff', '--quiet', 'HEAD', '@{u}'])
+        # Fetch latest information from the remote repository
+        fetch_result = subprocess.call(git_command_base + ['fetch'])
+        if fetch_result != 0:
+            print("[-] Git fetch failed")
+            return
 
-        if diff_result != 0:  # If there's a difference, suggesting an update is needed
+        # Check if the current branch is behind its upstream
+        # This command checks if HEAD has diverged from its upstream
+        upstream = subprocess.check_output(git_command_base + ['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}'], text=True).strip()
+        print(f"[+] Upstream branch: {upstream}")
+
+        # If the local HEAD is behind the remote branch, it suggests updates are available
+        ahead_behind_check = subprocess.check_output(git_command_base + ['rev-list', '--count', '--left-right', 'HEAD...@{u}'], text=True).strip()
+        left, right = map(int, ahead_behind_check.split())
+
+        if right > 0:  # This indicates HEAD is behind its upstream, suggesting updates are available
+            print(f"[+] {right} updates available. Pulling latest changes...")
+
+            # Pull the latest changes from the remote repository
             subprocess.call(git_command_base + ['pull'])
             print('[+] Successfully updated the bot')
             print('[+] Restarting bot...')
 
             # Restarting the bot
-            python_exe = 'python3' if not on_windows else 'python'  # Adjust for Windows
+            python_exe = 'python3' if not on_windows else 'python'
             restart_command = [python_exe, 'main.py']
 
             # Start the bot as a new process
             subprocess.Popen(restart_command, cwd=script_dir)
 
-            # Exit current process to allow the new one to take over
+            # Exit current process to allow the new process to take over
             exit(0)
         else:
             print('[+] Bot is up to date')
+    except subprocess.CalledProcessError as cpe:
+        print(f'[-] Git command failed: {cpe.output.strip()}')
     except Exception as e:
-        print(f'[-] An error occurred: {e}')  # Catch-all for other exceptions
+        print(f'[-] An error occurred: {e}')
 
 update()
 
