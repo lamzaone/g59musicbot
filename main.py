@@ -113,7 +113,7 @@ async def play(ctx, *, query: str):
                         queues[str(ctx.guild.id)].append({"title": title, "original_url": original_url})
                         with open(config.queues, 'w') as f:
                             json.dump(queues, f, indent=4)
-                        await ctx.send(f"Added `{title}` to the queue.")
+                        await ctx.send(f":notes: Added `{title}` to the queue.")
                 return
             except Exception as e:
                 await ctx.send("An error occurred while trying to retrieve the music info.")
@@ -131,7 +131,7 @@ async def play(ctx, *, query: str):
                     queues[str(ctx.guild.id)].append({"title": title, "original_url": original_url})
                     with open(config.queues, 'w') as f:
                         json.dump(queues, f, indent=4)
-                    await ctx.send(f"Added `{title}` to the queue.")
+                    await ctx.send(f":notes: Added `{title}` to the queue.")
                 return
             except Exception as e:
                 await ctx.send("An error occurred while trying to retrieve the music info.")
@@ -236,7 +236,7 @@ async def volume(ctx, volume: int = None):
         settings = json.load(f)        
 
     if volume is None:
-        await ctx.send("Current volume is " + str(settings[str(ctx.guild.id)]['volume'] * 100) + "%")
+        await ctx.send(":loud_sound: Current volume is " + str(round(settings[str(ctx.guild.id)]['volume'] * 100)) + "%")
         return
     
     elif volume < 0 or volume > 100:
@@ -251,7 +251,7 @@ async def volume(ctx, volume: int = None):
     if ctx.voice_client and ctx.voice_client.is_playing():
         ctx.voice_client.source.volume = volume / 100
 
-    await ctx.send(f"Volume set from `{current_volume}%` to `{volume}%`")
+    await ctx.send(f":loud_sound: Volume set from `{round(current_volume)}%` to `{volume}%`")
     
 
 
