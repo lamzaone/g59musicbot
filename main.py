@@ -297,7 +297,9 @@ def main(*args):
         if args[0] == 'updated':
             print("[+] Successfully updated to the latest version!")
     else:
-        update.update(is_windows)
+        if update.check_for_updates(is_windows):
+            update.update(is_windows)
+            sys.exit(0)
     try:
         config.init()
         bot.run(config.bot_token)

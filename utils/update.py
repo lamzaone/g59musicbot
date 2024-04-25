@@ -3,8 +3,7 @@ import os
 import sys
 
 
-def update(on_windows: bool):
-    print('[+] Checking for updates...')
+def check_for_updates(on_windows: bool):
     try:
         # Get the directory of the current script
         script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -31,10 +30,29 @@ def update(on_windows: bool):
         # If the local HEAD is behind the remote branch, it suggests updates are available
         ahead_behind_check = subprocess.check_output(git_command_base + ['rev-list', '--count', '--left-right', 'HEAD...@{u}'], text=True).strip()
         left, right = map(int, ahead_behind_check.split())
+        if right > 0:
+            print(f"[+] {right} updates available. Attempting to update...")
+            return True
+        else:
+            print('[+] Bot is up to date')
+            print('[+] Launching bot...')
+            return False
+    except subprocess.CalledProcessError as cpe:
+        print(f'[-] Git command failed: {cpe.output.strip()}')
+        return False
+    except Exception as e:
+        print(f'[-] An error occurred while checking for update: {e}')
+        return False
 
-        if right > 0:  # This indicates HEAD is behind its upstream, suggesting updates are available
-            print(f"[+] {right} updates available. Pulling latest changes...")
 
+def update(on_windows: bool):
+    print('[+] Checking for updates...')
+    try:
+        # Get the directory of the current script
+        script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+        try:
             # Pull the latest changes from the remote repository
             subprocess.call(git_command_base + ['pull'])
             print('[+] Successfully updated the bot')
@@ -46,12 +64,9 @@ def update(on_windows: bool):
             # Start the bot as a new process
             subprocess.Popen(restart_command, cwd=script_dir)
 
-            # Exit current process to allow the new process to take over
-            sys.exit(0)
-        else:
-            print('[+] Bot is up to date')
-            print('[+] Launching bot')
-    except subprocess.CalledProcessError as cpe:
-        print(f'[-] Git command failed: {cpe.output.strip()}')
+        except subprocess.CalledProcessError as cpe:
+            print(f'[-] Git command failed: {cpe.output.strip()}')
+        except Exception as e:
+            print(f'[-] An error occurred while updating: {e}')
     except Exception as e:
-        print(f'[-] An error occurred: {e}')
+        print(f'[-] An error occurred while attempting to update: {e}')
