@@ -20,27 +20,41 @@ is_windows = os.name == 'nt'
 
 @bot.event
 async def on_ready():
-    print(f'Initializing {bot.user}...')
-    print(discord.utils.oauth_url(bot.application_id, permissions=discord.Permissions(permissions=8)))
+    print(f'[+] Booted {bot.user}...')
     await bot.change_presence(activity=discord.Game(name="!play <song>", ), status=discord.Status.do_not_disturb)
-    queues = {}
 
+    # Reset queues and fetch settings for all guilds
+    queues = {}
     settings = Settings.get_settings_all()
 
-    for guild in bot.guilds:
-        if Settings.get_settings(guild.id) is None:
-            settings[str(guild.id)] = Settings.default_settings
-        queues[str(guild.id)] = []
 
+    # Initialize settings for all guilds
     try:
+        for guild in bot.guilds:
+            if Settings.get_settings(guild.id) is None:
+                settings[str(guild.id)] = Settings.default_settings
         Settings.set_all_settings(settings)
         print('[+] Successfully initialized bot settings')
     except Exception as e:
-        print('[-] Error initializing bot settings: ', e)
+        print('[!] Error initializing bot settings: ', e)
 
-    with open(config.queues, 'w') as f:
-        json.dump(queues, f, indent=4)
-        print('[+] Successfully initialized queues')
+
+    # Initialize queues for all guilds
+    try:
+        for guild in bot.guilds:
+            if Settings.get_settings(guild.id) is None:
+                settings[str(guild.id)] = Settings.default_settings
+            queues[str(guild.id)] = []
+        with open(config.queues, 'w') as f:
+            json.dump(queues, f, indent=4)
+            print('[+] Successfully initialized queues')
+    except Exception as e:
+        print('[!] Error initializing queues: ', e)
+
+    # Print URL for inviting the bot to a server
+    oauth_url = discord.utils.oauth_url(bot.application_id, permissions=discord.Permissions(permissions=8))
+    print(f'[+] Invite URL: {oauth_url}')
+
 
 
 
@@ -292,7 +306,7 @@ async def on_message(message):
 
 def main(*args):
 
-    # Run the bot
+    # Check for updates
     if args:
         if args[0] == 'updated':
             print("[+] Successfully updated to the latest version!")
@@ -300,6 +314,8 @@ def main(*args):
         if update.check_for_updates(is_windows):
             update.update(is_windows)
             sys.exit(0)
+
+    # Initialize the bot        
     try:
         config.init()
         bot.run(config.bot_token)
@@ -307,11 +323,9 @@ def main(*args):
         print(f"[-] An error occurred while running the bot: {e}")
         return
 
-    # If 'updated' is passed as an argument, print a message
 
 
 # Entry point
 if __name__ == '__main__':
-    # Check if there are command-line arguments and pass them to main
-    arguments = sys.argv[1:]  # All arguments after the script name
-    main(*arguments)
+    args = sys.argv[1:]  # All arguments after the script name
+    main(*args)

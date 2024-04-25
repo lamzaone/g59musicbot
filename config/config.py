@@ -13,56 +13,66 @@ bot_token=''
 
 def init():
     global bot_token
+
+    # Check if serversettings.json exists
     try:
         with open(serversettings, 'r') as f:
             if f.read() == '':
                 with open(serversettings, 'w') as f:
                     f.write('{}')
     except FileNotFoundError:
-        print("[-] serversettings.json not found. Attempting to create it now.")
+        # If the file does not exist, create it
+        print("[!] serversettings.json not found. Attempting to create it now.")
         try:
             with open(serversettings, 'w') as f:
                 f.write('{}')
             print("[+] serversettings.json created successfully")
         except Exception as e:
-            print("[--] Error creating serversettings.json file. Check permissions on the folder.\n^-- Error: ", e)
+            print("[!!] Error creating serversettings.json file. Check permissions on the folder.\n^-- Error: ", e)
 
+
+    # Check if queues.json exists
     try:
         with open(queues, 'r') as f:
             if f.read() == '':
                 with open(queues, 'w') as f:
                     f.write('{}')
     except FileNotFoundError:
-        print("[-] queues.json  not found. Attempting to create it now.")
+        # If the file does not exist, create it
+        print("[!] queues.json  not found. Attempting to create it now.")
         try:
             with open(queues, 'w') as f:
                 f.write('{}')
             print("[+] queues.json created successfully")
         except Exception as e:
-            print("[--] Error creating queues.json file. Check permissions on the folder.\n^-- Error: ", e)
+            print("[!!] Error creating queues.json file. Check permissions on the folder.\n^-- Error: ", e)
     
+
+    # Check if bot_token.txt exists
     try:
         with open(token_file, 'r') as f:
             bot_token = f.read()
     except FileNotFoundError:
-        print("[-] bot_token.txt not found. Attempting to create it now.")
+        # If the file does not exist, create it and ask the user for the bot token
+        print("[!] bot_token.txt not found. Attempting to create it now.")
         try:
             with open(token_file, 'w') as f:
-                bot_token = input("Please enter your bot token: ")
+                bot_token = input("[-] Please enter your bot token: ")
                 f.write(bot_token)
             print("[+] bot_token.txt created successfully")
         except Exception as e:
-            print("[--] Error creating bot_token.txt file. Check permissions on the folder.\n^-- Error: ", e)
+            print("[!!] Error creating bot_token.txt file. Check permissions on the folder.\n^-- Error: ", e)
     
+    # Check if the bot token is valid and ask for the token again if it's not valid.
     if len(bot_token) < 10:
-        print("[-] Bot token is invalid. Please enter a valid bot token")
+        print("[!] Bot token is invalid. Please enter a valid bot token")
         try:
             with open(token_file, 'w') as f:
-                bot_token = input("Please enter your bot token: ")
+                bot_token = input("[-] Please enter your bot token: ")
                 f.write(bot_token)
             print("[+] bot_token.txt updated successfully")
         except Exception as e:
-            print("[--] Error updating bot_token.txt file. Check permissions on the folder.\n^-- Error: ", e)
+            print("[!!] Error updating bot_token.txt file. Check permissions on the folder.\n^-- Error: ", e)
 
 
 ffmpeg_options = {
