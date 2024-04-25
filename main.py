@@ -107,11 +107,10 @@ async def play(ctx, *, query: str):
                 with yt_dlp.YoutubeDL(config.YTDL_OPTS) as ydl:
                         info = ydl.extract_info(query, download=False)
                         original_url = info['original_url']
-                        url = info['url']
                         title = info['title']
                         with open(config.queues, 'r') as f:
                             queues = json.load(f)
-                        queues[str(ctx.guild.id)].append({"title": title, "url": url, "original_url": original_url})
+                        queues[str(ctx.guild.id)].append({"title": title, "original_url": original_url})
                         with open(config.queues, 'w') as f:
                             json.dump(queues, f, indent=4)
                         await ctx.send(f"Added `{title}` to the queue.")
@@ -129,7 +128,7 @@ async def play(ctx, *, query: str):
                     url = info['url']
                     with open(config.queues, 'r') as f:
                         queues = json.load(f)
-                    queues[str(ctx.guild.id)].append({"title": title, "url": url, "original_url": original_url})
+                    queues[str(ctx.guild.id)].append({"title": title, "original_url": original_url})
                     with open(config.queues, 'w') as f:
                         json.dump(queues, f, indent=4)
                     await ctx.send(f"Added `{title}` to the queue.")
@@ -140,65 +139,62 @@ async def play(ctx, *, query: str):
 
     
     
-    try:
-        with yt_dlp.YoutubeDL(config.YTDL_OPTS) as ydl:
-            async with ctx.typing():
-                if type(query) == str:
-                    if "youtube.com/watch?" in query or "youtu.be/" in query:
-                        info = ydl.extract_info(query, download=False)
-                    else:
-                        info = ydl.extract_info(query, download=False)['entries'][0]
-
-                    video_url = info['url']
-
-                    ctx.bot.video_info = info
-                    ctx.bot.video_url = video_url
-                    # Play the audio using FFmpeg
-                    if on_windows:
-                        audio_source = discord.FFmpegPCMAudio(video_url, executable=FFMPEG_PATH, **config.ffmpeg_options)
-                    else:
-                        audio_source = discord.FFmpegPCMAudio(video_url, **config.ffmpeg_options)
-                    audio_source = discord.PCMVolumeTransformer(audio_source, settings['volume'])
-                    voice_client.play(audio_source)
-                    await ctx.send(f":notes: Now playing: `{info['title']}` from {info['original_url']}")
+    with yt_dlp.YoutubeDL(config.YTDL_OPTS) as ydl:
+        async with ctx.typing():
+            if type(query) == str:
+                if "youtube.com/watch?" in query or "youtu.be/" in query:
+                    info = ydl.extract_info(query, download=False)
                 else:
-                    if on_windows:
-                        audio_source = discord.FFmpegPCMAudio(query['url'], executable=FFMPEG_PATH, **config.ffmpeg_options)
-                    else:
-                        audio_source = discord.FFmpegPCMAudio(query['url'], **config.ffmpeg_options)
-                    
-                    ctx.bot.video_url = query['url']
-                    audio_source = discord.PCMVolumeTransformer(audio_source, settings['volume'])
-                    voice_client.play(audio_source)
-                    await ctx.send(f":notes: Now playing: `{query['title']}` from {query['original_url']}")
+                    info = ydl.extract_info(query, download=False)['entries'][0]
 
-            
-            # disconnect when the song is over but not when pausing
+                video_url = info['url']
 
-            while voice_client.is_connected() and (voice_client.is_playing() or ctx.voice_client.is_paused()):
-                await asyncio.sleep(1)
-        
-            #play next song in queue
-            with open(config.queues, 'r') as f:
-                queues = json.load(f)
-            if len(queues[str(ctx.guild.id)]) > 0:
-                await skip(ctx)
+                ctx.bot.video_info = info
+                ctx.bot.video_url = video_url
+                # Play the audio using FFmpeg
+                if on_windows:
+                    audio_source = discord.FFmpegPCMAudio(video_url, executable=FFMPEG_PATH, **config.ffmpeg_options)
+                else:
+                    audio_source = discord.FFmpegPCMAudio(video_url, **config.ffmpeg_options)
+                audio_source = discord.PCMVolumeTransformer(audio_source, settings['volume'])
+                voice_client.play(audio_source)
+                await ctx.send(f":notes: Now playing: `{info['title']}` \n {info['original_url']}")
             else:
-                # ignore if already stopped
-                if voice_client.is_connected():
-                    await ctx.voice_client.disconnect()
-                    # await ctx.send("Music stopped, queue is empty.")
+                info = ydl.extract_info(query['original_url'], download=False)
+                video_url = info['url']
+                if on_windows:
+                    audio_source = discord.FFmpegPCMAudio(video_url, executable=FFMPEG_PATH, **config.ffmpeg_options)
+                else:
+                    audio_source = discord.FFmpegPCMAudio(video_url, **config.ffmpeg_options)
+                
+                ctx.bot.video_url = video_url
+                audio_source = discord.PCMVolumeTransformer(audio_source, settings['volume'])
+                voice_client.play(audio_source)
+                await ctx.send(f":notes: Now playing: `{query['title']}` \n {query['original_url']}")
 
+        
+        # disconnect when the song is over but not when pausing
 
-    except Exception as e:
-        print(f"Error playing music: {e}")
-        await ctx.send("An error occurred while trying to play the music.")
+    while voice_client.is_connected() and (voice_client.is_playing() or ctx.voice_client.is_paused()):
+        await asyncio.sleep(1)
+
+    #play next song in queue
+    with open(config.queues, 'r') as f:
+        queues = json.load(f)
+    if len(queues[str(ctx.guild.id)]) > 0:
+        await skip(ctx)
+    else:
+        # ignore if already stopped
+        if voice_client.is_connected():
+            await ctx.voice_client.disconnect()
+            # await ctx.send("Music stopped, queue is empty.")
+
 
 
 @bot.command(name='skip', help='Skip the currently playing music')
 async def skip(ctx):
     #check if the bot is connected to a voice channel and the queue is not empty
-    if ctx.voice_client.is_connected() and ctx.voice_client.is_playing():
+    if ctx.voice_client.is_connected():
         with open(config.queues, 'r') as f:
             queues = json.load(f)
         if len(queues) > 0:
