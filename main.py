@@ -214,10 +214,10 @@ async def stop(ctx):
 async def pause(ctx):
     if ctx.voice_client and ctx.voice_client.is_playing():
         ctx.voice_client.pause()
-        await ctx.send(":pause: Music paused.")
+        await ctx.send(":pause_button: Music paused.")
     elif ctx.voice_client and ctx.voice_client.is_paused():
         ctx.voice_client.resume()
-        await ctx.send("Music resumed.")
+        await ctx.send(":arrow_forward: Music resumed.")
         
 
 @bot.command(name='volume', help='Set the volume of the music')
@@ -226,11 +226,11 @@ async def volume(ctx, volume: int = None):
     settings = Settings.get_settings(ctx.guild.id)
 
     if volume is None:
-        await ctx.send(":loud_sound: Current volume is " + str(round(settings['volume'] * 100)) + "%")
+        await ctx.send(":loud_sound: Current volume is `" + str(round(settings['volume'] * 100)) + "%`")
         return
     
     elif volume < 0 or volume > 100:
-        await ctx.send("Volume must be between 0 and 100 you dummy...")
+        await ctx.send(":loud_sound: Volume must be between 0 and 100 you dummy...")
         return
 
     current_volume = settings['volume'] * 100
@@ -273,11 +273,11 @@ async def seek(ctx, seconds: int):
 
             ctx.voice_client.play(audio_source)
 
-            await ctx.send(f"Started playing at {seconds} seconds.")
+            await ctx.send(f":arrow_forward: Started playing at {seconds} seconds.")
         else:
-            await ctx.send("No music data available to seek.")
+            await ctx.send(":x: No music data available to seek.")
     else:
-        await ctx.send("No music is currently playing.")
+        await ctx.send(":x: No music is currently playing.")
 
 @bot.event
 async def on_message(message):
