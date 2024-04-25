@@ -1,5 +1,6 @@
 import subprocess
 import os
+import sys
 
 
 def update(on_windows: bool):
@@ -46,8 +47,7 @@ def update(on_windows: bool):
             subprocess.Popen(restart_command, cwd=script_dir)
 
             # Exit current process to allow the new process to take over
-            os.exit()
-            exit()
+            sys.exit(0)
         else:
             print('[+] Bot is up to date')
             print('[+] Launching bot')
