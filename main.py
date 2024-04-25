@@ -290,9 +290,6 @@ async def seek(ctx, seconds: int):
 
 @bot.event
 async def on_message(message):
-    if message.author.id == 473624857389694977:
-        await message.channel.send(f'Daca te cheama szabo esti gay! :frumosul:')
-
     prefix = Settings.get_settings(message.guild.id)['prefix']
     if message.content.startswith(prefix):
         message.content = message.content[len(prefix):]
