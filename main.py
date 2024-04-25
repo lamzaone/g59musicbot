@@ -23,33 +23,41 @@ def update():
     import subprocess
     print('[+] Checking for updates...')
     try:
-        script_dir = os.path.dirname(os.path.abspath(__file__)) 
+        # Get the directory of the current script
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        
 
-        # Command base for Git with directory context
+        # Check if Git is available
+        git_check = subprocess.call(['git', '--version'])
+        if git_check != 0:
+            print("[-] Git is not installed or not in the system's PATH.")
+            return
+
+        # Base command for Git with directory context
         git_command_base = ['git', '-C', script_dir]
 
         # Check if the current branch is up to date with its upstream
-        # This command could fail if there's no upstream or another issue with Git setup
+        # This command might fail if there's no upstream or if Git has issues
         diff_result = subprocess.call(git_command_base + ['diff', '--quiet', 'HEAD', '@{u}'])
 
-        if diff_result != 0:  # An update is available
+        if diff_result != 0:  # If there's a difference, suggesting an update is needed
             subprocess.call(git_command_base + ['pull'])
             print('[+] Successfully updated the bot')
             print('[+] Restarting bot...')
 
             # Restarting the bot
-            python_exe = 'python3'
+            python_exe = 'python3' if not on_windows else 'python'  # Adjust for Windows
             restart_command = [python_exe, 'main.py']
 
             # Start the bot as a new process
             subprocess.Popen(restart_command, cwd=script_dir)
 
-            # Exit current process to allow new one to take over
+            # Exit current process to allow the new one to take over
             exit(0)
         else:
-            print('[+] Bot is up to date!')
+            print('[+] Bot is up to date')
     except Exception as e:
-        print(f'[-] An error occurred: {e}')
+        print(f'[-] An error occurred: {e}')  # Catch-all for other exceptions
 
 update()
 
