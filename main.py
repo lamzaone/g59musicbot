@@ -8,6 +8,7 @@ from config import config  # Make sure this import points to your bot's configur
 import asyncio
 import json
 
+
 # FFmpeg path - ensure you have FFmpeg installed and update the path if needed
 FFMPEG_PATH = os.path.join(os.getcwd(), 'ffmpeg/bin/ffmpeg.exe')
 
@@ -17,9 +18,32 @@ bot = commands.Bot(command_prefix="", intents=config.intents)
 on_windows = os.name == 'nt'
 
 
-# TODO: FIX PREFIXES BY PARSING EACH MESSAGE AND CHECKING FOR PREFIXES on_message
-#       THEN USE THE PREFIXES FROM THE SETTINGS FILE
-#       ALSO SET bot = commands.Bot(command_prefix="", intents=config.intents)
+# check if current git version is up to date, else pull latest commit
+def update():
+    import subprocess
+    print('[+] Checking for updates...')
+    try:
+        script_dir = os.path.dirname(os.path.abspath(__file__))  # Get directory of the current script
+        git_command_base = ['git', '-C', script_dir]  # Base command with directory context
+
+        # Check if the current branch is up to date with its upstream
+        # This command could fail if there's no upstream or another issue with Git setup
+        diff_result = subprocess.call(git_command_base + ['diff', '--quiet', 'HEAD', '@{u}'])
+
+        if diff_result != 0:  # There's a difference, suggesting an update is available
+            subprocess.call(git_command_base + ['pull'])
+            print('[+] Successfully updated the bot')
+            print('[+] Restarting bot...')
+
+            # Restart the current Python process
+            subprocess.Popen(['python3', 'main.py'], cwd=script_dir)
+            exit(0)
+        else:
+            print('[+] Bot is up to date')
+    except Exception as e:
+        print(f'[-] An error occurred: {e}')
+
+update()
 
 @bot.event
 async def on_ready():
