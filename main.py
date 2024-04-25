@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from utils import settings as Settings, queues as Queues
+from utils import settings as Settings, queues as Queues, update
 import yt_dlp
 import os
 from config import config  # Make sure this import points to your bot's configuration
@@ -15,63 +15,7 @@ FFMPEG_PATH = os.path.join(os.getcwd(), 'ffmpeg/bin/ffmpeg.exe')
 # Initialize Discord bot with command prefix and intents
 
 bot = commands.Bot(command_prefix="", intents=config.intents)
-on_windows = os.name == 'nt'
-
-
-# check if current git version is up to date, else pull latest commit
-def update():
-    import subprocess
-    print('[+] Checking for updates...')
-    try:
-        # Get the directory of the current script
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-
-        # Ensure Git is installed
-        if subprocess.call(['git', '--version']) != 0:
-            print("[-] Git is not installed or not in the system's PATH.")
-            return
-
-        # Base command for Git with directory context
-        git_command_base = ['git', '-C', script_dir]
-
-        # Fetch latest information from the remote repository
-        fetch_result = subprocess.call(git_command_base + ['fetch'])
-        if fetch_result != 0:
-            print("[-] Git fetch failed")
-            return
-
-        # Check if the current branch is behind its upstream
-        # This command checks if HEAD has diverged from its upstream
-        upstream = subprocess.check_output(git_command_base + ['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}'], text=True).strip()
-        print(f"[+] Upstream branch: {upstream}")
-
-        # If the local HEAD is behind the remote branch, it suggests updates are available
-        ahead_behind_check = subprocess.check_output(git_command_base + ['rev-list', '--count', '--left-right', 'HEAD...@{u}'], text=True).strip()
-        left, right = map(int, ahead_behind_check.split())
-
-        if right > 0:  # This indicates HEAD is behind its upstream, suggesting updates are available
-            print(f"[+] {right} updates available. Pulling latest changes...")
-
-            # Pull the latest changes from the remote repository
-            subprocess.call(git_command_base + ['pull'])
-            print('[+] Successfully updated the bot')
-            print('[+] Restarting bot...')
-
-            # Restarting the bot
-            python_exe = 'python3' if not on_windows else 'python'
-            restart_command = [python_exe, 'main.py', 'updated']
-            # Start the bot as a new process
-            subprocess.Popen(restart_command, cwd=script_dir)
-
-            # Exit current process to allow the new process to take over
-            exit(0)
-        else:
-            print('[+] Bot is up to date')
-            print('[+] Launching bot')
-    except subprocess.CalledProcessError as cpe:
-        print(f'[-] Git command failed: {cpe.output.strip()}')
-    except Exception as e:
-        print(f'[-] An error occurred: {e}')
+is_windows = os.name == 'nt'
 
 
 @bot.event
@@ -198,7 +142,7 @@ async def play(ctx, *, query: str):
                     ctx.bot.video_info = info
                     ctx.bot.video_url = video_url
                     # Play the audio using FFmpeg
-                    if on_windows:
+                    if is_windows:
                         audio_source = discord.FFmpegPCMAudio(video_url, executable=FFMPEG_PATH, **config.ffmpeg_options)
                     else:
                         audio_source = discord.FFmpegPCMAudio(video_url, **config.ffmpeg_options)
@@ -208,7 +152,7 @@ async def play(ctx, *, query: str):
                 else:
                     info = ydl.extract_info(query['original_url'], download=False)
                     video_url = info['url']
-                    if on_windows:
+                    if is_windows:
                         audio_source = discord.FFmpegPCMAudio(video_url, executable=FFMPEG_PATH, **config.ffmpeg_options)
                     else:
                         audio_source = discord.FFmpegPCMAudio(video_url, **config.ffmpeg_options)
@@ -322,7 +266,7 @@ async def seek(ctx, seconds: int):
             seek_time = f"-ss {seconds}"
             ffmpeg_opts = {**config.ffmpeg_options, "options": f"{config.ffmpeg_options['options']} {seek_time}"}
 
-            if on_windows:
+            if is_windows:
                 audio_source = discord.FFmpegPCMAudio(ctx.bot.video_url, executable=FFMPEG_PATH , **ffmpeg_opts)
             else:
                 audio_source = discord.FFmpegPCMAudio(ctx.bot.video_url, **ffmpeg_opts)
@@ -356,7 +300,7 @@ def main(*args):
         if args[0] == 'updated':
             print("[+] Successfully updated to the latest version!")
     else:
-        update()
+        update.update(is_windows)
     try:
         bot.run(config.bot_token)
     except Exception as e:
