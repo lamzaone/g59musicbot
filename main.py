@@ -59,7 +59,7 @@ def update():
 
             # Restarting the bot
             python_exe = 'python3' if not on_windows else 'python'
-            restart_command = [python_exe, 'main.py']
+            restart_command = [python_exe, 'main.py', 'updated']
             # Start the bot as a new process
             subprocess.Popen(restart_command, cwd=script_dir)
 
