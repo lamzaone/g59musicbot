@@ -47,7 +47,7 @@ def update():
             # Exit current process to allow new one to take over
             exit(0)
         else:
-            print('[+] Bot is up to date')
+            print('[+] Bot is up to date!')
     except Exception as e:
         print(f'[-] An error occurred: {e}')
 
