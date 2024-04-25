@@ -60,7 +60,6 @@ def update():
             # Restarting the bot
             python_exe = 'python3' if not on_windows else 'python'
             restart_command = [python_exe, 'main.py']
-
             # Start the bot as a new process
             subprocess.Popen(restart_command, cwd=script_dir)
 
@@ -112,8 +111,8 @@ async def on_guild_join(guild):
     with open(config.queues, 'w') as f:
         json.dump(queues, f, indent=4)
     print(f'[+] Joined {guild.name} with id {guild.id}')
-    print('[+] Successfully initialized settings')
-    print('[+] Successfully initialized queues')
+    print('[+] Successfully initialized config/serversettings.json')
+    print('[+] Successfully initialized config/queues.json')
 
 
 @bot.command(name='prefix', help='Change the command prefix for the bot')
