@@ -10,7 +10,7 @@ import sys
 
 
 # FFmpeg path - ensure you have FFmpeg installed and update the path if needed
-FFMPEG_PATH = os.path.join(os.getcwd(), 'ffmpeg/bin/ffmpeg.exe')
+FFMPEG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ffmpeg.exe')
 
 # Initialize Discord bot with command prefix and intents
 
