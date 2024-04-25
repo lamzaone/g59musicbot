@@ -215,6 +215,7 @@ async def play(ctx, *, query: str):
 
 
 
+
 @bot.command(name='skip', help='Skip the currently playing music')
 async def skip(ctx):
     #check if the bot is connected to a voice channel and the queue is not empty
@@ -247,7 +248,7 @@ async def stop(ctx):
 async def pause(ctx):
     if ctx.voice_client and ctx.voice_client.is_playing():
         ctx.voice_client.pause()
-        await ctx.send("Music paused.")
+        await ctx.send(":pause: Music paused.")
     elif ctx.voice_client and ctx.voice_client.is_paused():
         ctx.voice_client.resume()
         await ctx.send("Music resumed.")
