@@ -208,7 +208,7 @@ async def stop(ctx):
             queues[str(ctx.guild.id)] = []
         with open(config.queues, 'w') as f:
             json.dump(queues, f, indent=4)
-        await ctx.send(":octagonal_sign: Music stopped and queue has been cleared.")
+        await ctx.send("Music stopped and queue has been cleared.")
 
 @bot.command(name='pause', help='Pause the currently playing music')
 async def pause(ctx):
@@ -226,7 +226,7 @@ async def volume(ctx, volume: int = None):
     settings = Settings.get_settings(ctx.guild.id)
 
     if volume is None:
-        await ctx.send(":loud_sound: Current volume is `" + str(round(settings['volume'] * 100)) + "`%")
+        await ctx.send(":loud_sound: Current volume is " + str(round(settings['volume'] * 100)) + "%")
         return
     
     elif volume < 0 or volume > 100:
