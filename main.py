@@ -13,11 +13,13 @@ FFMPEG_PATH = os.path.join(os.getcwd(), 'ffmpeg/bin/ffmpeg.exe')
 
 # Initialize Discord bot with command prefix and intents
 
-bot = commands.Bot(command_prefix="!", intents=config.intents)
+bot = commands.Bot(command_prefix="", intents=config.intents)
 on_windows = os.name == 'nt'
 
 
-
+# TODO: FIX PREFIXES BY PARSING EACH MESSAGE AND CHECKING FOR PREFIXES on_message
+#       THEN USE THE PREFIXES FROM THE SETTINGS FILE
+#       ALSO SET bot = commands.Bot(command_prefix="", intents=config.intents)
 
 @bot.event
 async def on_ready():
@@ -34,7 +36,11 @@ async def on_ready():
             settings[str(guild.id)] = Settings.default_settings
         queues[str(guild.id)] = []
 
-    Settings.set_all_settings(settings)
+    try:
+        Settings.set_all_settings(settings)
+        print('[+] Successfully initialized bot settings')
+    except Exception as e:
+        print('[-] Error initializing bot settings: ', e)
 
     with open(config.queues, 'w') as f:
         json.dump(queues, f, indent=4)
@@ -64,16 +70,10 @@ async def on_guild_join(guild):
 
 @bot.command(name='prefix', help='Change the command prefix for the bot')
 async def prefix(ctx, new_prefix: str):
-    await ctx.send(f"Command disabled. Use the default prefix: {bot.command_prefix}")
-
-
-    # with open(config.serversettings, 'r') as f:
-    #     settings = json.load(f)
-    # settings[str(ctx.guild.id)]['prefix'] = new_prefix
-    # with open(config.serversettings, 'w') as f:
-    #     json.dump(settings, f, indent=4)
-    # bot.command_prefix = new_prefix
-    # await ctx.send(f"Prefix changed to {new_prefix}")
+    settings = Settings.get_settings(ctx.guild.id)
+    settings['prefix'] = new_prefix
+    Settings.set_guild_settings(ctx.guild.id, settings)
+    await ctx.send(f"Prefix changed to {new_prefix}")
 
 
 
@@ -83,9 +83,7 @@ async def prefix(ctx, new_prefix: str):
 @bot.command(name='play', help='Play music from YouTube using a search term or URL')
 async def play(ctx, *, query: str):
     # retrieve settings for the guild from the settings file
-    with open(config.serversettings, 'r') as f:
-        settings = json.load(f)
-        settings = settings[str(ctx.guild.id)]
+    settings = Settings.get_settings(ctx.guild.id)
     # Connect to the voice channel
     if not ctx.author.voice:
         await ctx.send("You must be in a voice channel to play music.")
@@ -234,21 +232,19 @@ async def pause(ctx):
 @bot.command(name='volume', help='Set the volume of the music')
 async def volume(ctx, volume: int = None):
     #change the settings for the guild in the settings file
-    with open(config.serversettings, 'r') as f:
-        settings = json.load(f)        
+    settings = Settings.get_settings(ctx.guild.id)
 
     if volume is None:
-        await ctx.send(":loud_sound: Current volume is " + str(round(settings[str(ctx.guild.id)]['volume'] * 100)) + "%")
+        await ctx.send(":loud_sound: Current volume is " + str(round(settings['volume'] * 100)) + "%")
         return
     
     elif volume < 0 or volume > 100:
         await ctx.send("Volume must be between 0 and 100 you dummy...")
         return
 
-    current_volume = settings[str(ctx.guild.id)]['volume'] * 100
-    settings[str(ctx.guild.id)]['volume'] = volume / 100
-    with open(config.serversettings, 'w') as f:
-        json.dump(settings, f, indent=4)
+    current_volume = settings['volume'] * 100
+    settings['volume'] = volume / 100
+    Settings.set_guild_settings(ctx.guild.id, settings)
 
     if ctx.voice_client and ctx.voice_client.is_playing():
         ctx.voice_client.source.volume = volume / 100
@@ -296,7 +292,14 @@ async def seek(ctx, seconds: int):
 async def on_message(message):
     if message.author.id == 473624857389694977:
         await message.channel.send(f'Daca te cheama szabo esti gay! :frumosul:')
-    await bot.process_commands(message)
+
+    prefix = Settings.get_settings(message.guild.id)['prefix']
+    if message.content.startswith(prefix):
+        message.content = message.content[len(prefix):]
+        await bot.process_commands(message)
+
+
+
 
 bot.run(config.bot_token)
 # generate invite link
