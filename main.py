@@ -68,8 +68,8 @@ async def on_guild_join(guild):
     with open(config.queues, 'w') as f:
         json.dump(queues, f, indent=4)
     print(f'[+] Joined {guild.name} with id {guild.id}')
-    print('[+] Successfully initialized config/serversettings.json')
-    print('[+] Successfully initialized config/queues.json')
+    print(f'[+] Successfully initialized config/serversettings.json for {guild.name}')
+    print(f'[+] Successfully initialized config/queues.json for {guild.name}')
 
 
 @bot.command(name='prefix', help='Change the command prefix for the bot')
