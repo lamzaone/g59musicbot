@@ -226,7 +226,7 @@ async def volume(ctx, volume: int = None):
     settings = Settings.get_settings(ctx.guild.id)
 
     if volume is None:
-        await ctx.send(":loud_sound: Current volume is " + str(round(settings['volume'] * 100)) + "%")
+        await ctx.send(":loud_sound: Current volume is `" + str(round(settings['volume'] * 100)) + "`%")
         return
     
     elif volume < 0 or volume > 100:
