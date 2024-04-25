@@ -6,7 +6,7 @@ def update(on_windows: bool):
     print('[+] Checking for updates...')
     try:
         # Get the directory of the current script
-        script_dir = os.path.dirname(os.path.abspath(__file__))
+        script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
         # Ensure Git is installed
         if subprocess.call(['git', '--version']) != 0:
