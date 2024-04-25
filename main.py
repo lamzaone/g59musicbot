@@ -1,12 +1,12 @@
 import discord
 from discord.ext import commands
-from utils import settings as Settings
-from utils import queues as Queues
+from utils import settings as Settings, queues as Queues
 import yt_dlp
 import os
 from config import config  # Make sure this import points to your bot's configuration
 import asyncio
 import json
+import sys
 
 
 # FFmpeg path - ensure you have FFmpeg installed and update the path if needed
@@ -67,12 +67,12 @@ def update():
             exit(0)
         else:
             print('[+] Bot is up to date')
+            print('[+] Launching bot')
     except subprocess.CalledProcessError as cpe:
         print(f'[-] Git command failed: {cpe.output.strip()}')
     except Exception as e:
         print(f'[-] An error occurred: {e}')
 
-update()
 
 @bot.event
 async def on_ready():
@@ -345,6 +345,29 @@ async def on_message(message):
 
 
 
+def main(*args):
+    # Ensure the bot token is defined
+    if not config.bot_token:
+        print("[-] Bot token is not defined. Please set 'bot_token' in 'config'.")
+        return
 
-bot.run(config.bot_token)
-# generate invite link
+    # Run the bot
+    if args:
+        if args[0] == 'updated':
+            print("[+] Successfully updated to the latest version!")
+    else:
+        update()
+    try:
+        bot.run(config.bot_token)
+    except Exception as e:
+        print(f"[-] An error occurred while running the bot: {e}")
+        return
+
+    # If 'updated' is passed as an argument, print a message
+
+
+# Entry point
+if __name__ == '__main__':
+    # Check if there are command-line arguments and pass them to main
+    arguments = sys.argv[1:]  # All arguments after the script name
+    main(*arguments)
