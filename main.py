@@ -23,19 +23,28 @@ def update():
     import subprocess
     print('[+] Checking for updates...')
     try:
-        script_dir = os.path.dirname(os.path.abspath(__file__))  # Get directory of the current script
+        script_dir = os.path.dirname(os.path.abspath(__file__)) 
+
+        # Command base for Git with directory context
+        git_command_base = ['git', '-C', script_dir]
 
         # Check if the current branch is up to date with its upstream
         # This command could fail if there's no upstream or another issue with Git setup
-        diff_result = subprocess.call(['git' 'diff', '--quiet', 'HEAD', '@{u}'])
+        diff_result = subprocess.call(git_command_base + ['diff', '--quiet', 'HEAD', '@{u}'])
 
-        if diff_result != 0:  # There's a difference, suggesting an update is available
-            subprocess.call(['git', 'pull'])
+        if diff_result != 0:  # An update is available
+            subprocess.call(git_command_base + ['pull'])
             print('[+] Successfully updated the bot')
             print('[+] Restarting bot...')
 
-            # Restart the current Python process
-            subprocess.Popen(['python3', 'main.py'], cwd=script_dir)
+            # Restarting the bot
+            python_exe = 'python3'
+            restart_command = [python_exe, 'main.py']
+
+            # Start the bot as a new process
+            subprocess.Popen(restart_command, cwd=script_dir)
+
+            # Exit current process to allow new one to take over
             exit(0)
         else:
             print('[+] Bot is up to date')
@@ -69,12 +78,6 @@ async def on_ready():
         json.dump(queues, f, indent=4)
         print('[+] Successfully initialized queues')
 
-    # load prefixes from settings file
-    # for guild in bot.guilds:
-    #     with open(config.serversettings, 'r') as f:
-    #         settings = json.load(f)
-    #         settings = settings[str(guild.id)]
-    #     bot.command_prefix = settings['prefix']
 
 
 @bot.event
