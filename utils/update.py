@@ -50,7 +50,7 @@ def update(on_windows: bool):
     try:
         # Get the directory of the current script
         script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
+        git_command_base = ['git', '-C', script_dir]
 
         try:
             # Pull the latest changes from the remote repository
