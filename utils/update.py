@@ -3,6 +3,8 @@ import os
 import sys
 
 
+# TODO: weird stuff happening when bot updates and restarts (parent process is not killed)
+
 def check_for_updates(on_windows: bool):
     try:
         # Get the directory of the current script
@@ -61,8 +63,9 @@ def update(on_windows: bool):
             # Restarting the bot
             python_exe = 'python3' if not on_windows else 'python'
             restart_command = [python_exe, 'main.py', 'updated']
-            # Start the bot as a new process
+            # Start the bot as a new process and kill parent process
             subprocess.Popen(restart_command, cwd=script_dir)
+            sys.exit(0)
 
         except subprocess.CalledProcessError as cpe:
             print(f'[-] Git command failed: {cpe.output.strip()}')
