@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from utils import settings as Settings, queues as Queues, update
+from utils import serversettings as Settings, queues as Queues, update
 import yt_dlp
 import os
 from config import config  # Make sure this import points to your bot's configuration

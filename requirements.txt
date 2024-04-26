@@ -1,5 +1,3 @@
-PyNaCl
 discord
 yt_dlp
 ffmpeg
-json
