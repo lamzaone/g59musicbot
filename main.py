@@ -23,8 +23,6 @@ is_windows = os.name == 'nt'
 @bot.event
 async def on_ready():
     await tree.sync()
-    await tree.remove_command('prefix')
-    await tree.remove_command('volume')
     print(f'[+] Booted {bot.user}...')
     await bot.change_presence(activity=discord.Game(name="!play <song>", ), status=discord.Status.do_not_disturb)
 
@@ -84,7 +82,7 @@ async def prefix(ctx, new_prefix: str):
     Settings.set_guild_settings(ctx.guild.id, settings)
     await ctx.send(f"Prefix changed to `{new_prefix}`")
 
-#FIXME
+    #FIXED???
 @tree.command(name='prefix', description='Change the command prefix for the bot')
 async def __prefix(interaction: discord.Interaction, new_prefix: str):
     ctx = await commands.Context.from_interaction(interaction)
@@ -296,8 +294,8 @@ async def volume(ctx, volume: int = None):
         ctx.voice_client.source.volume = volume / 100
 
     await ctx.send(f":loud_sound: Volume set from `{round(current_volume)}%` to `{volume}%`")
- #FIXME   
-@tree.command(name='volume', description='Set the volume of the music')
+ #FIXME: disabled command cuz error
+#@tree.command(name='volume', description='Set the volume of the music')
 async def _volume(interaction: discord.Interaction, volume:int = None):
     ctx = await commands.Context.from_interaction(interaction)
     if volume is not None:
