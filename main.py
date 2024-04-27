@@ -23,6 +23,8 @@ is_windows = os.name == 'nt'
 @bot.event
 async def on_ready():
     await tree.sync()
+    await tree.remove_command('prefix')
+    await tree.remove_command('volume')
     print(f'[+] Booted {bot.user}...')
     await bot.change_presence(activity=discord.Game(name="!play <song>", ), status=discord.Status.do_not_disturb)
 
