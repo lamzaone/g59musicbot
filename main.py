@@ -205,9 +205,13 @@ async def play(ctx, *, query: str):
 
 @tree.command(name='play', description='Play music from YouTube using a search term or URL')
 async def _play(interaction: discord.Interaction, query: str):
-    ctx = await commands.Context.from_interaction(interaction)
-    await play(ctx, query=query)
+    # ctx = await commands.Context.from_interaction(interaction)
+    # await play(ctx, query=query)
     #await interaction.response.send_message("Playing music...", ephemeral=True)
+
+    ctx = await commands.Context.from_interaction(interaction)
+    ctx.bot = bot # Add the bot instance to the context
+    await ctx.send(f"Command currently disabled due to broken queue skipping on music end. Please use {Settings.get_settings(ctx.guild.id)['prefix']}play instead.")
 
 
 
