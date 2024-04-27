@@ -202,11 +202,11 @@ async def play(ctx, *, query: str):
             await ctx.voice_client.disconnect()
             # await ctx.send("Music stopped, queue is empty.")
 
-@tree.command(name='play', description='Play music from YouTube using a search term or URL')
-async def _play(interaction: discord.Interaction, query: str):
-    ctx = await commands.Context.from_interaction(interaction)
-    # return await play(ctx, query=query)
-    ctx.send(f"Command currently disabled, please use{Settings.get_settings(ctx.guild.id)['prefix']}play instead.")
+# @tree.command(name='play', description='Play music from YouTube using a search term or URL')
+# async def _play(interaction: discord.Interaction, query: str):
+#     ctx = await commands.Context.from_interaction(interaction)
+#     # return await play(ctx, query=query)
+#     ctx.send(f"Command currently disabled, please use{Settings.get_settings(ctx.guild.id)['prefix']}play instead.")
 
 
 
@@ -227,12 +227,12 @@ async def skip(ctx):
             ctx.voice_client.disconnect()
             await ctx.send("Music stopped, queue is empty.")
 
-@tree.command(name='skip', description='Skip the currently playing music')
-async def _skip(interaction: discord.Interaction):
-    ctx = await commands.Context.from_interaction(interaction)
-    # await skip(ctx)
-    #await interaction.response.send_message("Skipping music...", ephemeral=True)
-    ctx.send(f"Command currently disabled, please use{Settings.get_settings(ctx.guild.id)['prefix']}skip instead.")
+# @tree.command(name='skip', description='Skip the currently playing music')
+# async def _skip(interaction: discord.Interaction):
+#     ctx = await commands.Context.from_interaction(interaction)
+#     # await skip(ctx)
+#     #await interaction.response.send_message("Skipping music...", ephemeral=True)
+#     ctx.send(f"Command currently disabled, please use{Settings.get_settings(ctx.guild.id)['prefix']}skip instead.")
 
 
 
