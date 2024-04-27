@@ -19,10 +19,9 @@ bot = commands.Bot(command_prefix="", intents=config.intents)
 tree = bot.tree
 is_windows = os.name == 'nt'
 
-
 @bot.event
 async def on_ready():
-    await tree.sync()
+    await bot.tree.sync()
     print(f'[+] Booted {bot.user}...')
     await bot.change_presence(activity=discord.Game(name="!play <song>", ), status=discord.Status.do_not_disturb)
 
@@ -196,7 +195,7 @@ async def play(ctx, *, query: str):
     with open(config.queues, 'r') as f:
         queues = json.load(f)
     if len(queues[str(ctx.guild.id)]) > 0:
-        await skip(ctx)
+        return await skip(ctx)
     else:
         # ignore if already stopped
         if voice_client.is_connected():
@@ -206,7 +205,7 @@ async def play(ctx, *, query: str):
 @tree.command(name='play', description='Play music from YouTube using a search term or URL')
 async def _play(interaction: discord.Interaction, query: str):
     ctx = await commands.Context.from_interaction(interaction)
-    await play(ctx, query=query)
+    return await play(ctx, query=query)
     #await interaction.response.send_message("Playing music...", ephemeral=True)
 
 
@@ -223,7 +222,7 @@ async def skip(ctx):
             with open(config.queues, 'w') as f:
                 json.dump(queues, f, indent=4)
             ctx.voice_client.stop()
-            await play(ctx, query=query)
+            return await play(ctx, query=query)
         else:
             ctx.voice_client.disconnect()
             await ctx.send("Music stopped, queue is empty.")
