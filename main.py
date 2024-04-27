@@ -7,6 +7,7 @@ from config import config  # Make sure this import points to your bot's configur
 import asyncio
 import json
 import sys
+import nacl
 
 
 # FFmpeg path - ensure you have FFmpeg installed and update the path if needed
@@ -15,11 +16,13 @@ FFMPEG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ffmpeg.e
 # Initialize Discord bot with command prefix and intents
 
 bot = commands.Bot(command_prefix="", intents=config.intents)
+tree = bot.tree
 is_windows = os.name == 'nt'
 
 
 @bot.event
 async def on_ready():
+    await tree.sync()
     print(f'[+] Booted {bot.user}...')
     await bot.change_presence(activity=discord.Game(name="!play <song>", ), status=discord.Status.do_not_disturb)
 
@@ -71,19 +74,26 @@ async def on_guild_join(guild):
     print(f'[+] Successfully initialized config/serversettings.json for {guild.name}')
     print(f'[+] Successfully initialized config/queues.json for {guild.name}')
 
-
+### SET PREFIX COMMAND ###
 @bot.command(name='prefix', help='Change the command prefix for the bot')
 async def prefix(ctx, new_prefix: str):
     settings = Settings.get_settings(ctx.guild.id)
     settings['prefix'] = new_prefix
     Settings.set_guild_settings(ctx.guild.id, settings)
-    await ctx.send(f"Prefix changed to {new_prefix}")
+    await ctx.send(f"Prefix changed to `{new_prefix}`")
+
+#FIXME
+@tree.command(name='prefix', description='Change the command prefix for the bot')
+async def __prefix(interaction: discord.Interaction, new_prefix: str):
+    ctx = await commands.Context.from_interaction(interaction)
+    await prefix(ctx, new_prefix)
+    #await interaction.response.send_message(f"Prefix changed to {new_prefix}", ephemeral=True)
 
 
 
 
 
-
+### PLAY COMMAND ###
 @bot.command(name='play', help='Play music from YouTube using a search term or URL')
 async def play(ctx, *, query: str):
     # retrieve settings for the guild from the settings file
@@ -193,9 +203,15 @@ async def play(ctx, *, query: str):
             await ctx.voice_client.disconnect()
             # await ctx.send("Music stopped, queue is empty.")
 
+@tree.command(name='play', description='Play music from YouTube using a search term or URL')
+async def _play(interaction: discord.Interaction, query: str):
+    ctx = await commands.Context.from_interaction(interaction)
+    await play(ctx, query=query)
+    #await interaction.response.send_message("Playing music...", ephemeral=True)
 
 
 
+### SKIP COMMAND ###
 @bot.command(name='skip', help='Skip the currently playing music')
 async def skip(ctx):
     #check if the bot is connected to a voice channel and the queue is not empty
@@ -212,7 +228,15 @@ async def skip(ctx):
             ctx.voice_client.disconnect()
             await ctx.send("Music stopped, queue is empty.")
 
+@tree.command(name='skip', description='Skip the currently playing music')
+async def _skip(interaction: discord.Interaction):
+    ctx = await commands.Context.from_interaction(interaction)
+    await skip(ctx)
+    #await interaction.response.send_message("Skipping music...", ephemeral=True)
 
+
+
+### STOP COMMAND ###
 @bot.command(name='stop', help='Stop playing music and disconnect from voice channel')
 async def stop(ctx):
     if ctx.voice_client and ctx.voice_client.is_connected():
@@ -224,6 +248,14 @@ async def stop(ctx):
             json.dump(queues, f, indent=4)
         await ctx.send(":octagonal_sign: Music stopped and queue has been cleared.")
 
+@tree.command(name='stop', description='Stop playing music and disconnect from voice channel')
+async def _stop(interaction: discord.Interaction):
+    ctx = await commands.Context.from_interaction(interaction)
+    await stop(ctx)
+    #await interaction.response.send_message("Stopping music...", ephemeral=True)
+
+
+### PAUSE COMMAND ###
 @bot.command(name='pause', help='Pause the currently playing music')
 async def pause(ctx):
     if ctx.voice_client and ctx.voice_client.is_playing():
@@ -233,7 +265,14 @@ async def pause(ctx):
         ctx.voice_client.resume()
         await ctx.send(":arrow_forward: Music resumed.")
         
+@tree.command(name='pause', description='Pause the currently playing music')
+async def _pause(interaction: discord.Interaction):
+    ctx = await commands.Context.from_interaction(interaction)
+    await pause(ctx)
+    #await interaction.response.send_message("Pausing music...", ephemeral=True)
 
+
+### VOLUME COMMAND ###
 @bot.command(name='volume', help='Set the volume of the music')
 async def volume(ctx, volume: int = None):
     #change the settings for the guild in the settings file
@@ -255,14 +294,31 @@ async def volume(ctx, volume: int = None):
         ctx.voice_client.source.volume = volume / 100
 
     await ctx.send(f":loud_sound: Volume set from `{round(current_volume)}%` to `{volume}%`")
-    
+ #FIXME   
+@tree.command(name='volume', description='Set the volume of the music')
+async def _volume(interaction: discord.Interaction, volume:int = None):
+    ctx = await commands.Context.from_interaction(interaction)
+    if volume is not None:
+        await volume(ctx, volume=volume)
+    else:
+        await volume(ctx)
+    #await interaction.response.send_message("Changing volume...", ephemeral=True)
 
 
-
+### PING COMMAND ###
 @bot.command(name='ping', help='Check the bot\'s latency')
 async def ping(ctx):
     await ctx.send(f'ping: `{round(bot.latency * 1000)}ms` | websocket: `{round(bot.ws.latency * 1000)}ms`')
 
+@tree.command(name='ping', description='Check the bot\'s latency')
+async def _ping(interaction: discord.Interaction):
+    ctx = await commands.Context.from_interaction(interaction)
+    await ping(ctx)
+    #await interaction.response.send_message("Checking ping...", ephemeral=True)
+
+
+
+### SEEK COMMAND ###
 @bot.command(name='seek', help='Set the playback position to a specific time in seconds')
 async def seek(ctx, seconds: int):
     # Ensure there is a voice client playing music
@@ -293,12 +349,21 @@ async def seek(ctx, seconds: int):
     else:
         await ctx.send(":x: No music is currently playing.")
 
+@tree.command(name='seek', description='Set the playback position to a specific time in seconds')
+async def _seek(interaction: discord.Interaction, seconds: int):
+    ctx = await commands.Context.from_interaction(interaction)
+    await seek(ctx, seconds=seconds)
+    #await interaction.response.send_message("Seeking music...", ephemeral=True)
+
+
+
 @bot.event
 async def on_message(message):
     prefix = Settings.get_settings(message.guild.id)['prefix']
     if message.content.startswith(prefix):
         message.content = message.content[len(prefix):]
         await bot.process_commands(message)
+
 
 
 
