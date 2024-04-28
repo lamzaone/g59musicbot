@@ -196,12 +196,10 @@ async def play_song(interaction, query):
         with yt_dlp.YoutubeDL(config.YTDL_OPTS) as ydl:
             info = musicplayer.extract_yt_info(query)
             video_url = info['url']
-
-            audio_source = discord.FFmpegPCMAudio(
-                video_url,
-                executable=config.FFMPEG_PATH if is_windows else None,
-                **config.ffmpeg_options
-            )
+            if is_windows:
+                audio_source = discord.FFmpegPCMAudio(video_url,executable=config.FFMPEG_PATH,**config.ffmpeg_options)
+            else:
+                audio_source = discord.FFmpegPCMAudio(video_url, **config.ffmpeg_options)
 
             ctx.bot.video_info = info
             ctx.bot.video_url = video_url
