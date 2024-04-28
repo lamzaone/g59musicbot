@@ -102,33 +102,34 @@ async def play(ctx, *, query: str):
             return
     
 
-    if ctx.voice_client.is_playing() or ctx.voice_client.is_paused():
-        try:
-            if ctx.voice_client.is_paused():
-                await ctx.send("reminder: Music is currently paused. use `/pause` to resume")
-            info = musicplayer.extract_yt_info(query)
-            queue = Queues.get_queue(ctx.guild.id)
-            queue.append({'title': info['title'], 'url': info['original_url']})
-            Queues.update_queue(ctx.guild.id, queue)
-            await ctx.send(f":white_check_mark: Added `{info['title']}` to the queue.")
-            return
-        except Exception as e:
-            print(f"[-] An error occurred while adding to queue: {e}")
-            await ctx.send(":x: An error occurred while adding the song to the queue.") 
-            return
-        except TypeError:
-            pass
+    async with ctx.typing():
+        if ctx.voice_client.is_playing() or ctx.voice_client.is_paused():
+            try:
+                if ctx.voice_client.is_paused():
+                    await ctx.send("reminder: Music is currently paused. use `/pause` to resume")
+                info = musicplayer.extract_yt_info(query)
+                queue = Queues.get_queue(ctx.guild.id)
+                queue.append({'title': info['title'], 'url': info['original_url']})
+                Queues.update_queue(ctx.guild.id, queue)
+                await ctx.send(f":white_check_mark: Added `{info['title']}` to the queue.")
+                return
+            except Exception as e:
+                print(f"[-] An error occurred while adding to queue: {e}")
+                await ctx.send(":x: An error occurred while adding the song to the queue.") 
+                return
+            except TypeError:
+                pass
 
-    info = musicplayer.extract_yt_info(query)
-    ctx.bot.video_info = info
-    ctx.bot.video_url = info['url']
-    if is_windows:
-        audio_source = discord.FFmpegPCMAudio(info['url'], executable=config.FFMPEG_PATH, **config.ffmpeg_options)
-    else:
-        audio_source = discord.FFmpegPCMAudio(info['url'], **config.ffmpeg_options)
-    audio_source = discord.PCMVolumeTransformer(audio_source, Settings.get_settings(ctx.guild.id)['volume'])
-    ctx.voice_client.play(audio_source)
-    await ctx.send(f":arrow_forward: Now playing `{info['title']}` \n{info['original_url']}")
+        info = musicplayer.extract_yt_info(query)
+        ctx.bot.video_info = info
+        ctx.bot.video_url = info['url']
+        if is_windows:
+            audio_source = discord.FFmpegPCMAudio(info['url'], executable=config.FFMPEG_PATH, **config.ffmpeg_options)
+        else:
+            audio_source = discord.FFmpegPCMAudio(info['url'], **config.ffmpeg_options)
+        audio_source = discord.PCMVolumeTransformer(audio_source, Settings.get_settings(ctx.guild.id)['volume'])
+        ctx.voice_client.play(audio_source)
+        await ctx.send(f":arrow_forward: Now playing `{info['title']}` \n{info['original_url']}")
     
     try:
         while ctx.voice_client.is_playing() or ctx.voice_client.is_paused():
