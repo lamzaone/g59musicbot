@@ -122,7 +122,10 @@ async def play(ctx, *, query: str):
     info = musicplayer.extract_yt_info(query)
     ctx.bot.video_info = info
     ctx.bot.video_url = info['url']
-    audio_source = discord.FFmpegPCMAudio(info['url'], executable=config.FFMPEG_PATH, **config.ffmpeg_options)
+    if is_windows:
+        audio_source = discord.FFmpegPCMAudio(info['url'], executable=config.FFMPEG_PATH, **config.ffmpeg_options)
+    else:
+        audio_source = discord.FFmpegPCMAudio(info['url'], **config.ffmpeg_options)
     audio_source = discord.PCMVolumeTransformer(audio_source, Settings.get_settings(ctx.guild.id)['volume'])
     ctx.voice_client.play(audio_source)
     await ctx.send(f":arrow_forward: Now playing `{info['title']}` \n{info['original_url']}")
