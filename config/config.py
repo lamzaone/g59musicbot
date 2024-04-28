@@ -9,7 +9,9 @@ current_folder = os.path.dirname(os.path.abspath(__file__))
 serversettings = os.path.join(current_folder, 'serversettings.json')
 queues = os.path.join(current_folder, 'queues.json')
 token_file = os.path.join(current_folder, 'bot_token.txt')
+FFMPEG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'ffmpeg.exe')
 bot_token=''
+
 
 def init():
     global bot_token

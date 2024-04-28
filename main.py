@@ -11,7 +11,6 @@ import nacl
 
 
 # FFmpeg path - ensure you have FFmpeg installed and update the path if needed
-FFMPEG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ffmpeg.exe')
 
 # Initialize Discord bot with command prefix and intents
 
@@ -21,10 +20,9 @@ is_windows = os.name == 'nt'
 
 @bot.event
 async def on_ready():
-    
     print(f'[+] Booted {bot.user}...')
     await bot.change_presence(activity=discord.Game(name="!play <song>", ), status=discord.Status.do_not_disturb)
-
+    tree.sync()
     # Reset queues and fetch settings for all guilds
     queues = {}
     settings = Settings.get_settings_all()
@@ -33,7 +31,6 @@ async def on_ready():
     # Initialize settings for all guilds
     try:
         for guild in bot.guilds:
-            await bot.tree.sync(guild=guild)
             if Settings.get_settings(guild.id) is None:
                 settings[str(guild.id)] = Settings.default_settings
         Settings.set_all_settings(settings)
@@ -104,8 +101,10 @@ async def play(ctx, *, query: str):
             return
     
 
-    if ctx.voice_client.is_playing():
+    if ctx.voice_client.is_playing() or ctx.voice_client.is_paused():
         try:
+            if ctx.voice_client.is_paused():
+                await ctx.send("reminder: Music is currently paused. use `/pause` to resume")
             info = musicplayer.extract_yt_info(query)
             queue = Queues.get_queue(ctx.guild.id)
             queue.append({'title': info['title'], 'url': info['original_url']})
@@ -122,18 +121,20 @@ async def play(ctx, *, query: str):
     info = musicplayer.extract_yt_info(query)
     ctx.bot.video_info = info
     ctx.bot.video_url = info['url']
-    audio_source = discord.FFmpegPCMAudio(info['url'], executable=FFMPEG_PATH, **config.ffmpeg_options)
+    audio_source = discord.FFmpegPCMAudio(info['url'], executable=config.FFMPEG_PATH, **config.ffmpeg_options)
     audio_source = discord.PCMVolumeTransformer(audio_source, Settings.get_settings(ctx.guild.id)['volume'])
     ctx.voice_client.play(audio_source)
     await ctx.send(f":arrow_forward: Now playing `{info['title']}` \n{info['original_url']}")
     
     try:
-        while ctx.voice_client.is_playing():
+        while ctx.voice_client.is_playing() or ctx.voice_client.is_paused():
             await asyncio.sleep(1)
         queue = Queues.get_queue(ctx.guild.id)
         if len(queue) > 0:
             next_song = Queues.next_song(ctx.guild.id)
             await play(ctx, query=next_song['url'])
+        else:
+            await ctx.voice_client.disconnect()
     except Exception as e:
         print(f"[-] An error occurred while playing music: {e}")
 
@@ -257,7 +258,7 @@ async def seek(ctx, seconds: int):
             ffmpeg_opts = {**config.ffmpeg_options, "options": f"{config.ffmpeg_options['options']} {seek_time}"}
 
             if is_windows:
-                audio_source = discord.FFmpegPCMAudio(ctx.bot.video_url, executable=FFMPEG_PATH , **ffmpeg_opts)
+                audio_source = discord.FFmpegPCMAudio(ctx.bot.video_url, executable=config.FFMPEG_PATH , **ffmpeg_opts)
             else:
                 audio_source = discord.FFmpegPCMAudio(ctx.bot.video_url, **ffmpeg_opts)
             audio_source = discord.PCMVolumeTransformer(audio_source, settings['volume'])
