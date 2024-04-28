@@ -91,7 +91,7 @@ YTDL_OPTS = {
     'logtostderr': False,
     'quiet': False,
     'no_warnings': True,
-    'default_search': 'auto',
+    'default_search': 'ytsearch:',
     'source_address': '0.0.0.0',  
     'force-ipv4': True,
     'preferredcodec': 'wav',
@@ -103,12 +103,29 @@ YTDL_OPTS = {
     'quality': 'highestaudio',
     'postprocessors': [{
         'key': 'FFmpegExtractAudio',
-        'preferredcodec': 'wav',
-        'preferredquality': '320',
+        'preferredcodec': 'mp3',
+        'preferredquality': '256',
     }],
     'bitdepth': 24,
     
 }
+
+YTDL_SOUNDCLOUD_OPTS = {
+    'format': 'bestaudio/best',
+    'restrictfilenames': False,
+    'noplaylist': True,
+    'nocheckcertificate': True,
+    'ignoreerrors': False,
+    'logtostderr': False,
+    'quiet': False,
+    'no_warnings': True,
+    'force-ipv4': True,
+    'preferredcodec': 'mp3',
+    'preferredquality': '256',
+    'timeout': 60,
+    'default_search': 'soundcloud',
+    'source_address': '0.0.0.0'
+    }
 
 intents = discord.Intents.default()
 intents.message_content = True

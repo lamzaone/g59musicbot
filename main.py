@@ -90,10 +90,10 @@ async def __prefix(interaction: discord.Interaction, new_prefix: str):
 
 
 
-
 ### PLAY COMMAND ###
 @bot.command(name='play', help='Play music from YouTube using a search term or URL')
 async def play(ctx, *, query: str):
+
     if ctx.voice_client is None:
         if ctx.author.voice:
             await ctx.author.voice.channel.connect()
@@ -101,13 +101,12 @@ async def play(ctx, *, query: str):
             await ctx.send(":x: You are not connected to a voice channel.")
             return
     
-
     async with ctx.typing():
         if ctx.voice_client.is_playing() or ctx.voice_client.is_paused():
             try:
                 if ctx.voice_client.is_paused():
                     await ctx.send("reminder: Music is currently paused. use `/pause` to resume")
-                info = musicplayer.extract_yt_info(query)
+                info = musicplayer.get_info(query)
                 queue = Queues.get_queue(ctx.guild.id)
                 queue.append({'title': info['title'], 'url': info['original_url']})
                 Queues.update_queue(ctx.guild.id, queue)
@@ -119,8 +118,8 @@ async def play(ctx, *, query: str):
                 return
             except TypeError:
                 pass
-
-        info = musicplayer.extract_yt_info(query)
+        
+        info = musicplayer.get_info(query)
         ctx.bot.video_info = info
         ctx.bot.video_url = info['url']
         if is_windows:
@@ -151,7 +150,6 @@ async def _play(interaction: discord.Interaction, query: str):
     # Ensure the interaction is acknowledged only once
     if not interaction.response.is_done():
         await interaction.response.defer(thinking=True)  # Acknowledge the interaction with a "thinking" state
-
     
     if interaction.guild:
         #check if bot is connected to a voice channel
@@ -170,7 +168,7 @@ async def _play(interaction: discord.Interaction, query: str):
         #check if music is playing or paused to add music to Queue instead of playing
         if voice_client.is_playing() or voice_client.is_paused():
             try:
-                info = musicplayer.extract_yt_info(query)
+                info = musicplayer.get_info(query)
                 queue = Queues.get_queue(interaction.guild.id)
                 queue.append({"title": info['title'], "url": info['original_url']})
                 Queues.update_queue(interaction.guild.id, queue)
@@ -180,10 +178,11 @@ async def _play(interaction: discord.Interaction, query: str):
                 await interaction.followup.send(":x: An error occurred while adding to the queue.", ephemeral=False)
                 print(f"Error adding to queue: {e}")
                 return #exit the function
-
+            
     # Call the play_song function ( because if i try writing all the logic inside _play, i can't recursively call it from itself :( )
     await play_song(interaction, query)
 
+### START PLAYING SONG FUNCTION ###
 async def play_song(interaction, query):
     # get voice client
     voice_client = discord.utils.get(bot.voice_clients, guild=interaction.guild)
@@ -194,7 +193,7 @@ async def play_song(interaction, query):
     ctx = await commands.Context.from_interaction(interaction)
     try:
         with yt_dlp.YoutubeDL(config.YTDL_OPTS) as ydl:
-            info = musicplayer.extract_yt_info(query)
+            info = musicplayer.get_info(query)
             video_url = info['url']
             if is_windows:
                 audio_source = discord.FFmpegPCMAudio(video_url,executable=config.FFMPEG_PATH,**config.ffmpeg_options)
@@ -236,6 +235,7 @@ async def skip(ctx):
         await ctx.send(":fast_forward: Skipped the current song.")
     else:
         await ctx.send(":x: No music is currently playing.")
+
 @tree.command(name='skip', description='Skip the current song and play the next one in the queue')
 async def _skip(interaction: discord.Interaction):
     ctx = await commands.Context.from_interaction(interaction)
@@ -281,7 +281,7 @@ async def _pause(interaction: discord.Interaction):
 
 ### VOLUME COMMAND ###
 @bot.command(name='volume', help='Set the volume of the music')
-async def volume(ctx, volume: int = None):
+async def _volume(ctx, volume: int = None):
     #change the settings for the guild in the settings file
     settings = Settings.get_settings(ctx.guild.id)
 
@@ -304,13 +304,11 @@ async def volume(ctx, volume: int = None):
 
 
 #FIXME: disabled command cuz error
-#@tree.command(name='volume', description='Set the volume of the music')
-async def _volume(interaction: discord.Interaction, volume:int = None):
+@tree.command(name='volume', description='Set the volume of the music')
+async def __volume(interaction: discord.Interaction, volume:int = None):
     ctx = await commands.Context.from_interaction(interaction)
-    if volume is not None:
-        await volume(ctx, volume=volume)
-    else:
-        await volume(ctx)
+    print(ctx)
+    await _volume(ctx,volume if volume is not None else None)
     #await interaction.response.send_message("Changing volume...", ephemeral=False)
 
 
