@@ -96,6 +96,7 @@ YTDL_OPTS = {
     'force-ipv4': True,
     'preferredcodec': 'wav',
     'preferredquality': '320',
+    'timeout': 60,
     'cachedir': True,
     'expiretime': 3600,
     'cookiefile': 'cookies.txt',
