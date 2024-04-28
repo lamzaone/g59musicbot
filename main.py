@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from utils import serversettings as Settings, queues as Queues, update
+from utils import serversettings as Settings, queues as Queues, update, musicplayer
 import yt_dlp
 import os
 from config import config  # Make sure this import points to your bot's configuration
@@ -21,7 +21,7 @@ is_windows = os.name == 'nt'
 
 @bot.event
 async def on_ready():
-    await bot.tree.sync()
+    
     print(f'[+] Booted {bot.user}...')
     await bot.change_presence(activity=discord.Game(name="!play <song>", ), status=discord.Status.do_not_disturb)
 
@@ -33,6 +33,7 @@ async def on_ready():
     # Initialize settings for all guilds
     try:
         for guild in bot.guilds:
+            await bot.tree.sync(guild=guild)
             if Settings.get_settings(guild.id) is None:
                 settings[str(guild.id)] = Settings.default_settings
         Settings.set_all_settings(settings)
@@ -95,147 +96,67 @@ async def __prefix(interaction: discord.Interaction, new_prefix: str):
 ### PLAY COMMAND ###
 @bot.command(name='play', help='Play music from YouTube using a search term or URL')
 async def play(ctx, *, query: str):
-    # retrieve settings for the guild from the settings file
-    settings = Settings.get_settings(ctx.guild.id)
-    # Connect to the voice channel
-    if not ctx.author.voice:
-        await ctx.send("You must be in a voice channel to play music.")
-        return
+    if ctx.voice_client is None:
+        if ctx.author.voice:
+            await ctx.author.voice.channel.connect()
+        else:
+            await ctx.send(":x: You are not connected to a voice channel.")
+            return
     
-    voice_channel = ctx.author.voice.channel
-    if ctx.voice_client is None or not ctx.voice_client.is_connected():
-        await voice_channel.connect()
 
-    voice_client = ctx.voice_client
+    if ctx.voice_client.is_playing():
+        try:
+            info = musicplayer.extract_yt_info(query)
+            queue = Queues.get_queue(ctx.guild.id)
+            queue.append({'title': info['title'], 'url': info['original_url']})
+            Queues.update_queue(ctx.guild.id, queue)
+            await ctx.send(f":white_check_mark: Added `{info['title']}` to the queue.")
+            return
+        except Exception as e:
+            print(f"[-] An error occurred while adding to queue: {e}")
+            await ctx.send(":x: An error occurred while adding the song to the queue.") 
+            return
+        except TypeError:
+            pass
 
-    
-    # Trigger bot typing status
-
-    
-    # check if bot is playing music
-    if voice_client.is_playing() and ("youtube.com/watch?" in query or "youtu.be/" in query):
-        async with ctx.typing():
-            try:
-                with yt_dlp.YoutubeDL(config.YTDL_OPTS) as ydl:
-                        info = ydl.extract_info(query, download=False)
-                        original_url = info['original_url']
-                        title = info['title']
-                        with open(config.queues, 'r') as f:
-                            queues = json.load(f)
-                        queues[str(ctx.guild.id)].append({"title": title, "original_url": original_url})
-                        with open(config.queues, 'w') as f:
-                            json.dump(queues, f, indent=4)
-                        await ctx.send(f":notes: Added `{title}` to the queue.")
-                return
-            except Exception as e:
-                await ctx.send("An error occurred while trying to retrieve the music info.")
-                return
-    elif voice_client.is_playing():
-        async with ctx.typing():
-            try:
-                with yt_dlp.YoutubeDL(config.YTDL_OPTS) as ydl:
-                    info = ydl.extract_info(query, download=False)['entries'][0]
-                    original_url = info['original_url']
-                    title = info['title']
-                    url = info['url']
-                    with open(config.queues, 'r') as f:
-                        queues = json.load(f)
-                    queues[str(ctx.guild.id)].append({"title": title, "original_url": original_url})
-                    with open(config.queues, 'w') as f:
-                        json.dump(queues, f, indent=4)
-                    await ctx.send(f":notes: Added `{title}` to the queue.")
-                return
-            except Exception as e:
-                await ctx.send("An error occurred while trying to retrieve the music info.")
-                return
-
+    info = musicplayer.extract_yt_info(query)
+    ctx.bot.video_info = info
+    ctx.bot.video_url = info['url']
+    audio_source = discord.FFmpegPCMAudio(info['url'], executable=FFMPEG_PATH, **config.ffmpeg_options)
+    audio_source = discord.PCMVolumeTransformer(audio_source, Settings.get_settings(ctx.guild.id)['volume'])
+    ctx.voice_client.play(audio_source)
+    await ctx.send(f":arrow_forward: Now playing `{info['title']}` \n{info['original_url']}")
     
     try:
-        with yt_dlp.YoutubeDL(config.YTDL_OPTS) as ydl:
-            async with ctx.typing():
-                if type(query) == str:
-                    if "youtube.com/watch?" in query or "youtu.be/" in query:
-                        info = ydl.extract_info(query, download=False)
-                    else:
-                        info = ydl.extract_info(query, download=False)['entries'][0]
-
-                    video_url = info['url']
-
-                    ctx.bot.video_info = info
-                    ctx.bot.video_url = video_url
-                    # Play the audio using FFmpeg
-                    if is_windows:
-                        audio_source = discord.FFmpegPCMAudio(video_url, executable=FFMPEG_PATH, **config.ffmpeg_options)
-                    else:
-                        audio_source = discord.FFmpegPCMAudio(video_url, **config.ffmpeg_options)
-                    audio_source = discord.PCMVolumeTransformer(audio_source, settings['volume'])
-                    voice_client.play(audio_source)
-                    await ctx.send(f":notes: Now playing: `{info['title']}` \n {info['original_url']}")
-                else:
-                    info = ydl.extract_info(query['original_url'], download=False)
-                    video_url = info['url']
-                    if is_windows:
-                        audio_source = discord.FFmpegPCMAudio(video_url, executable=FFMPEG_PATH, **config.ffmpeg_options)
-                    else:
-                        audio_source = discord.FFmpegPCMAudio(video_url, **config.ffmpeg_options)
-                    
-                    ctx.bot.video_url = video_url
-                    audio_source = discord.PCMVolumeTransformer(audio_source, settings['volume'])
-                    voice_client.play(audio_source)
-                    await ctx.send(f":notes: Now playing: `{query['title']}` \n {query['original_url']}")
+        while ctx.voice_client.is_playing():
+            await asyncio.sleep(1)
+        queue = Queues.get_queue(ctx.guild.id)
+        if len(queue) > 0:
+            next_song = Queues.next_song(ctx.guild.id)
+            await play(ctx, query=next_song['url'])
     except Exception as e:
-        await ctx.send("An error occurred while trying to play the music.")
-        print(f'Error playing music: {e}')
+        print(f"[-] An error occurred while playing music: {e}")
 
-
-    while voice_client.is_connected() and (voice_client.is_playing() or ctx.voice_client.is_paused()):
-        await asyncio.sleep(1)
-
-    #play next song in queue
-    with open(config.queues, 'r') as f:
-        queues = json.load(f)
-    if len(queues[str(ctx.guild.id)]) > 0:
-        return await skip(ctx)
-    else:
-        # ignore if already stopped
-        if voice_client.is_connected():
-            await ctx.voice_client.disconnect()
-            # await ctx.send("Music stopped, queue is empty.")
-
-# @tree.command(name='play', description='Play music from YouTube using a search term or URL')
-# async def _play(interaction: discord.Interaction, query: str):
-#     ctx = await commands.Context.from_interaction(interaction)
-#     # return await play(ctx, query=query)
-#     ctx.send(f"Command currently disabled, please use{Settings.get_settings(ctx.guild.id)['prefix']}play instead.")
+@tree.command(name='play', description='Play music from YouTube using a search term or URL')
+async def _play(interaction: discord.Interaction, query: str):
+    ctx = await commands.Context.from_interaction(interaction)
+    await play(ctx, query=query)
 
 
 
-### SKIP COMMAND ###
-@bot.command(name='skip', help='Skip the currently playing music')
+
+@bot.command(name='skip', help='Skip the current song and play the next one in the queue')
 async def skip(ctx):
-    #check if the bot is connected to a voice channel and the queue is not empty
-    if ctx.voice_client.is_connected():
-        with open(config.queues, 'r') as f:
-            queues = json.load(f)
-        if len(queues) > 0:
-            query = queues[str(ctx.guild.id)].pop(0)
-            with open(config.queues, 'w') as f:
-                json.dump(queues, f, indent=4)
-            ctx.voice_client.stop()
-            return await play(ctx, query=query)
-        else:
-            ctx.voice_client.disconnect()
-            await ctx.send("Music stopped, queue is empty.")
-
-# @tree.command(name='skip', description='Skip the currently playing music')
-# async def _skip(interaction: discord.Interaction):
-#     ctx = await commands.Context.from_interaction(interaction)
-#     # await skip(ctx)
-#     #await interaction.response.send_message("Skipping music...", ephemeral=True)
-#     ctx.send(f"Command currently disabled, please use{Settings.get_settings(ctx.guild.id)['prefix']}skip instead.")
-
-
-
+    if ctx.voice_client and ctx.voice_client.is_playing():
+        ctx.voice_client.stop()
+        await ctx.send(":fast_forward: Skipped the current song.")
+    else:
+        await ctx.send(":x: No music is currently playing.")
+@tree.command(name='skip', description='Skip the current song and play the next one in the queue')
+async def _skip(interaction: discord.Interaction):
+    ctx = await commands.Context.from_interaction(interaction)
+    await skip(ctx)
+        
 ### STOP COMMAND ###
 @bot.command(name='stop', help='Stop playing music and disconnect from voice channel')
 async def stop(ctx):
