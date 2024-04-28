@@ -146,7 +146,7 @@ async def play(ctx, *, query: str):
 async def _play(interaction: discord.Interaction, query: str):
     ctx = await commands.Context.from_interaction(interaction)
     # await play(ctx, query=query)
-    await ctx.send(f"This command is disabled for now. Please use {Settings.get_settings(ctx.guild.id)['prefix']}play instead. \nThank you for your understanding. <a:pepe_rain:878510483148251137>")
+    await ctx.send(f":broken_heart: This command is disabled for now. Please use `{Settings.get_settings(ctx.guild.id)['prefix']}play` instead. \nThank you for your understanding.")
 
 
 
