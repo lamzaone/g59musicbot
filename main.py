@@ -85,7 +85,7 @@ async def prefix(ctx, new_prefix: str):
 async def __prefix(interaction: discord.Interaction, new_prefix: str):
     ctx = await commands.Context.from_interaction(interaction)
     await prefix(ctx, new_prefix)
-    #await interaction.response.send_message(f"Prefix changed to {new_prefix}", ephemeral=True)
+    #await interaction.response.send_message(f"Prefix changed to {new_prefix}", ephemeral=False)
 
 
 
@@ -143,43 +143,52 @@ async def play(ctx, *, query: str):
     except Exception as e:
         print(f"[-] An error occurred while playing music: {e}")
 
+
+
+### /PLAY COMMAND ###
 @tree.command(name='play', description='Play music from YouTube using a search term or URL')
 async def _play(interaction: discord.Interaction, query: str):
     # Ensure the interaction is acknowledged only once
     if not interaction.response.is_done():
         await interaction.response.defer(thinking=True)  # Acknowledge the interaction with a "thinking" state
 
-    # Ensure the bot is in a voice channel
+    
     if interaction.guild:
+        #check if bot is connected to a voice channel
         voice_client = discord.utils.get(bot.voice_clients, guild=interaction.guild)
         if voice_client is None:
+            #connect to the voice channel of the user
             if interaction.user.voice:
                 await interaction.user.voice.channel.connect()
             else:
-                await interaction.followup.send(":x: You must be in a voice channel.", ephemeral=True)
+                await interaction.followup.send(":x: You must be in a voice channel.", ephemeral=False)
                 return
         
+        #get voice channel again after connecting
         voice_client = discord.utils.get(bot.voice_clients, guild=interaction.guild)
+
+        #check if music is playing or paused to add music to Queue instead of playing
         if voice_client.is_playing() or voice_client.is_paused():
             try:
                 info = musicplayer.extract_yt_info(query)
                 queue = Queues.get_queue(interaction.guild.id)
                 queue.append({"title": info['title'], "url": info['original_url']})
                 Queues.update_queue(interaction.guild.id, queue)
-                await interaction.followup.send(f":white_check_mark: Added `{info['title']}` to the queue.", ephemeral=True)
-                return
+                await interaction.followup.send(f":white_check_mark: Added `{info['title']}` to the queue.", ephemeral=False)
+                return #exit the function
             except Exception as e:
-                await interaction.followup.send(":x: An error occurred while adding to the queue.", ephemeral=True)
+                await interaction.followup.send(":x: An error occurred while adding to the queue.", ephemeral=False)
                 print(f"Error adding to queue: {e}")
-                return
+                return #exit the function
 
+    # Call the play_song function ( because if i try writing all the logic inside _play, i can't recursively call it from itself :( )
     await play_song(interaction, query)
 
 async def play_song(interaction, query):
-    # Play a song
+    # get voice client
     voice_client = discord.utils.get(bot.voice_clients, guild=interaction.guild)
     if not voice_client:
-        await interaction.followup.send(":x: The bot is not connected to a voice channel.", ephemeral=True)
+        await interaction.followup.send(":x: The bot is not connected to a voice channel.", ephemeral=False)
         return
 
     ctx = await commands.Context.from_interaction(interaction)
@@ -203,7 +212,7 @@ async def play_song(interaction, query):
                 await asyncio.sleep(1)
             await on_song_end(interaction)
     except Exception as e:
-        await interaction.followup.send(":x: Error playing music.", ephemeral=True)
+        await interaction.followup.send(":x: Error playing music.", ephemeral=False)
         print(f"Error playing music: {e}")
 
 ### ON SONG END HANDLER ###
@@ -252,7 +261,7 @@ async def stop(ctx):
 async def _stop(interaction: discord.Interaction):
     ctx = await commands.Context.from_interaction(interaction)
     await stop(ctx)
-    #await interaction.response.send_message("Stopping music...", ephemeral=True)
+    #await interaction.response.send_message("Stopping music...", ephemeral=False)
 
 
 ### PAUSE COMMAND ###
@@ -269,7 +278,7 @@ async def pause(ctx):
 async def _pause(interaction: discord.Interaction):
     ctx = await commands.Context.from_interaction(interaction)
     await pause(ctx)
-    #await interaction.response.send_message("Pausing music...", ephemeral=True)
+    #await interaction.response.send_message("Pausing music...", ephemeral=False)
 
 
 ### VOLUME COMMAND ###
@@ -304,7 +313,7 @@ async def _volume(interaction: discord.Interaction, volume:int = None):
         await volume(ctx, volume=volume)
     else:
         await volume(ctx)
-    #await interaction.response.send_message("Changing volume...", ephemeral=True)
+    #await interaction.response.send_message("Changing volume...", ephemeral=False)
 
 
 ### PING COMMAND ###
@@ -316,7 +325,7 @@ async def ping(ctx):
 async def _ping(interaction: discord.Interaction):
     ctx = await commands.Context.from_interaction(interaction)
     await ping(ctx)
-    #await interaction.response.send_message("Checking ping...", ephemeral=True)
+    #await interaction.response.send_message("Checking ping...", ephemeral=False)
 
 
 
@@ -392,7 +401,7 @@ async def sync(ctx: commands.Context, guilds: commands.Greedy[discord.Object], s
 async def _seek(interaction: discord.Interaction, seconds: int):
     ctx = await commands.Context.from_interaction(interaction)
     await seek(ctx, seconds=seconds)
-    #await interaction.response.send_message("Seeking music...", ephemeral=True)
+    #await interaction.response.send_message("Seeking music...", ephemeral=False)
 
 
 
