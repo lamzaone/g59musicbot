@@ -142,11 +142,82 @@ async def play(ctx, *, query: str):
             await ctx.voice_client.disconnect()
     except Exception as e:
         print(f"[-] An error occurred while playing music: {e}")
+
 @tree.command(name='play', description='Play music from YouTube using a search term or URL')
 async def _play(interaction: discord.Interaction, query: str):
+    # Ensure the interaction is acknowledged only once
+    if not interaction.response.is_done():
+        await interaction.response.defer(thinking=True)  # Acknowledge the interaction with a "thinking" state
+
+    # Ensure the bot is in a voice channel
+    if interaction.guild:
+        voice_client = discord.utils.get(bot.voice_clients, guild=interaction.guild)
+        if voice_client is None:
+            if interaction.user.voice:
+                await interaction.user.voice.channel.connect()
+            else:
+                await interaction.followup.send(":x: You must be in a voice channel.", ephemeral=True)
+                return
+        
+        voice_client = discord.utils.get(bot.voice_clients, guild=interaction.guild)
+        if voice_client.is_playing() or voice_client.is_paused():
+            try:
+                info = musicplayer.extract_yt_info(query)
+                queue = Queues.get_queue(interaction.guild.id)
+                queue.append({"title": info['title'], "url": info['original_url']})
+                Queues.update_queue(interaction.guild.id, queue)
+                await interaction.followup.send(f":white_check_mark: Added `{info['title']}` to the queue.", ephemeral=True)
+                return
+            except Exception as e:
+                await interaction.followup.send(":x: An error occurred while adding to the queue.", ephemeral=True)
+                print(f"Error adding to queue: {e}")
+                return
+
+    await play_song(interaction, query)
+
+async def play_song(interaction, query):
+    # Play a song
+    voice_client = discord.utils.get(bot.voice_clients, guild=interaction.guild)
+    if not voice_client:
+        await interaction.followup.send(":x: The bot is not connected to a voice channel.", ephemeral=True)
+        return
+
     ctx = await commands.Context.from_interaction(interaction)
-    # await play(ctx, query=query)
-    await ctx.send(f":broken_heart: This command is disabled for now. Please use `{Settings.get_settings(ctx.guild.id)['prefix']}play` instead. \nThank you for your understanding.")
+    try:
+        with yt_dlp.YoutubeDL(config.YTDL_OPTS) as ydl:
+            info = musicplayer.extract_yt_info(query)
+            video_url = info['url']
+
+            audio_source = discord.FFmpegPCMAudio(
+                video_url,
+                executable=config.FFMPEG_PATH if is_windows else None,
+                **config.ffmpeg_options
+            )
+
+            ctx.bot.video_info = info
+            ctx.bot.video_url = video_url
+            audio_source = discord.PCMVolumeTransformer(audio_source, Settings.get_settings(interaction.guild.id)['volume'])
+            voice_client.play(audio_source)
+            await interaction.followup.send(f":arrow_forward: Now playing `{info['title']}` \n{info['original_url']}")
+            while voice_client.is_playing() or voice_client.is_paused():
+                await asyncio.sleep(1)
+            await on_song_end(interaction)
+    except Exception as e:
+        await interaction.followup.send(":x: Error playing music.", ephemeral=True)
+        print(f"Error playing music: {e}")
+
+### ON SONG END HANDLER ###
+async def on_song_end(interaction):
+    voice_client = discord.utils.get(bot.voice_clients, guild=interaction.guild)
+    if voice_client and voice_client.is_connected():
+        queue = Queues.get_queue(interaction.guild.id)
+        
+        if queue:
+            next_song = queue.pop(0)  # Get the next song
+            Queues.update_queue(interaction.guild.id, queue)  # Save the queue
+            await play_song(interaction, next_song['url'])  # Play the next song
+        else:
+            await voice_client.disconnect()  # Disconnect if the queue is empty
 
 
 
