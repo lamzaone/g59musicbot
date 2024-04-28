@@ -8,6 +8,7 @@ import asyncio
 import json
 import sys
 import nacl
+from typing import Literal, Optional
 
 
 # FFmpeg path - ensure you have FFmpeg installed and update the path if needed
@@ -20,9 +21,9 @@ is_windows = os.name == 'nt'
 
 @bot.event
 async def on_ready():
+    await tree.sync()
     print(f'[+] Booted {bot.user}...')
     await bot.change_presence(activity=discord.Game(name="!play <song>", ), status=discord.Status.do_not_disturb)
-    tree.sync()
     # Reset queues and fetch settings for all guilds
     queues = {}
     settings = Settings.get_settings_all()
@@ -137,7 +138,6 @@ async def play(ctx, *, query: str):
             await ctx.voice_client.disconnect()
     except Exception as e:
         print(f"[-] An error occurred while playing music: {e}")
-
 @tree.command(name='play', description='Play music from YouTube using a search term or URL')
 async def _play(interaction: discord.Interaction, query: str):
     ctx = await commands.Context.from_interaction(interaction)
@@ -145,7 +145,7 @@ async def _play(interaction: discord.Interaction, query: str):
 
 
 
-
+### SKIP COMMAND ###
 @bot.command(name='skip', help='Skip the current song and play the next one in the queue')
 async def skip(ctx):
     if ctx.voice_client and ctx.voice_client.is_playing():
@@ -158,17 +158,19 @@ async def _skip(interaction: discord.Interaction):
     ctx = await commands.Context.from_interaction(interaction)
     await skip(ctx)
         
+
+
 ### STOP COMMAND ###
 @bot.command(name='stop', help='Stop playing music and disconnect from voice channel')
 async def stop(ctx):
     if ctx.voice_client and ctx.voice_client.is_connected():
-        await ctx.voice_client.disconnect()
-        with open(config.queues, 'r') as f:
-            queues = json.load(f)
-            queues[str(ctx.guild.id)] = []
-        with open(config.queues, 'w') as f:
-            json.dump(queues, f, indent=4)
+        queue = Queues.get_queue(ctx.guild.id)
+        queue = {}
+        Queues.update_queue(ctx.guild.id, queue)
+        ctx.voice_client.stop()
         await ctx.send(":octagonal_sign: Music stopped and queue has been cleared.")
+    else:
+        await ctx.send(":x: No music is currently playing.")
 
 @tree.command(name='stop', description='Stop playing music and disconnect from voice channel')
 async def _stop(interaction: discord.Interaction):
@@ -216,7 +218,9 @@ async def volume(ctx, volume: int = None):
         ctx.voice_client.source.volume = volume / 100
 
     await ctx.send(f":loud_sound: Volume set from `{round(current_volume)}%` to `{volume}%`")
- #FIXME: disabled command cuz error
+
+
+#FIXME: disabled command cuz error
 #@tree.command(name='volume', description='Set the volume of the music')
 async def _volume(interaction: discord.Interaction, volume:int = None):
     ctx = await commands.Context.from_interaction(interaction)
@@ -270,6 +274,43 @@ async def seek(ctx, seconds: int):
             await ctx.send(":x: No music data available to seek.")
     else:
         await ctx.send(":x: No music is currently playing.")
+
+
+### SYNC COMMANDS ###
+@bot.command()
+@commands.guild_only()
+@commands.is_owner()
+async def sync(ctx: commands.Context, guilds: commands.Greedy[discord.Object], spec: Optional[Literal["~", "*", "^"]] = None) -> None:
+    if not guilds:
+        if spec == "~":
+            synced = await ctx.bot.tree.sync(guild=ctx.guild)
+        elif spec == "*":
+            ctx.bot.tree.copy_global_to(guild=ctx.guild)
+            synced = await ctx.bot.tree.sync(guild=ctx.guild)
+        elif spec == "^":
+            ctx.bot.tree.clear_commands(guild=ctx.guild)
+            await ctx.bot.tree.sync(guild=ctx.guild)
+            synced = []
+        else:
+            synced = await ctx.bot.tree.sync()
+
+        await ctx.send(
+            f"Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}"
+        )
+        return
+
+    ret = 0
+    for guild in guilds:
+        try:
+            await ctx.bot.tree.sync(guild=guild)
+        except discord.HTTPException:
+            pass
+        else:
+            ret += 1
+
+    await ctx.send(f"Synced the tree to {ret}/{len(guilds)}.")
+
+
 
 @tree.command(name='seek', description='Set the playback position to a specific time in seconds')
 async def _seek(interaction: discord.Interaction, seconds: int):
