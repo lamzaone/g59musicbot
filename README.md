@@ -39,7 +39,7 @@ pip install -r requirements.txt
 ```
 4. Start the bot using the following command
 ```
-python3 main.py
+python main.py
 ```
 5. Add your bot token when asked to
 6. Copy the invite-url and invite the bot to your server!
@@ -65,7 +65,7 @@ pip install -r requirements.txt
 
 4. Start the bot using the following command
 ```
-python main.py
+python3 main.py
 ```
 5. Add your bot token when asked to
 6. Copy the invite-url and invite the bot to your server!
