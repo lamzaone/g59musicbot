@@ -251,9 +251,7 @@ async def _skip(interaction: discord.Interaction):
 @commands.guild_only()
 async def stop(ctx):
     if ctx.voice_client and ctx.voice_client.is_connected():
-        queue = Queues.get_queue(ctx.guild.id)
-        queue = {}
-        Queues.update_queue(ctx.guild.id, queue)
+        Queues.update_queue(ctx.guild.id, [])
         ctx.voice_client.stop()
         await ctx.send(":octagonal_sign: Music stopped and queue has been cleared.")
     else:
