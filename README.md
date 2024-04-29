@@ -20,11 +20,12 @@ git clone https://github.com/lamzaone/g59musicplayer.git
 ```
 pip install -r requirements.txt
 ```
-4. Place your  Discord Bot Token insie config/config.py
-5. Start the bot using the following command
+4. Start the bot using the following command
 ```
 python3 main.py
 ```
+5. Add your bot token when asked to
+6. Copy the invite-url and invite the bot to your server!
 
 ---
 ### Linux(tested on Ubuntu)
@@ -42,11 +43,12 @@ sudo apt install ffmpeg
 ```
 pip install -r requirements.txt
 ```
-4. Place your  Discord Bot Token insie config/config.py
-5. Start the bot using the following command
+4. Start the bot using the following command
 ```
-python3 main.py
+python main.py
 ```
+5. Add your bot token when asked to
+6. Copy the invite-url and invite the bot to your server!
 
 
 ---
