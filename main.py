@@ -23,7 +23,7 @@ is_windows = os.name == 'nt'
 async def on_ready():
     await tree.sync()
     print(f'[+] Booted {bot.user}...')
-    await bot.change_presence(activity=discord.Game(name="!play <song>", ), status=discord.Status.do_not_disturb)
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="/play <song>"), status=discord.Status.dnd)
     # Reset queues and fetch settings for all guilds
     queues = {}
     settings = Settings.get_settings_all()
@@ -359,14 +359,14 @@ async def seek(ctx, seconds: int):
                 settings = settings[str(ctx.guild.id)]
             seek_time = f"-ss {seconds}"
             ffmpeg_opts = {**config.ffmpeg_options, "options": f"{config.ffmpeg_options['options']} {seek_time}"}
+            async with ctx.typing():
+                if is_windows:
+                    audio_source = discord.FFmpegPCMAudio(ctx.bot.video_url, executable=config.FFMPEG_PATH , **ffmpeg_opts)
+                else:
+                    audio_source = discord.FFmpegPCMAudio(ctx.bot.video_url, **ffmpeg_opts)
+                audio_source = discord.PCMVolumeTransformer(audio_source, settings['volume'])
 
-            if is_windows:
-                audio_source = discord.FFmpegPCMAudio(ctx.bot.video_url, executable=config.FFMPEG_PATH , **ffmpeg_opts)
-            else:
-                audio_source = discord.FFmpegPCMAudio(ctx.bot.video_url, **ffmpeg_opts)
-            audio_source = discord.PCMVolumeTransformer(audio_source, settings['volume'])
-
-            ctx.voice_client.play(audio_source)
+                ctx.voice_client.play(audio_source)
 
             await ctx.send(f":arrow_forward: Started playing at {seconds} seconds.")
         else:
