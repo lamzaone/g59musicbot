@@ -11,11 +11,10 @@ import nacl
 from typing import Literal, Optional
 
 
-# FFmpeg path - ensure you have FFmpeg installed and update the path if needed
+
 
 # Initialize Discord bot with command prefix and intents
-
-bot = commands.Bot(command_prefix="", intents=config.intents)
+bot = commands.Bot(command_prefix="", intents=config.intents) # set prefix to "" becuse we handle them in on_message event
 tree = bot.tree
 is_windows = os.name == 'nt'
 
@@ -58,16 +57,11 @@ async def on_ready():
 
 
 
-
+### INITIALIZE GUILD SETTINGS AND QUEUES ON GUILD JOIN ###
 @bot.event
 async def on_guild_join(guild):
     Settings.set_guild_settings(guild.id, Settings.default_settings)
-
-    with open(config.queues, 'r') as f:
-        queues = json.load(f)
-        queues[str(guild.id)] = []
-    with open(config.queues, 'w') as f:
-        json.dump(queues, f, indent=4)
+    Queues.update_queue(guild.id, [])
     print(f'[+] Joined {guild.name} with id {guild.id}')
     print(f'[+] Successfully initialized config/serversettings.json for {guild.name}')
     print(f'[+] Successfully initialized config/queues.json for {guild.name}')
@@ -92,7 +86,6 @@ async def _prefix(interaction: discord.Interaction, new_prefix: str):
         await interaction.response.send_message(":x: You must have the `Administrator` permission to use this command.", ephemeral=True)
         return
     await prefix(ctx, new_prefix)
-    #await interaction.response.send_message(f"Prefix changed to {new_prefix}", ephemeral=False)
 
 
 
@@ -226,13 +219,12 @@ async def on_song_end(interaction):
     voice_client = discord.utils.get(bot.voice_clients, guild=interaction.guild)
     if voice_client and voice_client.is_connected():
         queue = Queues.get_queue(interaction.guild.id)
-        
+
         if queue:
-            next_song = queue.pop(0)  # Get the next song
-            Queues.update_queue(interaction.guild.id, queue)  # Save the queue
-            await play_song(interaction, next_song['url'])  # Play the next song
+            next_song = Queues.next_song(interaction.guild.id)
+            await play_song(interaction, next_song['url'])
         else:
-            await voice_client.disconnect()  # Disconnect if the queue is empty
+            await voice_client.disconnect()
 
 
 
