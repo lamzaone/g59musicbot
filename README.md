@@ -1,19 +1,11 @@
 # Discord YouTube Music Bot in Python - Easy Set-up
-Fast and reliable music bot made in python that currently supports YouTube (more features to be added soon) - **Easy to set-up!**
+Fast and reliable music bot made in python that currently supports YouTube and Soundcloud(more features to be added soon) - **Easy to set-up!**
 You can also invite the bot to multiple servers, each having their own custom settings!
 
 
 Not only this music bot can be customised to your liking, but it's very easy to self-host your own discord bot 24/7 for free! I can make a tutorial on how to host your own musicbot for free, if anyone requests it.
 
-## Current command support:
-- Queue support -- *Adds links to a queue that plays automatically*
-- !prefix -- **BROKEN ATM** *Changes the prefix used for commands on the current server*
-- !play <song name\youtube link> -- *Plays music from YouTube*
-- !stop -- *Stops the music and clears the queue*
-- !pause -- *Pause/resume the music*
-- !seek <seconds> -- *Go to a specific timeframe on the current song*
-- !volume opt:<0-100> -- *Sets the volume to <0-100>% / If no arguments are given, it shows the current volume*
-- !ping -- *Displays the bot's ping*
+---
 
 ## Setup
 
@@ -55,3 +47,26 @@ pip install -r requirements.txt
 ```
 python3 main.py
 ```
+
+
+---
+---
+## CHANGELOG:
+### Version 0.2
+- **ADDED SOUNDCLOUD SUPPORT!**
+- **ADDED SLASH (/) COMMANDS SUPPORT!**
+- **ADDED .GIF BANNER/AVATAR CHANGER***
+- Rebuild the logic behind the musicplayer to improve stability
+- fixed a bug where queue would break sometimes
+- Improved code readability
+- *Added !sync command to sync the command tree **(bot owner only)***
+
+### Version 0.1:
+- Implemented queues
+- Implemented !play command (supports YouTube currently)
+- Implemented !skip command - **skips current song**
+- Implemented !seek command - **set current song timeframe to x**
+- Implemented !pause command - **pause/resume**
+- Implemented !volume command - **change volume to <0-100>%
+- Implemented !stop command - **stops music and clears queue**
+- Implemented !prefix command - **change command prefix**
