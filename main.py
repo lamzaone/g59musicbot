@@ -74,14 +74,17 @@ async def on_guild_join(guild):
 
 ### SET PREFIX COMMAND ###
 @bot.command(name='prefix', help='Change the command prefix for the bot')
+@commands.guild_only()
+@commands.has_permissions(manage_guild=True)
 async def prefix(ctx, new_prefix: str):
     settings = Settings.get_settings(ctx.guild.id)
     settings['prefix'] = new_prefix
     Settings.set_guild_settings(ctx.guild.id, settings)
     await ctx.send(f"Prefix changed to `{new_prefix}`")
 
-    #FIXED???
 @tree.command(name='prefix', description='Change the command prefix for the bot')
+@commands.guild_only()
+@commands.has_permissions(manage_guild=True)
 async def __prefix(interaction: discord.Interaction, new_prefix: str):
     ctx = await commands.Context.from_interaction(interaction)
     await prefix(ctx, new_prefix)
@@ -92,6 +95,7 @@ async def __prefix(interaction: discord.Interaction, new_prefix: str):
 
 ### PLAY COMMAND ###
 @bot.command(name='play', help='Play music from YouTube using a search term or URL')
+@commands.guild_only()
 async def play(ctx, *, query: str):
 
     if ctx.voice_client is None:
@@ -146,6 +150,7 @@ async def play(ctx, *, query: str):
 
 ### /PLAY COMMAND ###
 @tree.command(name='play', description='Play music from YouTube using a search term or URL')
+@commands.guild_only()
 async def _play(interaction: discord.Interaction, query: str):
     # Ensure the interaction is acknowledged only once
     if not interaction.response.is_done():
@@ -229,6 +234,7 @@ async def on_song_end(interaction):
 
 ### SKIP COMMAND ###
 @bot.command(name='skip', help='Skip the current song and play the next one in the queue')
+@commands.guild_only()
 async def skip(ctx):
     if ctx.voice_client and ctx.voice_client.is_playing():
         ctx.voice_client.stop()
@@ -237,6 +243,7 @@ async def skip(ctx):
         await ctx.send(":x: No music is currently playing.")
 
 @tree.command(name='skip', description='Skip the current song and play the next one in the queue')
+@commands.guild_only()
 async def _skip(interaction: discord.Interaction):
     ctx = await commands.Context.from_interaction(interaction)
     await skip(ctx)
@@ -245,6 +252,7 @@ async def _skip(interaction: discord.Interaction):
 
 ### STOP COMMAND ###
 @bot.command(name='stop', help='Stop playing music and disconnect from voice channel')
+@commands.guild_only()
 async def stop(ctx):
     if ctx.voice_client and ctx.voice_client.is_connected():
         queue = Queues.get_queue(ctx.guild.id)
@@ -256,6 +264,7 @@ async def stop(ctx):
         await ctx.send(":x: No music is currently playing.")
 
 @tree.command(name='stop', description='Stop playing music and disconnect from voice channel')
+@commands.guild_only()
 async def _stop(interaction: discord.Interaction):
     ctx = await commands.Context.from_interaction(interaction)
     await stop(ctx)
@@ -264,6 +273,7 @@ async def _stop(interaction: discord.Interaction):
 
 ### PAUSE COMMAND ###
 @bot.command(name='pause', help='Pause the currently playing music')
+@commands.guild_only()
 async def pause(ctx):
     if ctx.voice_client and ctx.voice_client.is_playing():
         ctx.voice_client.pause()
@@ -273,6 +283,7 @@ async def pause(ctx):
         await ctx.send(":arrow_forward: Music resumed.")
         
 @tree.command(name='pause', description='Pause the currently playing music')
+@commands.guild_only()
 async def _pause(interaction: discord.Interaction):
     ctx = await commands.Context.from_interaction(interaction)
     await pause(ctx)
@@ -281,6 +292,8 @@ async def _pause(interaction: discord.Interaction):
 
 ### VOLUME COMMAND ###
 @bot.command(name='volume', help='Set the volume of the music')
+@commands.guild_only()
+@commands.has_permissions(manage_guild=True)
 async def _volume(ctx, volume: int = None):
     #change the settings for the guild in the settings file
     settings = Settings.get_settings(ctx.guild.id)
@@ -303,11 +316,12 @@ async def _volume(ctx, volume: int = None):
     await ctx.send(f":loud_sound: Volume set from `{round(current_volume)}%` to `{volume}%`")
 
 
-#FIXME: disabled command cuz error
+
 @tree.command(name='volume', description='Set the volume of the music')
+@commands.guild_only()
+@commands.has_permissions(manage_guild=True)
 async def __volume(interaction: discord.Interaction, volume:int = None):
     ctx = await commands.Context.from_interaction(interaction)
-    print(ctx)
     await _volume(ctx,volume if volume is not None else None)
     #await interaction.response.send_message("Changing volume...", ephemeral=False)
 
@@ -327,6 +341,7 @@ async def _ping(interaction: discord.Interaction):
 
 ### SEEK COMMAND ###
 @bot.command(name='seek', help='Set the playback position to a specific time in seconds')
+@commands.guild_only()
 async def seek(ctx, seconds: int):
     # Ensure there is a voice client playing music
     if ctx.voice_client and ctx.voice_client.is_playing():
@@ -355,6 +370,14 @@ async def seek(ctx, seconds: int):
             await ctx.send(":x: No music data available to seek.")
     else:
         await ctx.send(":x: No music is currently playing.")
+
+@tree.command(name='seek', description='Set the playback position to a specific time in seconds')
+@commands.guild_only()
+async def _seek(interaction: discord.Interaction, seconds: int):
+    ctx = await commands.Context.from_interaction(interaction)
+    await seek(ctx, seconds=seconds)
+    #await interaction.response.send_message("Seeking music...", ephemeral=False)
+
 
 
 ### SYNC COMMANDS ###
@@ -393,21 +416,15 @@ async def sync(ctx: commands.Context, guilds: commands.Greedy[discord.Object], s
 
 
 
-@tree.command(name='seek', description='Set the playback position to a specific time in seconds')
-async def _seek(interaction: discord.Interaction, seconds: int):
-    ctx = await commands.Context.from_interaction(interaction)
-    await seek(ctx, seconds=seconds)
-    #await interaction.response.send_message("Seeking music...", ephemeral=False)
-
-
-
 @bot.event
 async def on_message(message):
-    prefix = Settings.get_settings(message.guild.id)['prefix']
-    if message.content.startswith(prefix):
-        message.content = message.content[len(prefix):]
+    if message.guild is not None:
+        prefix = Settings.get_settings(message.guild.id)['prefix']
+        if message.content.startswith(prefix):
+            message.content = message.content[len(prefix):]
+            await bot.process_commands(message)
+    else:
         await bot.process_commands(message)
-
 
 
 
