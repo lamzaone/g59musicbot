@@ -91,13 +91,12 @@ YTDL_OPTS = {
     'logtostderr': False,
     'quiet': False,
     'no_warnings': True,
-    'default_search': 'ytsearch:',
+    'default_search': 'auto',
     'source_address': '0.0.0.0',  
     'force-ipv4': True,
     'preferredcodec': 'mp3',
     'preferredquality': '256',
     'timeout': 60,
-    'cachedir': True,
     'expiretime': 3600,
     "noprogress": True,
     "socket_timeout": 5,
@@ -119,31 +118,32 @@ YTDL_OPTS = {
     
 }
 
-YTDL_SOUNDCLOUD_OPTS = {
-    'format': 'bestaudio/best',
-    'restrictfilenames': False,
-    'noplaylist': True,
-    'nocheckcertificate': True,
-    'ignoreerrors': False,
-    'logtostderr': False,
-    'quiet': False,
-    'no_warnings': True,
-    'force-ipv4': True,
-    'preferredcodec': 'mp3',
-    'preferredquality': '256',
-    "noprogress": True,
-    "socket_timeout": 5,
-    "socket_io_timeout": 10,
-    "sleep_interval": 1,
-    "max_sleep_interval": 5,
-    "retries": 10,
-    "fragment_retries": 10,
-    "threads": 6,
-    "geo_bypass": True,
-    'timeout': 60,
-    'default_search': 'soundcloud',
-    'source_address': '0.0.0.0'
-    }
+# YTDL_SOUNDCLOUD_OPTS = {
+#     'format': 'bestaudio/best',
+#     'restrictfilenames': False,
+#     'noplaylist': True,
+#     'nocheckcertificate': True,
+#     'ignoreerrors': False,
+#     'logtostderr': False,
+#     'quiet': False,
+#     'no_warnings': True,
+#     'force-ipv4': True,
+#     'preferredcodec': 'mp3',
+#     'preferredquality': '256',
+#     "noprogress": True,
+#     "socket_timeout": 5,
+#     "socket_io_timeout": 10,
+#     "sleep_interval": 1,
+#     "max_sleep_interval": 5,
+#     "retries": 10,
+#     "fragment_retries": 10,
+#     "threads": 6,
+#     "geo_bypass": True,
+#     'timeout': 60,
+#     'default_search': 'soundcloud',
+#     'source_address': '0.0.0.0'
+#     }
+
 
 intents = discord.Intents.default()
 intents.message_content = True
