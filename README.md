@@ -100,6 +100,7 @@ sudo reboot
 - **ADDED SOUNDCLOUD SUPPORT!**
 - **ADDED SLASH (/) COMMANDS SUPPORT!**
 - **ADDED .GIF BANNER/AVATAR CHANGER***
+- **ADDED AUTO UPDATE ON BOT LAUNCH**
 - Rebuild the logic behind the musicplayer to improve stability
 - fixed a bug where queue would break sometimes
 - Improved code readability
