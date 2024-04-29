@@ -128,7 +128,7 @@ YTDL_SOUNDCLOUD_OPTS = {
     }
 
 
-YTDL_OPTS = {
+YTDL_AUTO = {
     'format': 'bestaudio/best',
     'restrictfilenames': False,
     'noplaylist': True,
