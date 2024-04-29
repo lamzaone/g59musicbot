@@ -75,7 +75,7 @@ async def on_guild_join(guild):
 ### SET PREFIX COMMAND ###
 @bot.command(name='prefix', help='Change the command prefix for the bot')
 @commands.guild_only()
-@commands.has_permissions(manage_guild=True)
+@commands.has_permissions(administrator=True)
 async def prefix(ctx, new_prefix: str):
     settings = Settings.get_settings(ctx.guild.id)
     settings['prefix'] = new_prefix
@@ -83,10 +83,14 @@ async def prefix(ctx, new_prefix: str):
     await ctx.send(f"Prefix changed to `{new_prefix}`")
 
 @tree.command(name='prefix', description='Change the command prefix for the bot')
-@commands.guild_only()
-@commands.has_permissions(manage_guild=True)
-async def __prefix(interaction: discord.Interaction, new_prefix: str):
+async def _prefix(interaction: discord.Interaction, new_prefix: str):
     ctx = await commands.Context.from_interaction(interaction)
+    if not ctx.guild:
+        await interaction.response.send_message(":x: This command can only be used in a server.", ephemeral=True)
+        return
+    if not ctx.author.guild_permissions.administrator:
+        await interaction.response.send_message(":x: You must have the `Administrator` permission to use this command.", ephemeral=True)
+        return
     await prefix(ctx, new_prefix)
     #await interaction.response.send_message(f"Prefix changed to {new_prefix}", ephemeral=False)
 
@@ -268,7 +272,6 @@ async def stop(ctx):
 async def _stop(interaction: discord.Interaction):
     ctx = await commands.Context.from_interaction(interaction)
     await stop(ctx)
-    #await interaction.response.send_message("Stopping music...", ephemeral=False)
 
 
 ### PAUSE COMMAND ###
@@ -287,7 +290,6 @@ async def pause(ctx):
 async def _pause(interaction: discord.Interaction):
     ctx = await commands.Context.from_interaction(interaction)
     await pause(ctx)
-    #await interaction.response.send_message("Pausing music...", ephemeral=False)
 
 
 ### VOLUME COMMAND ###
@@ -295,7 +297,6 @@ async def _pause(interaction: discord.Interaction):
 @commands.guild_only()
 @commands.has_permissions(manage_guild=True)
 async def _volume(ctx, volume: int = None):
-    #change the settings for the guild in the settings file
     settings = Settings.get_settings(ctx.guild.id)
 
     if volume is None:
@@ -318,12 +319,15 @@ async def _volume(ctx, volume: int = None):
 
 
 @tree.command(name='volume', description='Set the volume of the music')
-@commands.guild_only()
-@commands.has_permissions(manage_guild=True)
 async def __volume(interaction: discord.Interaction, volume:int = None):
     ctx = await commands.Context.from_interaction(interaction)
+    if not ctx.guild:
+        await interaction.response.send_message(":x: This command can only be used in a server.", ephemeral=True)
+        return
+    if not ctx.author.guild_permissions.manage_guild:
+        await interaction.response.send_message(":x: You must have the `Manage Server` permission to use this command.", ephemeral=True)
+        return
     await _volume(ctx,volume if volume is not None else None)
-    #await interaction.response.send_message("Changing volume...", ephemeral=False)
 
 
 ### PING COMMAND ###
@@ -335,7 +339,6 @@ async def ping(ctx):
 async def _ping(interaction: discord.Interaction):
     ctx = await commands.Context.from_interaction(interaction)
     await ping(ctx)
-    #await interaction.response.send_message("Checking ping...", ephemeral=False)
 
 
 
@@ -376,7 +379,6 @@ async def seek(ctx, seconds: int):
 async def _seek(interaction: discord.Interaction, seconds: int):
     ctx = await commands.Context.from_interaction(interaction)
     await seek(ctx, seconds=seconds)
-    #await interaction.response.send_message("Seeking music...", ephemeral=False)
 
 
 
@@ -426,7 +428,30 @@ async def on_message(message):
     else:
         await bot.process_commands(message)
 
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send(f":x: You need to have `{', '.join(error.missing_permissions)}` permissions to use this command.", ephemeral=True)
+        return
+    if isinstance(error, commands.CommandNotFound):
+        return
+    if isinstance(error, commands.CheckFailure):
+        await ctx.send(":x: You do not have permission to use this command.")
+        return
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send(":x: Missing required argument.")
+        return
+    if isinstance(error, commands.BadArgument):
+        await ctx.send(":x: Invalid argument.")
+        return
+    if isinstance(error, commands.CommandOnCooldown):
+        await ctx.send(f":x: Command on cooldown. Try again in {error.retry_after:.2f} seconds.")
+        return
+    if isinstance(error, commands.CommandInvokeError):
+        await ctx.send(":x: An error occurred while executing the command.")
+        return
 
+    raise error
 
 
 
