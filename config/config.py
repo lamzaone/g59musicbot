@@ -96,6 +96,7 @@ YTDL_OPTS = {
     'force-ipv4': True,
     'preferredcodec': 'mp3',
     'preferredquality': '256',
+    'cachedir' : True,
     'timeout': 60,
     'expiretime': 3600,
     "noprogress": True,

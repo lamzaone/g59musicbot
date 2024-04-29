@@ -50,9 +50,12 @@ def extract_auto_info(query:str):
 
 def get_info(query:str):
     if is_youtube(query) or not is_link(query):
+        print("is youtube")
         return extract_music_info(query)
     elif is_soundcloud(query):
+        print("is soundcloud")
         return extract_soundcloud_info(query)
     else:
+        print("is auto")
         return extract_auto_info(query)
     
