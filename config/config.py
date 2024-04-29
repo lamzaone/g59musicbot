@@ -91,6 +91,7 @@ YTDL_OPTS = {
     'logtostderr': False,
     'quiet': False,
     'no_warnings': True,
+    'no-download': True,
     'default_search': 'ytsearch1',
     'source_address': '0.0.0.0',  
     'force-ipv4': True,
@@ -111,7 +112,8 @@ YTDL_OPTS = {
 }
 
 YTDL_SOUNDCLOUD_OPTS = {
-    'format': 'bestaudio/best',
+    'format': 'bestaudio/best',    
+    'no-download': True,
     'restrictfilenames': False,
     'noplaylist': True,
     'nocheckcertificate': True,
@@ -131,7 +133,8 @@ YTDL_SOUNDCLOUD_OPTS = {
 YTDL_AUTO = {
     'format': 'bestaudio/best',
     'restrictfilenames': False,
-    'noplaylist': True,
+    'noplaylist': True,    
+    'no-download': True,
     'nocheckcertificate': True,
     'ignoreerrors': False,
     'logtostderr': False,
