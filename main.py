@@ -114,7 +114,7 @@ async def play(ctx, *, query: str):
             try:
                 if ctx.voice_client.is_paused():
                     await ctx.send("reminder: Music is currently paused. use `/pause` to resume")
-                info = musicplayer.extract_music_info(query)
+                info = musicplayer.get_info(query)
                 queue = Queues.get_queue(ctx.guild.id)
                 queue.append({'title': info['title'], 'url': info['original_url']})
                 Queues.update_queue(ctx.guild.id, queue)
@@ -127,7 +127,7 @@ async def play(ctx, *, query: str):
             except TypeError:
                 pass
         
-        info = musicplayer.extract_music_info(query)
+        info = musicplayer.get_info(query)
         ctx.bot.video_info = info
         ctx.bot.video_url = info['url']
         if is_windows:
@@ -177,7 +177,7 @@ async def _play(interaction: discord.Interaction, query: str):
         #check if music is playing or paused to add music to Queue instead of playing
         if voice_client.is_playing() or voice_client.is_paused():
             try:
-                info = musicplayer.extract_music_info(query)
+                info = musicplayer.get_info(query)
                 queue = Queues.get_queue(interaction.guild.id)
                 queue.append({"title": info['title'], "url": info['original_url']})
                 Queues.update_queue(interaction.guild.id, queue)
@@ -202,7 +202,7 @@ async def play_song(interaction, query):
     ctx = await commands.Context.from_interaction(interaction)
     try:
         with yt_dlp.YoutubeDL(config.YTDL_OPTS) as ydl:
-            info = musicplayer.extract_music_info(query)
+            info = musicplayer.get_info(query)
             video_url = info['url']
             if is_windows:
                 audio_source = discord.FFmpegPCMAudio(video_url,executable=config.FFMPEG_PATH,**config.ffmpeg_options)
@@ -428,30 +428,30 @@ async def on_message(message):
     else:
         await bot.process_commands(message)
 
-# @bot.event
-# async def on_command_error(ctx, error):
-#     if isinstance(error, commands.MissingPermissions):
-#         await ctx.send(f":x: You need to have `{', '.join(error.missing_permissions)}` permissions to use this command.", ephemeral=True)
-#         return
-#     if isinstance(error, commands.CommandNotFound):
-#         return
-#     if isinstance(error, commands.CheckFailure):
-#         await ctx.send(":x: You do not have permission to use this command.")
-#         return
-#     if isinstance(error, commands.MissingRequiredArgument):
-#         await ctx.send(":x: Missing required argument.")
-#         return
-#     if isinstance(error, commands.BadArgument):
-#         await ctx.send(":x: Invalid argument.")
-#         return
-#     if isinstance(error, commands.CommandOnCooldown):
-#         await ctx.send(f":x: Command on cooldown. Try again in {error.retry_after:.2f} seconds.")
-#         return
-#     if isinstance(error, commands.CommandInvokeError):
-#         await ctx.send(":x: An error occurred while executing the command.")
-#         return
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send(f":x: You need to have `{', '.join(error.missing_permissions)}` permissions to use this command.", ephemeral=True)
+        return
+    if isinstance(error, commands.CommandNotFound):
+        return
+    if isinstance(error, commands.CheckFailure):
+        await ctx.send(":x: You do not have permission to use this command.")
+        return
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send(":x: Missing required argument.")
+        return
+    if isinstance(error, commands.BadArgument):
+        await ctx.send(":x: Invalid argument.")
+        return
+    if isinstance(error, commands.CommandOnCooldown):
+        await ctx.send(f":x: Command on cooldown. Try again in {error.retry_after:.2f} seconds.")
+        return
+    if isinstance(error, commands.CommandInvokeError):
+        await ctx.send(":x: An error occurred while executing the command.")
+        return
 
-#     raise error
+    raise error
 
 
 
