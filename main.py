@@ -106,19 +106,48 @@ async def search(ctx, *, query:str):
             await message.add_reaction(reactions[i])
         
         reaction = await bot.wait_for('reaction_add', timeout=30.0, check=lambda reaction, user: user == ctx.author and reaction.message == message)
-        index = reactions.index(reaction[0].emoji)
-        await play(ctx, query=search_results[index]['original_url'])
+        index = reactions.index(reaction[0].emoji)        
         await message.delete()
+        await play(ctx, query=search_results[index]['original_url'])
     except Exception as e:  
         embed.title = "Error"
         embed.description = f"An error occurred while searching: {str(e)}"
         await message.edit(embed=embed)
 
-@tree.command(name='search', description='Search for a song on YouTube')
-async def _search(interaction: discord.Interaction, query:str):
-    ctx = await commands.Context.from_interaction(interaction)
-    await search(ctx, query=query)
 
+@tree.command(name='search', description='Search for a song on YouTube')
+async def _search(interaction: discord.Interaction, query: str):
+    # Initial response to acknowledge the command
+    await interaction.response.defer(thinking=True)
+
+    embed = discord.Embed(title=f"Searching for `{query}`", color=discord.Color.blurple())
+    # Use followup to send additional messages after deferring the response
+    message = await interaction.followup.send(embed=embed, wait=True)    
+    reactions = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
+
+    try:
+        search_results = musicplayer.search(query)
+        
+        embed.title = f"Search results for `{query}`"
+        embed.description = ""
+        for i, result in enumerate(search_results):
+            embed.add_field(name=f"{i + 1}. {result['title']}", value=result['original_url'], inline=False)
+            await message.edit(embed=embed)  # Update the message
+            await asyncio.sleep(0.2)  # Simulate delay for a gradual update
+        for i in range(min(len(search_results), len(reactions))):
+            await message.add_reaction(reactions[i])
+        def reaction_check(reaction, user):
+            return user == interaction.user and reaction.message.id == message.id
+        reaction, _ = await bot.wait_for('reaction_add', timeout=30.0, check=reaction_check)
+        index = reactions.index(reaction.emoji)
+        await play(commands.context.from_interaction(interaction), query=search_results[index]['original_url'])
+    except asyncio.TimeoutError:
+        await interaction.followup.send("Reaction timeout, please try again.")
+
+    except Exception as e:
+        embed.title = "Error"
+        embed.description = f"An error occurred: {str(e)}"
+        await interaction.followup.send(embed=embed)
 
 ### PLAY COMMAND ###
 @bot.command(name='play', help='Play music from YouTube using a search term or URL')
