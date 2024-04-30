@@ -140,7 +140,8 @@ async def _search(interaction: discord.Interaction, query: str):
             return user == interaction.user and reaction.message.id == message.id
         reaction, _ = await bot.wait_for('reaction_add', timeout=30.0, check=reaction_check)
         index = reactions.index(reaction.emoji)
-        await play(commands.context.from_interaction(interaction), query=search_results[index]['original_url'])
+        ctx = await commands.Context.from_interaction(interaction)
+        await play(ctx, query=search_results[index]['original_url'])
     except asyncio.TimeoutError:
         await interaction.followup.send("Reaction timeout, please try again.")
 
