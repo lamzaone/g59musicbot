@@ -119,7 +119,6 @@ async def search(ctx, *, query:str):
 async def _search(interaction: discord.Interaction, query: str):
     # Initial response to acknowledge the command
     await interaction.response.defer(thinking=True)
-
     embed = discord.Embed(title=f"Searching for `{query}`", color=discord.Color.blurple())
     # Use followup to send additional messages after deferring the response
     message = await interaction.followup.send(embed=embed, wait=True)    
@@ -140,8 +139,7 @@ async def _search(interaction: discord.Interaction, query: str):
             return user == interaction.user and reaction.message.id == message.id
         reaction, _ = await bot.wait_for('reaction_add', timeout=30.0, check=reaction_check)
         index = reactions.index(reaction.emoji)
-        ctx = await commands.Context.from_interaction(interaction)
-        await play(ctx, query=search_results[index]['original_url'])
+        await play_song(interaction=interaction, query=search_results[index]['original_url'])
     except asyncio.TimeoutError:
         await interaction.followup.send("Reaction timeout, please try again.")
 
@@ -149,6 +147,7 @@ async def _search(interaction: discord.Interaction, query: str):
         embed.title = "Error"
         embed.description = f"An error occurred: {str(e)}"
         await interaction.followup.send(embed=embed)
+
 
 ### PLAY COMMAND ###
 @bot.command(name='play', help='Play music from YouTube using a search term or URL')
@@ -212,9 +211,13 @@ async def _play(interaction: discord.Interaction, query: str):
     # Ensure the interaction is acknowledged only once
     if not interaction.response.is_done():
         await interaction.response.defer(thinking=True)  # Acknowledge the interaction with a "thinking" state
-    
+    # Call the play_song function ( because if i try writing all the logic inside _play, i can't recursively call it from itself :( )
+
+    await play_song(interaction, query)
+
+### START PLAYING SONG FUNCTION ###
+async def play_song(interaction, query):
     if interaction.guild:
-        #check if bot is connected to a voice channel
         voice_client = discord.utils.get(bot.voice_clients, guild=interaction.guild)
         if voice_client is None:
             #connect to the voice channel of the user
@@ -226,28 +229,19 @@ async def _play(interaction: discord.Interaction, query: str):
         
         #get voice channel again after connecting
         voice_client = discord.utils.get(bot.voice_clients, guild=interaction.guild)
-
-        #check if music is playing or paused to add music to Queue instead of playing
         if voice_client.is_playing() or voice_client.is_paused():
-            try:
-                info = musicplayer.get_info(query)
-                queue = Queues.get_queue(interaction.guild.id)
-                queue.append({"title": info['title'], "url": info['original_url']})
-                Queues.update_queue(interaction.guild.id, queue)
-                await interaction.followup.send(f":white_check_mark: Added `{info['title']}` to the queue.", ephemeral=False)
-                return #exit the function
-            except Exception as e:
-                await interaction.followup.send(":x: An error occurred while adding to the queue.", ephemeral=False)
-                print(f"Error adding to queue: {e}")
-                return #exit the function
-            
-    # Call the play_song function ( because if i try writing all the logic inside _play, i can't recursively call it from itself :( )
-    await play_song(interaction, query)
-
-### START PLAYING SONG FUNCTION ###
-async def play_song(interaction, query):
-    # get voice client
-    voice_client = discord.utils.get(bot.voice_clients, guild=interaction.guild)
+                try:
+                    info = musicplayer.get_info(query)
+                    queue = Queues.get_queue(interaction.guild.id)
+                    queue.append({"title": info['title'], "url": info['original_url']})
+                    Queues.update_queue(interaction.guild.id, queue)
+                    await interaction.followup.send(f":white_check_mark: Added `{info['title']}` to the queue.", ephemeral=False)
+                    return #exit the function
+                except Exception as e:
+                    await interaction.followup.send(":x: An error occurred while adding to the queue.", ephemeral=False)
+                    print(f"Error adding to queue: {e}")
+                    return #exit the function
+        # get voice client
     if not voice_client:
         await interaction.followup.send(":x: The bot is not connected to a voice channel.", ephemeral=False)
         return
