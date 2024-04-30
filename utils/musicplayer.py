@@ -59,3 +59,14 @@ def get_info(query:str):
         print("is auto")
         return extract_auto_info(query)
     
+
+
+
+def search(query:str):
+    try:
+        with yt_dlp.YoutubeDL(config.YTDL_OPTS) as ydl:
+            info = ydl.extract_info(f"ytsearch4:{query}", download=False)['entries']
+            return info
+    except Exception as e:
+        print(f"[-] An error occurred while searching: {e}")
+        return None

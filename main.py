@@ -87,7 +87,37 @@ async def _prefix(interaction: discord.Interaction, new_prefix: str):
         return
     await prefix(ctx, new_prefix)
 
+@bot.command(name='search', help='Search for a song on YouTube')
+@commands.guild_only()
+async def search(ctx, *, query:str):
+    embed = discord.Embed(title=f"Searching for `{query}`", color=discord.Color.blurple())
+    message = await ctx.send(embed=embed)
+    reactions = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
 
+    try:
+        search_results = musicplayer.search(query)
+        for i, result in enumerate(search_results):
+            embed.title = f"Search results for `{query}`"
+            embed.add_field(name=f"{i + 1}. {result['title']}", value=result['original_url'], inline=False)
+            await message.edit(embed=embed)
+            await asyncio.sleep(0.2)
+            
+        for i in range(len(search_results)):
+            await message.add_reaction(reactions[i])
+        
+        reaction = await bot.wait_for('reaction_add', timeout=30.0, check=lambda reaction, user: user == ctx.author and reaction.message == message)
+        index = reactions.index(reaction[0].emoji)
+        await play(ctx, query=search_results[index]['original_url'])
+        await message.delete()
+    except Exception as e:  
+        embed.title = "Error"
+        embed.description = f"An error occurred while searching: {str(e)}"
+        await message.edit(embed=embed)
+
+@tree.command(name='search', description='Search for a song on YouTube')
+async def _search(interaction: discord.Interaction, query:str):
+    ctx = await commands.Context.from_interaction(interaction)
+    await search(ctx, query=query)
 
 
 ### PLAY COMMAND ###
