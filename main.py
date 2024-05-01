@@ -95,13 +95,17 @@ async def search(ctx, *, query:str):
     reactions = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
 
     try:
-        search_results = musicplayer.search(query)
-        for i, result in enumerate(search_results):
-            embed.title = f"Search results for `{query}`"
-            embed.add_field(name=f"{i + 1}. {result['title']}", value=result['original_url'], inline=False)
-            await message.edit(embed=embed)
-            await asyncio.sleep(0.2)
-            
+        search_results = []
+        for i in range (4):
+            OPTS = config.YTDL_OPTS.copy()
+            with yt_dlp.YoutubeDL(OPTS) as ydl:
+                OPTS['playlist_items'] = str(i + 1)
+                search_result = ydl.extract_info(f"ytsearch4:{query}", download=False)['entries'][0]
+                embed.title = f"Search results for `{query}`"
+                embed.add_field(name=f"{i + 1}. {search_result['title']}", value=search_result['webpage_url'], inline=False)
+                await message.edit(embed=embed)
+                search_results.append(search_result)
+
         for i in range(len(search_results)):
             await message.add_reaction(reactions[i])
         
@@ -125,16 +129,22 @@ async def _search(interaction: discord.Interaction, query: str):
     reactions = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
 
     try:
-        search_results = musicplayer.search(query)
-        
+        search_results = []
         embed.title = f"Search results for `{query}`"
         embed.description = ""
-        for i, result in enumerate(search_results):
-            embed.add_field(name=f"{i + 1}. {result['title']}", value=result['original_url'], inline=False)
-            await message.edit(embed=embed)  # Update the message
-            await asyncio.sleep(0.2)  # Simulate delay for a gradual update
+        for i in range (4):
+            OPTS = config.YTDL_OPTS.copy()
+            with yt_dlp.YoutubeDL(OPTS) as ydl:
+                OPTS['playlist_items'] = str(i + 1)
+                search_result = ydl.extract_info(f"ytsearch4:{query}", download=False)['entries'][0]
+                embed.title = f"Search results for `{query}`"
+                embed.add_field(name=f"{i + 1}. {search_result['title']}", value=search_result['webpage_url'], inline=False)
+                await message.edit(embed=embed)
+                search_results.append(search_result)
+
         for i in range(min(len(search_results), len(reactions))):
             await message.add_reaction(reactions[i])
+
         def reaction_check(reaction, user):
             return user == interaction.user and reaction.message.id == message.id
         reaction, _ = await bot.wait_for('reaction_add', timeout=30.0, check=reaction_check)
