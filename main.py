@@ -96,12 +96,12 @@ async def search(ctx, *, query:str):
 
     try:
         search_results = []
-        for i in range (5):
+        for i in range (4):
             OPTS = config.YTDL_OPTS.copy()
             OPTS['extract_flat'] = True
             with yt_dlp.YoutubeDL(OPTS) as ydl:
                 OPTS['playlist_items'] = str(i + 1)
-                search_result = ydl.extract_info(f"ytsearch5:{query}", download=False)['entries'][0]
+                search_result = ydl.extract_info(f"ytsearch4:{query}", download=False)['entries'][0]
                 embed.title = f"Search results for `{query}`"
                 embed.add_field(name=f"{i + 1}. {search_result['title']}", value=search_result['url'], inline=False)
                 await message.edit(embed=embed)
