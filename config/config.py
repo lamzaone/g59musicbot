@@ -97,7 +97,7 @@ def init():
 def get_cogs():
     cogs = []
     for file in os.listdir("cogs"):
-        if file.endswith(".py") and not file.startswith("_"):
+        if file.endswith(".py") and not file.startswith("!"):
             cogs.append(file[:-3])
     return cogs
 
