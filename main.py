@@ -80,49 +80,6 @@ async def on_guild_join(guild):
     print(f'[+] Successfully initialized config/serversettings.json for {guild.name}')
     print(f'[+] Successfully initialized config/queues.json for {guild.name}')
 
-### SET PREFIX COMMAND ###
-# @bot.command(name='prefix', help='Change the command prefix for the bot')
-# @commands.guild_only()
-# @commands.has_permissions(administrator=True)
-# async def prefix(ctx, new_prefix: str):
-#     settings = Settings.get_settings(ctx.guild.id)
-#     settings['prefix'] = new_prefix
-#     Settings.set_guild_settings(ctx.guild.id, settings)
-#     await ctx.send(f"Prefix changed to `{new_prefix}`")
-
-# @tree.command(name='prefix', description='Change the command prefix for the bot')
-# async def _prefix(interaction: discord.Interaction, new_prefix: str):
-#     ctx = await commands.Context.from_interaction(interaction)
-#     if not ctx.guild:
-#         await interaction.response.send_message(":x: This command can only be used in a server.", ephemeral=True)
-#         return
-#     if not ctx.author.guild_permissions.administrator:
-#         await interaction.response.send_message(":x: You must have the `Administrator` permission to use this command.", ephemeral=True)
-#         return
-#     await prefix(ctx, new_prefix)
-
-
-
-
-
-
-
-
-
-### PING COMMAND ###
-@bot.command(name='ping', help='Check the bot\'s latency')
-async def ping(ctx):
-    await ctx.send(f'ping: `{round(bot.latency * 1000)}ms` | websocket: `{round(bot.ws.latency * 1000)}ms`')
-
-@tree.command(name='ping', description='Check the bot\'s latency')
-async def _ping(interaction: discord.Interaction):
-    ctx = await commands.Context.from_interaction(interaction)
-    await ping(ctx)
-
-
-
-
-
 
 
 ### SYNC COMMANDS ###

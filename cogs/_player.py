@@ -17,11 +17,11 @@ import os
 is_windows = os.name == 'nt'
 
 class _Player(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @app_commands.command(name='play', description='Play music from YouTube using a search term or URL')
-    async def _play(self, interaction: discord.Interaction, query: str) -> None:
+    async def _play(self, interaction: discord.Interaction, query: str):
         # Ensure the interaction is acknowledged only once
         if not interaction.response.is_done():
             await interaction.response.defer(thinking=True)  # Acknowledge the interaction with a "thinking" state
@@ -29,7 +29,7 @@ class _Player(commands.Cog):
         await self.play_song(interaction, query)
 
     ### START PLAYING SONG FUNCTION ###
-    async def play_song(self, interaction, query) -> None:
+    async def play_song(self, interaction, query):
         if interaction.guild:
             voice_client = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
             if voice_client is None:
@@ -80,7 +80,7 @@ class _Player(commands.Cog):
             print(f"Error playing music: {e}")
 
     ### ON SONG END HANDLER ###
-    async def on_song_end(self, interaction) -> None:
+    async def on_song_end(self, interaction):
         voice_client = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
         if voice_client and voice_client.is_connected():
             queue = Queues.get_queue(interaction.guild.id)
@@ -125,7 +125,7 @@ class _Player(commands.Cog):
 
 
     @app_commands.command(name='volume', description='Set the volume of the music')
-    async def __volume(self, interaction: discord.Interaction, volume:int = None) -> None:
+    async def __volume(self, interaction: discord.Interaction, volume:int = None):
         ctx = await self.bot.get_context(interaction)
         if not ctx.guild:
             await interaction.response.send_message(":x: This command can only be used in a server.", ephemeral=True)
@@ -137,14 +137,15 @@ class _Player(commands.Cog):
         await player_cog._volume(ctx,volume if volume is not None else None)
 
     @app_commands.command(name='seek', description='Set the playback position to a specific time in seconds')
-    @commands.guild_only()
-    async def _seek(self, interaction: discord.Interaction, seconds: int) -> None:
+    async def _seek(self, interaction: discord.Interaction, seconds: int): 
         ctx = await self.bot.get_context(interaction)
         player_cog = ctx.bot.get_cog('Player')
         await player_cog.seek(ctx, seconds=seconds)
 
+
+
     @app_commands.command(name='search', description='Search for a song on YouTube')
-    async def _search(self, interaction: discord.Interaction, query: str, results: int = 4) -> None:
+    async def _search(self, interaction: discord.Interaction, query: str, results: int = 4):
         if results > 10:
             await interaction.response.send_message(":x: You can only search for a maximum of 10 results.", ephemeral=True)
             return

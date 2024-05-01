@@ -121,65 +121,66 @@ class Player(commands.Cog):
     ### SEEK COMMAND ###
     @commands.command(name='seek', help='Set the playback position to a specific time in seconds')
     @commands.guild_only()
-    async def seek(self, ctx, seconds: int) -> None:
-        # Ensure there is a voice client playing music
-        if ctx.voice_client and ctx.voice_client.is_playing():
-            # Stop the current playback
-            ctx.voice_client.stop()
+    async def seek(self, ctx, seconds: int):
+        try:
+            if ctx.voice_client and ctx.voice_client.is_playing():
+                # Stop the current playback
 
-            # Check if there's stored video information
-            if hasattr(ctx.bot, 'video_info') and hasattr(ctx.bot, 'video_url'):
-                # Add the offset in seconds to the FFmpeg options to fast forward
-                settings = Settings.get_settings(ctx.guild.id)
-                seek_time = f"-ss {seconds}"
-                ffmpeg_opts = {**config.ffmpeg_options, "options": f"{config.ffmpeg_options['options']} {seek_time}"}
-                async with ctx.typing():
-                    if is_windows:
-                        audio_source = discord.FFmpegPCMAudio(ctx.bot.video_url, executable=config.FFMPEG_PATH , **ffmpeg_opts)
-                    else:
-                        audio_source = discord.FFmpegPCMAudio(ctx.bot.video_url, **ffmpeg_opts)
-                    audio_source = discord.PCMVolumeTransformer(audio_source, settings['volume'])
-
+                # Check if there's stored video information
+                if hasattr(ctx.bot, 'video_info') and hasattr(ctx.bot, 'video_url'):
+                    # Add the offset in seconds to the FFmpeg options to fast forward
+                    settings = Settings.get_settings(ctx.guild.id)
+                    seek_time = f"-ss {seconds}"
+                    ffmpeg_opts = {**config.ffmpeg_options, "options": f"{config.ffmpeg_options['options']} {seek_time}"}
+                    async with ctx.typing():
+                        if is_windows:
+                            audio_source = discord.FFmpegPCMAudio(ctx.bot.video_url, executable=config.FFMPEG_PATH , **ffmpeg_opts)
+                        else:
+                            audio_source = discord.FFmpegPCMAudio(ctx.bot.video_url, **ffmpeg_opts)
+                        audio_source = discord.PCMVolumeTransformer(audio_source, settings['volume'])
+                    ctx.voice_client.stop()
                     ctx.voice_client.play(audio_source)
 
-                await ctx.send(f":arrow_forward: Started playing at {seconds} seconds.")
+                    await ctx.send(f":arrow_forward: Started playing at {seconds} seconds.")
+                else:
+                    await ctx.send(":x: No music data available to seek.")
             else:
-                await ctx.send(":x: No music data available to seek.")
-        else:
-            await ctx.send(":x: No music is currently playing.")
+                await ctx.send(":x: No music is currently playing.")
+        except Exception as e:
+            print(f"[-] An error occurred while seeking: {e}")
 
 
-@commands.command(name='search', help='Search for a song on YouTube')
-@commands.guild_only()
-async def search(self,ctx, *, query:str) -> None:
-    embed = discord.Embed(title=f"Searching for `{query}`", color=discord.Color.blurple())
-    message = await ctx.send(embed=embed)
-    reactions = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
+    @commands.command(name='search', help='Search for a song on YouTube')
+    @commands.guild_only()
+    async def search(self, ctx, *, query:str) -> None:
+        embed = discord.Embed(title=f"Searching for `{query}`", color=discord.Color.blurple())
+        message = await ctx.send(embed=embed)
+        reactions = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
 
-    try:
-        search_results = []
-        for i in range (4):
-            OPTS = config.YTDL_OPTS.copy()
-            OPTS['extract_flat'] = True
-            with yt_dlp.YoutubeDL(OPTS) as ydl:
-                OPTS['playlist_items'] = str(i + 1)
-                search_result = ydl.extract_info(f"ytsearch4:{query}", download=False)['entries'][0]
-                embed.title = f"Search results for `{query}`"
-                embed.add_field(name=f"{i + 1}. {search_result['title']}", value=search_result['url'], inline=False)
-                await message.edit(embed=embed)
-                search_results.append(search_result)
+        try:
+            search_results = []
+            for i in range (4):
+                OPTS = config.YTDL_OPTS.copy()
+                OPTS['extract_flat'] = True
+                with yt_dlp.YoutubeDL(OPTS) as ydl:
+                    OPTS['playlist_items'] = str(i + 1)
+                    search_result = ydl.extract_info(f"ytsearch4:{query}", download=False)['entries'][0]
+                    embed.title = f"Search results for `{query}`"
+                    embed.add_field(name=f"{i + 1}. {search_result['title']}", value=search_result['url'], inline=False)
+                    await message.edit(embed=embed)
+                    search_results.append(search_result)
 
-        for i in range(len(search_results)):
-            await message.add_reaction(reactions[i])
-        
-        reaction = await self.bot.wait_for('reaction_add', timeout=30.0, check=lambda reaction, user: user == ctx.author and reaction.message == message)
-        index = reactions.index(reaction[0].emoji)        
-        await message.delete()
-        await self.play(ctx, query=search_results[index]['url'])
-    except Exception as e:  
-        embed.title = "Error"
-        embed.description = f"An error occurred while searching: {str(e)}"
-        await message.edit(embed=embed)
+            for i in range(len(search_results)):
+                await message.add_reaction(reactions[i])
+            
+            reaction = await self.bot.wait_for('reaction_add', timeout=30.0, check=lambda reaction, user: user == ctx.author and reaction.message == message)
+            index = reactions.index(reaction[0].emoji)        
+            await message.delete()
+            await self.play(ctx, query=search_results[index]['url'])
+        except Exception as e:  
+            embed.title = "Error"
+            embed.description = f"An error occurred while searching: {str(e)}"
+            await message.edit(embed=embed)
 
 
 async def setup(bot: commands.Bot) -> None:
