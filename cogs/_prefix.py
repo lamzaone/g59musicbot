@@ -1,8 +1,14 @@
+##############################################
+##############################################
+#   WARNING: THIS FILE DEPENDS ON prefix.py  #
+##############################################
+##############################################
+
 import discord
 from discord.ext import commands
 from discord import app_commands
 from utils import serversettings as Settings
-from cogs import prefixx
+from cogs import prefix
 
 class _Prefix(commands.Cog):
     def __init__(self, bot: commands.Bot):
