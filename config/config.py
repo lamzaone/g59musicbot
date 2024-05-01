@@ -9,13 +9,15 @@ current_folder = os.path.dirname(os.path.abspath(__file__))
 serversettings = os.path.join(current_folder, 'serversettings.json')
 queues = os.path.join(current_folder, 'queues.json')
 token_file = os.path.join(current_folder, 'bot_token.txt')
+app_id_file = os.path.join(current_folder, 'app_id.txt')
 FFMPEG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'ffmpeg.exe')
 bot_token=''
+app_id = ''
 
 
 def init():
     global bot_token
-
+    global app_id
     # Check if serversettings.json exists
     try:
         with open(serversettings, 'r') as f:
@@ -76,6 +78,28 @@ def init():
         except Exception as e:
             print("[!!] Error updating bot_token.txt file. Check permissions on the folder.\n^-- Error: ", e)
 
+    # Check if app_id.txt exists
+    try:
+        with open(app_id_file, 'r') as f:
+            app_id = f.read()
+    except FileNotFoundError:
+        # If the file does not exist, create it and ask the user for the app id
+        print("[!] app_id.txt not found. Attempting to create it now.")
+        try:
+            with open(app_id_file, 'w') as f:
+                app_id = input("[-] Please enter your app id: ")
+                f.write(app_id)
+            print("[+] app_id.txt created successfully")
+        except Exception as e:
+            print("[!!] Error creating app_id.txt file. Check permissions on the folder.\n^-- Error: ", e)
+        
+
+def get_cogs():
+    cogs = []
+    for file in os.listdir("cogs"):
+        if file.endswith(".py") and not file.startswith("_"):
+            cogs.append(file[:-3])
+    return cogs
 
 ffmpeg_options = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',

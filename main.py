@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
 from utils import serversettings as Settings, queues as Queues, update, musicplayer
 import yt_dlp
 import os
@@ -12,20 +13,33 @@ from typing import Literal, Optional
 
 
 
-
 # Initialize Discord bot with command prefix and intents
 bot = commands.Bot(command_prefix=commands.when_mentioned_or(""), intents=config.intents)
 tree = bot.tree
 is_windows = os.name == 'nt'
 
+
+
+async def load_cogs():
+    cogs = config.get_cogs()
+    for cog in cogs:
+        try:
+            await bot.load_extension(f"cogs.{cog}")
+            print(f"[+] Loaded")
+        except Exception as e:
+            print(f"[-] An error occurred while loading {cog}: {e}")
+
 @bot.event
 async def on_ready():
+    await load_cogs()
     await tree.sync()
     print(f'[+] Booted {bot.user}...')
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="/play <song>"), status=discord.Status.dnd)
     # Reset queues and fetch settings for all guilds
     queues = {}
     settings = Settings.get_settings_all()
+
+
 
 
     # Initialize settings for all guilds
@@ -67,25 +81,25 @@ async def on_guild_join(guild):
     print(f'[+] Successfully initialized config/queues.json for {guild.name}')
 
 ### SET PREFIX COMMAND ###
-@bot.command(name='prefix', help='Change the command prefix for the bot')
-@commands.guild_only()
-@commands.has_permissions(administrator=True)
-async def prefix(ctx, new_prefix: str):
-    settings = Settings.get_settings(ctx.guild.id)
-    settings['prefix'] = new_prefix
-    Settings.set_guild_settings(ctx.guild.id, settings)
-    await ctx.send(f"Prefix changed to `{new_prefix}`")
+# @bot.command(name='prefix', help='Change the command prefix for the bot')
+# @commands.guild_only()
+# @commands.has_permissions(administrator=True)
+# async def prefix(ctx, new_prefix: str):
+#     settings = Settings.get_settings(ctx.guild.id)
+#     settings['prefix'] = new_prefix
+#     Settings.set_guild_settings(ctx.guild.id, settings)
+#     await ctx.send(f"Prefix changed to `{new_prefix}`")
 
-@tree.command(name='prefix', description='Change the command prefix for the bot')
-async def _prefix(interaction: discord.Interaction, new_prefix: str):
-    ctx = await commands.Context.from_interaction(interaction)
-    if not ctx.guild:
-        await interaction.response.send_message(":x: This command can only be used in a server.", ephemeral=True)
-        return
-    if not ctx.author.guild_permissions.administrator:
-        await interaction.response.send_message(":x: You must have the `Administrator` permission to use this command.", ephemeral=True)
-        return
-    await prefix(ctx, new_prefix)
+# @tree.command(name='prefix', description='Change the command prefix for the bot')
+# async def _prefix(interaction: discord.Interaction, new_prefix: str):
+#     ctx = await commands.Context.from_interaction(interaction)
+#     if not ctx.guild:
+#         await interaction.response.send_message(":x: This command can only be used in a server.", ephemeral=True)
+#         return
+#     if not ctx.author.guild_permissions.administrator:
+#         await interaction.response.send_message(":x: You must have the `Administrator` permission to use this command.", ephemeral=True)
+#         return
+#     await prefix(ctx, new_prefix)
 
 @bot.command(name='search', help='Search for a song on YouTube')
 @commands.guild_only()
