@@ -59,3 +59,4 @@ def get_info(query:str):
         print("is auto")
         return extract_auto_info(query)
     
+

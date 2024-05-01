@@ -13,9 +13,10 @@ FFMPEG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 bot_token=''
 
 
+
 def init():
     global bot_token
-
+    global app_id
     # Check if serversettings.json exists
     try:
         with open(serversettings, 'r') as f:
@@ -77,6 +78,15 @@ def init():
             print("[!!] Error updating bot_token.txt file. Check permissions on the folder.\n^-- Error: ", e)
 
 
+        
+
+def get_cogs():
+    cogs = []
+    for file in os.listdir("cogs"):
+        if file.endswith(".py") and not file.startswith("!"):
+            cogs.append(file[:-3])
+    return cogs
+
 ffmpeg_options = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
     'options': '-vn',
@@ -91,6 +101,7 @@ YTDL_OPTS = {
     'logtostderr': False,
     'quiet': False,
     'no_warnings': True,
+    'no-download': True,
     'default_search': 'ytsearch1',
     'source_address': '0.0.0.0',  
     'force-ipv4': True,
@@ -111,7 +122,8 @@ YTDL_OPTS = {
 }
 
 YTDL_SOUNDCLOUD_OPTS = {
-    'format': 'bestaudio/best',
+    'format': 'bestaudio/best',    
+    'no-download': True,
     'restrictfilenames': False,
     'noplaylist': True,
     'nocheckcertificate': True,
@@ -131,7 +143,8 @@ YTDL_SOUNDCLOUD_OPTS = {
 YTDL_AUTO = {
     'format': 'bestaudio/best',
     'restrictfilenames': False,
-    'noplaylist': True,
+    'noplaylist': True,    
+    'no-download': True,
     'nocheckcertificate': True,
     'ignoreerrors': False,
     'logtostderr': False,

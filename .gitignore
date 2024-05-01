@@ -7,3 +7,4 @@
 /config/bot_token.txt
 /ffmpeg.exe
 /utils/picchanger.py
+/cogs/__pycache__

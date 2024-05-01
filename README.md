@@ -1,14 +1,22 @@
 # Discord YouTube Music Bot in Python - Easy Set-up
-Fast and reliable music bot made in python that currently supports YouTube and Soundcloud(more features to be added soon) - **Easy to set-up!**
+Fast and reliable music bot made in python that currently supports YouTube, Soundcloud, Vimeo, and more! - **Easy to set-up!**
+The bot doesn't currently support Spotify, but supports pretty much every other source.
 You can also invite the bot to multiple servers, each having their own custom settings!
 
 
 Not only this music bot can be customised to your liking, but it's very easy to self-host your own discord bot 24/7 for free! Create an account on cloud.oracle.com, start a VM instance on Ubuntu 22.04 using the Always FREE plan and follow the instructions below to install!
 
-#### Any questions? DM me on Discord (link on my profile) 
+#### Any questions? DM me on Discord (link on my profile). Please let me know if any problems or bugs occur, thanks! 
 
 ---
+### TODOs
+- Implement Search function
+- Handle playlist  links (add every song to the queue)
+- Create custom playlists
+- Add Spotify support
 
+
+---
 # Setup
 
 ## Windows
@@ -31,7 +39,7 @@ pip install -r requirements.txt
 ```
 4. Start the bot using the following command
 ```
-python3 main.py
+python main.py
 ```
 5. Add your bot token when asked to
 6. Copy the invite-url and invite the bot to your server!
@@ -57,7 +65,7 @@ pip install -r requirements.txt
 
 4. Start the bot using the following command
 ```
-python main.py
+python3 main.py
 ```
 5. Add your bot token when asked to
 6. Copy the invite-url and invite the bot to your server!
