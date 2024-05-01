@@ -14,7 +14,7 @@ from typing import Literal, Optional
 
 
 # Initialize Discord bot with command prefix and intents
-bot = commands.Bot(command_prefix="", intents=config.intents) # set prefix to "" becuse we handle them in on_message event
+bot = commands.Bot(command_prefix=commands.when_mentioned_or(""), intents=config.intents)
 tree = bot.tree
 is_windows = os.name == 'nt'
 
@@ -98,11 +98,12 @@ async def search(ctx, *, query:str):
         search_results = []
         for i in range (4):
             OPTS = config.YTDL_OPTS.copy()
+            OPTS['extract_flat'] = True
             with yt_dlp.YoutubeDL(OPTS) as ydl:
                 OPTS['playlist_items'] = str(i + 1)
                 search_result = ydl.extract_info(f"ytsearch4:{query}", download=False)['entries'][0]
                 embed.title = f"Search results for `{query}`"
-                embed.add_field(name=f"{i + 1}. {search_result['title']}", value=search_result['webpage_url'], inline=False)
+                embed.add_field(name=f"{i + 1}. {search_result['title']}", value=search_result['url'], inline=False)
                 await message.edit(embed=embed)
                 search_results.append(search_result)
 
@@ -112,7 +113,7 @@ async def search(ctx, *, query:str):
         reaction = await bot.wait_for('reaction_add', timeout=30.0, check=lambda reaction, user: user == ctx.author and reaction.message == message)
         index = reactions.index(reaction[0].emoji)        
         await message.delete()
-        await play(ctx, query=search_results[index]['original_url'])
+        await play(ctx, query=search_results[index]['url'])
     except Exception as e:  
         embed.title = "Error"
         embed.description = f"An error occurred while searching: {str(e)}"
@@ -134,11 +135,12 @@ async def _search(interaction: discord.Interaction, query: str):
         embed.description = ""
         for i in range (4):
             OPTS = config.YTDL_OPTS.copy()
+            OPTS['extract_flat'] = True
             with yt_dlp.YoutubeDL(OPTS) as ydl:
                 OPTS['playlist_items'] = str(i + 1)
                 search_result = ydl.extract_info(f"ytsearch4:{query}", download=False)['entries'][0]
                 embed.title = f"Search results for `{query}`"
-                embed.add_field(name=f"{i + 1}. {search_result['title']}", value=search_result['webpage_url'], inline=False)
+                embed.add_field(name=f"{i + 1}. {search_result['title']}", value=search_result['url'], inline=False)
                 await message.edit(embed=embed)
                 search_results.append(search_result)
 
@@ -149,7 +151,7 @@ async def _search(interaction: discord.Interaction, query: str):
             return user == interaction.user and reaction.message.id == message.id
         reaction, _ = await bot.wait_for('reaction_add', timeout=30.0, check=reaction_check)
         index = reactions.index(reaction.emoji)
-        await play_song(interaction=interaction, query=search_results[index]['original_url'])
+        await play_song(interaction=interaction, query=search_results[index]['url'])
     except asyncio.TimeoutError:
         await interaction.followup.send("Reaction timeout, please try again.")
 
