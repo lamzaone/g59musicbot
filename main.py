@@ -1,15 +1,12 @@
 import discord
 from discord.ext import commands
-from discord import app_commands
-from utils import serversettings as Settings, queues as Queues, update, musicplayer
-import yt_dlp
+from utils import serversettings as Settings, queues as Queues, update
 import os
 from config import config  # Make sure this import points to your bot's configuration
 import asyncio
 import json
 import sys
 import nacl
-from typing import Literal, Optional
 
 
 
@@ -18,16 +15,15 @@ bot = commands.Bot(command_prefix=commands.when_mentioned_or(""), intents=config
 tree = bot.tree
 is_windows = os.name == 'nt'
 
-
-
 async def load_cogs():
     cogs = config.get_cogs()
     for cog in cogs:
         try:
             await bot.load_extension(f"cogs.{cog}")
-            print(f"[+] Loaded")
+            print(f"[+] Successfully loaded {cog}")
         except Exception as e:
             print(f"[-] An error occurred while loading {cog}: {e}")
+
 
 @bot.event
 async def on_ready():
@@ -39,9 +35,6 @@ async def on_ready():
     queues = {}
     settings = Settings.get_settings_all()
 
-
-
-
     # Initialize settings for all guilds
     try:
         for guild in bot.guilds:
@@ -51,7 +44,6 @@ async def on_ready():
         print('[+] Successfully initialized bot settings')
     except Exception as e:
         print('[!] Error initializing bot settings: ', e)
-
 
     # Initialize queues for all guilds
     try:
@@ -70,7 +62,6 @@ async def on_ready():
     print(f'[+] Invite URL: {oauth_url}')
 
 
-
 ### INITIALIZE GUILD SETTINGS AND QUEUES ON GUILD JOIN ###
 @bot.event
 async def on_guild_join(guild):
@@ -79,44 +70,6 @@ async def on_guild_join(guild):
     print(f'[+] Joined {guild.name} with id {guild.id}')
     print(f'[+] Successfully initialized config/serversettings.json for {guild.name}')
     print(f'[+] Successfully initialized config/queues.json for {guild.name}')
-
-
-
-### SYNC COMMANDS ###
-@bot.command()
-@commands.guild_only()
-@commands.is_owner()
-async def sync(ctx: commands.Context, guilds: commands.Greedy[discord.Object], spec: Optional[Literal["~", "*", "^"]] = None) -> None:
-    if not guilds:
-        if spec == "~":
-            synced = await ctx.bot.tree.sync(guild=ctx.guild)
-        elif spec == "*":
-            ctx.bot.tree.copy_global_to(guild=ctx.guild)
-            synced = await ctx.bot.tree.sync(guild=ctx.guild)
-        elif spec == "^":
-            ctx.bot.tree.clear_commands(guild=ctx.guild)
-            await ctx.bot.tree.sync(guild=ctx.guild)
-            synced = []
-        else:
-            synced = await ctx.bot.tree.sync()
-
-        await ctx.send(
-            f"Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}"
-        )
-        return
-
-    ret = 0
-    for guild in guilds:
-        try:
-            await ctx.bot.tree.sync(guild=guild)
-        except discord.HTTPException:
-            pass
-        else:
-            ret += 1
-
-    await ctx.send(f"Synced the tree to {ret}/{len(guilds)}.")
-
-
 
 @bot.event
 async def on_message(message):
@@ -154,7 +107,6 @@ async def on_command_error(ctx, error):
     raise error
 
 
-
 def main(*args):
 
     # Check for updates
@@ -175,8 +127,6 @@ def main(*args):
         return
 
 
-
-# Entry point
 if __name__ == '__main__':
-    args = sys.argv[1:]  # All arguments after the script name
+    args = sys.argv[1:]
     main(*args)

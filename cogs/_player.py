@@ -97,7 +97,7 @@ class _Player(commands.Cog):
 
     @app_commands.command(name='skip', description='Skip the current song and play the next one in the queue')
     @commands.guild_only()
-    async def _skip(self, interaction: discord.Interaction) -> None:
+    async def _skip(self, interaction: discord.Interaction):
         ctx = await self.bot.get_context(interaction)
         player_cog = ctx.bot.get_cog('Player')
         await player_cog.skip(ctx)
@@ -107,7 +107,7 @@ class _Player(commands.Cog):
 
     @app_commands.command(name='stop', description='Stop playing music and disconnect from voice channel')
     @commands.guild_only()
-    async def _stop(self, interaction: discord.Interaction) -> None:
+    async def _stop(self, interaction: discord.Interaction):
         ctx = await self.bot.get_context(interaction)
         player_cog = ctx.bot.get_cog('Player')
         await player_cog.stop(ctx)
@@ -116,7 +116,7 @@ class _Player(commands.Cog):
             
     @app_commands.command(name='pause', description='Pause the currently playing music')
     @commands.guild_only()
-    async def _pause(self, interaction: discord.Interaction) -> None:
+    async def _pause(self, interaction: discord.Interaction):
         ctx = await self.bot.get_context(interaction)
         player_cog = ctx.bot.get_cog('Player')
         await player_cog.pause(ctx)
@@ -190,5 +190,5 @@ class _Player(commands.Cog):
 
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: commands.Bot):
     await bot.add_cog(_Player(bot))

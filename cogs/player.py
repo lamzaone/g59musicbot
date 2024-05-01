@@ -10,12 +10,12 @@ import json
 is_windows = os.name == 'nt'
 
 class Player(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @commands.command(name='play', help='Play music from YouTube using a search term or URL')
     @commands.guild_only()
-    async def play(self, ctx, *, query: str) -> None:
+    async def play(self, ctx, *, query: str):
         if ctx.voice_client is None:
             if ctx.author.voice:
                 await ctx.author.voice.channel.connect()
@@ -68,7 +68,7 @@ class Player(commands.Cog):
         ### SKIP COMMAND ###
     @commands.command(name='skip', help='Skip the current song and play the next one in the queue')
     @commands.guild_only()
-    async def skip(self, ctx) -> None:
+    async def skip(self, ctx):
         if ctx.voice_client and ctx.voice_client.is_playing():
             ctx.voice_client.stop()
             await ctx.send(":fast_forward: Skipped the current song.")
@@ -77,7 +77,7 @@ class Player(commands.Cog):
     ### STOP COMMAND ###
     @commands.command(name='stop', help='Stop playing music and disconnect from voice channel')
     @commands.guild_only()
-    async def stop(self, ctx) -> None:
+    async def stop(self, ctx):
         if ctx.voice_client and ctx.voice_client.is_connected():
             Queues.update_queue(ctx.guild.id, [])
             ctx.voice_client.stop()
@@ -87,7 +87,7 @@ class Player(commands.Cog):
     ### PAUSE COMMAND ###
     @commands.command(name='pause', help='Pause the currently playing music')
     @commands.guild_only()
-    async def pause(self, ctx) -> None:
+    async def pause(self, ctx):
         if ctx.voice_client and ctx.voice_client.is_playing():
             ctx.voice_client.pause()
             await ctx.send(":pause_button: Music paused.")
@@ -98,7 +98,7 @@ class Player(commands.Cog):
     @commands.command(name='volume', help='Set the volume of the music')
     @commands.guild_only()
     @commands.has_permissions(manage_guild=True)
-    async def _volume(self, ctx, volume: int = None) -> None:
+    async def _volume(self, ctx, volume: int = None):
         settings = Settings.get_settings(ctx.guild.id)
 
         if volume is None:
@@ -152,7 +152,7 @@ class Player(commands.Cog):
 
     @commands.command(name='search', help='Search for a song on YouTube')
     @commands.guild_only()
-    async def search(self, ctx, *, query:str) -> None:
+    async def search(self, ctx, *, query:str):
         embed = discord.Embed(title=f"Searching for `{query}`", color=discord.Color.blurple())
         message = await ctx.send(embed=embed)
         reactions = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
@@ -183,5 +183,5 @@ class Player(commands.Cog):
             await message.edit(embed=embed)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: commands.Bot):
     await bot.add_cog(Player(bot))
