@@ -96,12 +96,12 @@ async def search(ctx, *, query:str):
 
     try:
         search_results = []
-        for i in range (4):
+        for i in range (5):
             OPTS = config.YTDL_OPTS.copy()
             OPTS['extract_flat'] = True
             with yt_dlp.YoutubeDL(OPTS) as ydl:
                 OPTS['playlist_items'] = str(i + 1)
-                search_result = ydl.extract_info(f"ytsearch4:{query}", download=False)['entries'][0]
+                search_result = ydl.extract_info(f"ytsearch5:{query}", download=False)['entries'][0]
                 embed.title = f"Search results for `{query}`"
                 embed.add_field(name=f"{i + 1}. {search_result['title']}", value=search_result['url'], inline=False)
                 await message.edit(embed=embed)
@@ -133,12 +133,12 @@ async def _search(interaction: discord.Interaction, query: str):
         search_results = []
         embed.title = f"Search results for `{query}`"
         embed.description = ""
-        for i in range (4):
+        for i in range (5):
             OPTS = config.YTDL_OPTS.copy()
             OPTS['extract_flat'] = True
             with yt_dlp.YoutubeDL(OPTS) as ydl:
                 OPTS['playlist_items'] = str(i + 1)
-                search_result = ydl.extract_info(f"ytsearch4:{query}", download=False)['entries'][0]
+                search_result = ydl.extract_info(f"ytsearch5:{query}", download=False)['entries'][0]
                 embed.title = f"Search results for `{query}`"
                 embed.add_field(name=f"{i + 1}. {search_result['title']}", value=search_result['url'], inline=False)
                 await message.edit(embed=embed)
@@ -151,6 +151,7 @@ async def _search(interaction: discord.Interaction, query: str):
             return user == interaction.user and reaction.message.id == message.id
         reaction, _ = await bot.wait_for('reaction_add', timeout=30.0, check=reaction_check)
         index = reactions.index(reaction.emoji)
+        await message.delete()
         await play_song(interaction=interaction, query=search_results[index]['url'])
     except asyncio.TimeoutError:
         await interaction.followup.send("Reaction timeout, please try again.")
