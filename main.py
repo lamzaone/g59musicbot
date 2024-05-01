@@ -96,12 +96,12 @@ async def search(ctx, *, query:str):
 
     try:
         search_results = []
-        for i in range (5):
+        for i in range (4):
             OPTS = config.YTDL_OPTS.copy()
             OPTS['extract_flat'] = True
             with yt_dlp.YoutubeDL(OPTS) as ydl:
                 OPTS['playlist_items'] = str(i + 1)
-                search_result = ydl.extract_info(f"ytsearch5:{query}", download=False)['entries'][0]
+                search_result = ydl.extract_info(f"ytsearch4:{query}", download=False)['entries'][0]
                 embed.title = f"Search results for `{query}`"
                 embed.add_field(name=f"{i + 1}. {search_result['title']}", value=search_result['url'], inline=False)
                 await message.edit(embed=embed)
@@ -121,7 +121,10 @@ async def search(ctx, *, query:str):
 
 
 @tree.command(name='search', description='Search for a song on YouTube')
-async def _search(interaction: discord.Interaction, query: str):
+async def _search(interaction: discord.Interaction, query: str, results: int = 4):
+    if results > 10:
+        await interaction.response.send_message(":x: You can only search for a maximum of 10 results.", ephemeral=True)
+        return
     # Initial response to acknowledge the command
     await interaction.response.defer(thinking=True)
     embed = discord.Embed(title=f"Searching for `{query}`", color=discord.Color.blurple())
@@ -133,12 +136,12 @@ async def _search(interaction: discord.Interaction, query: str):
         search_results = []
         embed.title = f"Search results for `{query}`"
         embed.description = ""
-        for i in range (5):
+        for i in range (results):
             OPTS = config.YTDL_OPTS.copy()
             OPTS['extract_flat'] = True
             with yt_dlp.YoutubeDL(OPTS) as ydl:
                 OPTS['playlist_items'] = str(i + 1)
-                search_result = ydl.extract_info(f"ytsearch5:{query}", download=False)['entries'][0]
+                search_result = ydl.extract_info(f"ytsearch{results}:{query}", download=False)['entries'][0]
                 embed.title = f"Search results for `{query}`"
                 embed.add_field(name=f"{i + 1}. {search_result['title']}", value=search_result['url'], inline=False)
                 await message.edit(embed=embed)
