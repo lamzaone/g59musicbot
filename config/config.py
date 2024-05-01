@@ -13,9 +13,10 @@ FFMPEG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 bot_token=''
 
 
+
 def init():
     global bot_token
-
+    global app_id
     # Check if serversettings.json exists
     try:
         with open(serversettings, 'r') as f:
@@ -76,6 +77,15 @@ def init():
         except Exception as e:
             print("[!!] Error updating bot_token.txt file. Check permissions on the folder.\n^-- Error: ", e)
 
+
+        
+
+def get_cogs():
+    cogs = []
+    for file in os.listdir("cogs"):
+        if file.endswith(".py") and not file.startswith("!"):
+            cogs.append(file[:-3])
+    return cogs
 
 ffmpeg_options = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
