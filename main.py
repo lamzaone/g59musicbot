@@ -47,14 +47,23 @@ async def on_ready():
     # Initialize queues for all guilds
     try:
         for guild in bot.guilds:
-            if Settings.get_settings(guild.id) is None:
-                settings[str(guild.id)] = Settings.default_settings
             queues[str(guild.id)] = []
         with open(config.queues, 'w') as f:
             json.dump(queues, f, indent=4)
             print('[+] Successfully initialized queues')
     except Exception as e:
         print('[!] Error initializing queues: ', e)
+
+    # if playlists are enabled, initialize playlists for all guilds
+    playlist_cog = bot.get_cog('Playlist')
+    if playlist_cog is not None:
+        print('[+] Playlists cog found, initializing playlists')
+        
+        try:
+            playlist_cog.initialize_playlists(bot.guilds)
+            print('[+] Successfully initialized playlists')
+        except Exception as e:
+            print('[!] Error initializing playlists: ', e)
 
     # Print URL for inviting the bot to a server
     oauth_url = discord.utils.oauth_url(bot.application_id, permissions=discord.Permissions(permissions=8))

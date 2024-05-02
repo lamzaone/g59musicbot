@@ -23,7 +23,7 @@ class Player(commands.Cog):
 
     @commands.command(name='play', help='Play music from YouTube using a search term or URL')
     @commands.guild_only()
-    async def play(self, ctx, *, query: str):
+    async def play(self, ctx, *, query: str = None):
         if ctx.voice_client is None:
             if ctx.author.voice:
                 await ctx.author.voice.channel.connect()
@@ -33,6 +33,9 @@ class Player(commands.Cog):
         
         async with ctx.typing():
             if ctx.voice_client.is_playing() or ctx.voice_client.is_paused():
+                if query is None:
+                    await ctx.send(":x: Music is already playing. Use `/skip` to play the next song.")
+                    return
                 try:
                     if ctx.voice_client.is_paused():
                         await ctx.send("reminder: Music is currently paused. use `/pause` to resume")
@@ -48,8 +51,10 @@ class Player(commands.Cog):
                     return
                 except TypeError:
                     pass
-            
-            info = musicplayer.get_info(query)
+            if query is None:
+                info = musicplayer.get_info(Queues.next_song(ctx.guild.id)['url'])
+            else:
+                info = musicplayer.get_info(query)
             ctx.bot.video_info = info
             ctx.bot.video_url = info['url']
             if is_windows:
