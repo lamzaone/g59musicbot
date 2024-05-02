@@ -25,6 +25,8 @@ async def load_cogs():
             print(f"[-] An error occurred while loading {cog}: {e}")
 
 
+
+
 @bot.event
 async def on_ready():
     await load_cogs()
@@ -37,10 +39,7 @@ async def on_ready():
 
     # Initialize settings for all guilds
     try:
-        for guild in bot.guilds:
-            if Settings.get_settings(guild.id) is None:
-                settings[str(guild.id)] = Settings.default_settings
-        Settings.set_all_settings(settings)
+        await Settings.check_guilds(bot.guilds)
         print('[+] Successfully initialized bot settings')
     except Exception as e:
         print('[!] Error initializing bot settings: ', e)

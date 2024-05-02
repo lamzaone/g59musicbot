@@ -130,7 +130,7 @@ class _Player(commands.Cog):
         if not ctx.guild:
             await interaction.response.send_message(":x: This command can only be used in a server.", ephemeral=True)
             return
-        if not ctx.author.guild_permissions.manage_guild:
+        if not ctx.author.guild_permissions.administrator or not ctx.author.get_role(Settings.get_dj_role(ctx.guild.id)):
             await interaction.response.send_message(":x: You must have the `Manage Server` permission to use this command.", ephemeral=True)
             return
         player_cog = ctx.bot.get_cog('Player')
@@ -188,6 +188,19 @@ class _Player(commands.Cog):
             embed.description = f"An error occurred: {str(e)}"
             await interaction.followup.send(embed=embed)
 
+        ### SET DJ ROLE COMMAND ###
+    @app_commands.command(name='setdj', description='Set the DJ role for the server')
+    @commands.guild_only()
+    async def set_dj(self, interaction: discord.Interaction , role: discord.Role = None):
+        if not interaction.guild:
+            await interaction.response.send_message(":x: This command can only be used in a server.", ephemeral=True)
+            return
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message(":x: You must have the `Administrator` permission to use this command.", ephemeral=True)
+            return
+        ctx = await self.bot.get_context(interaction)
+        player_cog = ctx.bot.get_cog('Player')
+        await player_cog.set_dj(ctx, role=role)
 
 
 async def setup(bot: commands.Bot):

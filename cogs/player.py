@@ -13,6 +13,14 @@ class Player(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+
+    def has_dj_role(ctx):
+        # Get the role from your settings
+        dj_role = Settings.get_dj_role(ctx.guild.id)
+        role = discord.utils.get(ctx.guild.roles, id=dj_role)
+        return role in ctx.author.roles or ctx.author.guild_permissions.administrator
+
+
     @commands.command(name='play', help='Play music from YouTube using a search term or URL')
     @commands.guild_only()
     async def play(self, ctx, *, query: str):
@@ -97,7 +105,7 @@ class Player(commands.Cog):
     ### VOLUME COMMAND ###
     @commands.command(name='volume', help='Set the volume of the music')
     @commands.guild_only()
-    @commands.has_permissions(manage_guild=True)
+    @commands.check(has_dj_role)
     async def _volume(self, ctx, volume: int = None):
         settings = Settings.get_settings(ctx.guild.id)
 
@@ -149,7 +157,7 @@ class Player(commands.Cog):
         except Exception as e:
             print(f"[-] An error occurred while seeking: {e}")
 
-
+    ### YOUTUBE SEARCH ###
     @commands.command(name='search', help='Search for a song on YouTube')
     @commands.guild_only()
     async def search(self, ctx, *, query:str):
@@ -183,5 +191,23 @@ class Player(commands.Cog):
             await message.edit(embed=embed)
 
 
+    ### SET DJ ROLE COMMAND ###
+    @commands.command(name='setdj', help='Set the DJ role for the server')
+    @commands.guild_only()
+    @commands.has_permissions(administrator=True)
+    async def set_dj(self, ctx, role: discord.Role = None):
+        if role is None: ## get dj role name from id
+            await ctx.send(f"Current DJ role: <@&{str(Settings.get_dj_role(ctx.guild.id))}>") 
+            return
+        settings = Settings.get_settings(ctx.guild.id)
+        settings['dj_role'] = role.id
+        Settings.set_guild_settings(ctx.guild.id, settings)
+        await ctx.send(f":white_check_mark: DJ role set to `{role.name}`")
+
+
+    ### DJ ROLE COMMAND CHECK ###
+
+
 async def setup(bot: commands.Bot):
     await bot.add_cog(Player(bot))
+
