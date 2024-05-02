@@ -130,8 +130,8 @@ class _Player(commands.Cog):
         if not ctx.guild:
             await interaction.response.send_message(":x: This command can only be used in a server.", ephemeral=True)
             return
-        if not ctx.author.guild_permissions.administrator or not ctx.author.get_role(Settings.get_dj_role(ctx.guild.id)):
-            await interaction.response.send_message(":x: You must have the `Manage Server` permission to use this command.", ephemeral=True)
+        if not ctx.author.guild_permissions.administrator and not ctx.author.get_role(Settings.get_dj_role(ctx.guild.id)):
+            await interaction.response.send_message(":x: You must have the `Administrator` permission to use this command.", ephemeral=True)
             return
         player_cog = ctx.bot.get_cog('Player')
         await player_cog._volume(ctx,volume if volume is not None else None)
