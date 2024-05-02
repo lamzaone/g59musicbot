@@ -3,7 +3,7 @@ from discord.ext import commands
 import os
 from config import config
 import json
-from utils import queues as Queues
+from utils import queues as Queues, musicplayer
 from cogs import player
 
 class Playlist(commands.Cog):
@@ -18,13 +18,39 @@ class Playlist(commands.Cog):
     
         
     @commands.group(name='playlist', aliases=['pl'], invoke_without_command=True)
-    async def playlist(self, ctx):
+    #index or name of playlist to load
+    async def playlist(self, ctx, playlist_name: str=None):
         embed = discord.Embed(title=f"Available playlists", description="", color=discord.Color.dark_magenta())
         message = await ctx.send(embed=embed)
-        async with ctx.typing():
-            for i, playlist in enumerate(os.listdir(playlist_dir(ctx.guild.id)), start=1):
-                embed.description += f'{i}: {playlist}\n'
-            await message.edit(embed=embed)
+        if playlist_name is None:
+            async with ctx.typing():
+                for i, playlist in enumerate(os.listdir(playlist_dir(ctx.guild.id)), start=1):
+                    embed.description += f'{i}: {playlist[:-5]}\n'
+                await message.edit(embed=embed)
+            return
+        if playlist_name.isnumeric():
+            playlist_name = os.listdir(playlist_dir(ctx.guild.id))[int(playlist_name)-1]
+            try:
+                playlist = get_playlist(ctx.guild.id, playlist_name)
+                embed.title = f"Playlist {playlist_name}"
+                embed.description = ""
+                for i, song in enumerate(playlist, start=1):
+                    embed.description += f'{i}: {song["title"]}\n'
+                await message.edit(embed=embed)
+            except FileNotFoundError:
+                await message.edit(content='Playlist not found')
+        else:
+            try:
+                playlist = get_playlist(ctx.guild.id, playlist_name)
+                embed.title = f"Playlist {playlist_name}"
+                embed.description = ""
+                for i, song in enumerate(playlist, start=1):
+                    embed.description += f'{i}: {song["title"]}\n'
+                await message.edit(embed=embed)
+            except FileNotFoundError:
+                await message.edit(content='Playlist not found')
+
+
 
     @playlist.command(name='create', aliases=['c'], brief='Create a new playlist')
     async def create(self, ctx, name: str):
@@ -58,9 +84,19 @@ class Playlist(commands.Cog):
                     url = info['original_url']
                     print(title, url)
                     add_to_playlist(ctx.guild.id, playlist_name, title, url)
-                    await ctx.send(f'Song added to playlist {playlist_name}')
+                    await ctx.send(f'Song `{title}` added to playlist `{playlist_name}`')
                 except Exception as e:
                     await ctx.send(f'Error adding song to playlist: {e}')
+        else:
+            info=musicplayer.get_info(query)
+            if info is None:
+                await ctx.send('No results found')
+                return
+            else:
+                title = info['title']
+                url = info['original_url']
+                add_to_playlist(ctx.guild.id, playlist_name, title, url)
+                await ctx.send(f'Song `{title}` added to playlist `{playlist_name}`')
 
     @playlist.command(name='remove', aliases=['r'], brief='Remove a song from a playlist')
     async def remove(self, ctx, playlist_name: str, song_name: str):

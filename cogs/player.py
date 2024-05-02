@@ -196,6 +196,35 @@ class Player(commands.Cog):
             await message.edit(embed=embed)
 
 
+    ### QUEUE SHUFFLE COMMAND ###
+    @commands.command(name='shuffle', help='Shuffle the current queue')
+    @commands.guild_only()
+    async def shuffle(self, ctx):
+        queue = Queues.get_queue(ctx.guild.id)
+        if len(queue) > 0:
+            import random
+            random.shuffle(queue)
+            Queues.update_queue(ctx.guild.id, queue)
+            await ctx.send(":twisted_rightwards_arrows: Queue has been shuffled.")
+        else:
+            await ctx.send(":x: The queue is empty.")
+    
+    @commands.command(name='queue', help='Display the current queue')
+    @commands.guild_only()
+    async def queue(self, ctx):
+        try:
+            queue = Queues.get_queue(ctx.guild.id)
+            if len(queue) > 0:
+                embed = discord.Embed(title="Queue", color=discord.Color.blurple())
+                embed.description = ""
+                for i, song in enumerate(queue, start=1):
+                    embed.description += f"{i}: {song['title']}\n"
+                await ctx.send(embed=embed)
+            else:
+                await ctx.send(":x: The queue is empty.")
+        except Exception as e:
+            print(f"[-] An error occurred while displaying the queue: {e}")
+
     ### SET DJ ROLE COMMAND ###
     @commands.command(name='setdj', help='Set the DJ role for the server')
     @commands.guild_only()

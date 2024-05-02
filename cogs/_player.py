@@ -202,6 +202,18 @@ class _Player(commands.Cog):
         player_cog = ctx.bot.get_cog('Player')
         await player_cog.set_dj(ctx, role=role)
 
+    @app_commands.command(name='queue', description='Display the current queue')
+    async def _queue(self, interaction: discord.Interaction):
+        ctx = await self.bot.get_context(interaction)
+        player_cog = ctx.bot.get_cog('Player')
+        await player_cog.queue(ctx)
+
+    @app_commands.command(name='shuffle', description='Shuffle the queue')
+    async def _shuffle(self, interaction: discord.Interaction):
+        ctx = await self.bot.get_context(interaction)
+        player_cog = ctx.bot.get_cog('Player')
+        await player_cog.shuffle(ctx)
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(_Player(bot))

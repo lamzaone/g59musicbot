@@ -30,7 +30,6 @@ async def load_cogs():
 @bot.event
 async def on_ready():
     await load_cogs()
-    await tree.sync()
     print(f'[+] Booted {bot.user}...')
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="/play <song>"), status=discord.Status.dnd)
     # Reset queues and fetch settings for all guilds
@@ -64,6 +63,13 @@ async def on_ready():
             print('[+] Successfully initialized playlists')
         except Exception as e:
             print('[!] Error initializing playlists: ', e)
+
+    for guild in bot.guilds:
+        try:
+            await tree.sync(guild=guild)
+            print(f'[+] Successfully synced guild {guild.name}')
+        except Exception as e:
+            print(f'[!] Error syncing guild {guild.name}: {e}')
 
     # Print URL for inviting the bot to a server
     oauth_url = discord.utils.oauth_url(bot.application_id, permissions=discord.Permissions(permissions=8))
