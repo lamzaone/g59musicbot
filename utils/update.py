@@ -56,6 +56,7 @@ def update(on_windows: bool):
 
         try:
             # Pull the latest changes from the remote repository
+            subprocess.call(git_command_base + ['reset', '--hard', 'HEAD'])
             subprocess.call(git_command_base + ['pull'])
             print('[+] Successfully updated the bot')
             print('[+] Restarting bot...')
