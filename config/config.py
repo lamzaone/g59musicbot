@@ -12,6 +12,7 @@ token_file = os.path.join(current_folder, 'bot_token.txt')
 playlists_folder = os.path.join(os.path.dirname(current_folder), 'playlists')
 FFMPEG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'ffmpeg.exe')
 bot_token=''
+cogs_dir = os.path.join(os.path.dirname(current_folder), 'cogs')
 
 
 
@@ -83,7 +84,7 @@ def init():
 
 def get_cogs():
     cogs = []
-    for file in os.listdir("cogs"):
+    for file in os.listdir(cogs_dir):
         if file.endswith(".py") and not file.startswith("!"):
             cogs.append(file[:-3])
     return cogs
