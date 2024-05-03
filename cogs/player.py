@@ -13,9 +13,17 @@ class Player(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+
+    def has_dj_role(ctx):
+        # Get the role from your settings
+        dj_role = Settings.get_dj_role(ctx.guild.id)
+        role = discord.utils.get(ctx.guild.roles, id=dj_role)
+        return role in ctx.author.roles or ctx.author.guild_permissions.administrator
+
+
     @commands.command(name='play', help='Play music from YouTube using a search term or URL')
     @commands.guild_only()
-    async def play(self, ctx, *, query: str):
+    async def play(self, ctx, *, query: str = None):
         if ctx.voice_client is None:
             if ctx.author.voice:
                 await ctx.author.voice.channel.connect()
@@ -25,6 +33,9 @@ class Player(commands.Cog):
         
         async with ctx.typing():
             if ctx.voice_client.is_playing() or ctx.voice_client.is_paused():
+                if query is None:
+                    await ctx.send(":x: Music is already playing. Use `/skip` to play the next song.")
+                    return
                 try:
                     if ctx.voice_client.is_paused():
                         await ctx.send("reminder: Music is currently paused. use `/pause` to resume")
@@ -40,8 +51,10 @@ class Player(commands.Cog):
                     return
                 except TypeError:
                     pass
-            
-            info = musicplayer.get_info(query)
+            if query is None:
+                info = musicplayer.get_info(Queues.next_song(ctx.guild.id)['url'])
+            else:
+                info = musicplayer.get_info(query)
             ctx.bot.video_info = info
             ctx.bot.video_url = info['url']
             if is_windows:
@@ -97,7 +110,7 @@ class Player(commands.Cog):
     ### VOLUME COMMAND ###
     @commands.command(name='volume', help='Set the volume of the music')
     @commands.guild_only()
-    @commands.has_permissions(manage_guild=True)
+    @commands.check(has_dj_role)
     async def _volume(self, ctx, volume: int = None):
         settings = Settings.get_settings(ctx.guild.id)
 
@@ -149,7 +162,7 @@ class Player(commands.Cog):
         except Exception as e:
             print(f"[-] An error occurred while seeking: {e}")
 
-
+    ### YOUTUBE SEARCH ###
     @commands.command(name='search', help='Search for a song on YouTube')
     @commands.guild_only()
     async def search(self, ctx, *, query:str):
@@ -183,5 +196,52 @@ class Player(commands.Cog):
             await message.edit(embed=embed)
 
 
+    ### QUEUE SHUFFLE COMMAND ###
+    @commands.command(name='shuffle', help='Shuffle the current queue')
+    @commands.guild_only()
+    async def shuffle(self, ctx):
+        queue = Queues.get_queue(ctx.guild.id)
+        if len(queue) > 0:
+            import random
+            random.shuffle(queue)
+            Queues.update_queue(ctx.guild.id, queue)
+            await ctx.send(":twisted_rightwards_arrows: Queue has been shuffled.")
+        else:
+            await ctx.send(":x: The queue is empty.")
+    
+    @commands.command(name='queue', help='Display the current queue')
+    @commands.guild_only()
+    async def queue(self, ctx):
+        try:
+            queue = Queues.get_queue(ctx.guild.id)
+            if len(queue) > 0:
+                embed = discord.Embed(title="Queue", color=discord.Color.blurple())
+                embed.description = ""
+                for i, song in enumerate(queue, start=1):
+                    embed.description += f"{i}: {song['title']}\n"
+                await ctx.send(embed=embed)
+            else:
+                await ctx.send(":x: The queue is empty.")
+        except Exception as e:
+            print(f"[-] An error occurred while displaying the queue: {e}")
+
+    ### SET DJ ROLE COMMAND ###
+    @commands.command(name='setdj', help='Set the DJ role for the server')
+    @commands.guild_only()
+    @commands.has_permissions(administrator=True)
+    async def set_dj(self, ctx, role: discord.Role = None):
+        if role is None: ## get dj role name from id
+            await ctx.send(f"Current DJ role: <@&{str(Settings.get_dj_role(ctx.guild.id))}>") 
+            return
+        settings = Settings.get_settings(ctx.guild.id)
+        settings['dj_role'] = role.id
+        Settings.set_guild_settings(ctx.guild.id, settings)
+        await ctx.send(f":white_check_mark: DJ role set to `{role.name}`")
+
+
+    ### DJ ROLE COMMAND CHECK ###
+
+
 async def setup(bot: commands.Bot):
     await bot.add_cog(Player(bot))
+

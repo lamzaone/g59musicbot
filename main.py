@@ -25,10 +25,11 @@ async def load_cogs():
             print(f"[-] An error occurred while loading {cog}: {e}")
 
 
+
+
 @bot.event
 async def on_ready():
     await load_cogs()
-    await tree.sync()
     print(f'[+] Booted {bot.user}...')
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="/play <song>"), status=discord.Status.dnd)
     # Reset queues and fetch settings for all guilds
@@ -37,10 +38,7 @@ async def on_ready():
 
     # Initialize settings for all guilds
     try:
-        for guild in bot.guilds:
-            if Settings.get_settings(guild.id) is None:
-                settings[str(guild.id)] = Settings.default_settings
-        Settings.set_all_settings(settings)
+        await Settings.check_guilds(bot.guilds)
         print('[+] Successfully initialized bot settings')
     except Exception as e:
         print('[!] Error initializing bot settings: ', e)
@@ -48,14 +46,30 @@ async def on_ready():
     # Initialize queues for all guilds
     try:
         for guild in bot.guilds:
-            if Settings.get_settings(guild.id) is None:
-                settings[str(guild.id)] = Settings.default_settings
             queues[str(guild.id)] = []
         with open(config.queues, 'w') as f:
             json.dump(queues, f, indent=4)
             print('[+] Successfully initialized queues')
     except Exception as e:
         print('[!] Error initializing queues: ', e)
+
+    # if playlists are enabled, initialize playlists for all guilds
+    playlist_cog = bot.get_cog('Playlist')
+    if playlist_cog is not None:
+        print('[+] Playlists cog found, initializing playlists')
+        
+        try:
+            playlist_cog.initialize_playlists(bot.guilds)
+            print('[+] Successfully initialized playlists')
+        except Exception as e:
+            print('[!] Error initializing playlists: ', e)
+
+    for guild in bot.guilds:
+        try:
+            await tree.sync(guild=guild)
+            print(f'[+] Successfully synced guild {guild.name}')
+        except Exception as e:
+            print(f'[!] Error syncing guild {guild.name}: {e}')
 
     # Print URL for inviting the bot to a server
     oauth_url = discord.utils.oauth_url(bot.application_id, permissions=discord.Permissions(permissions=8))

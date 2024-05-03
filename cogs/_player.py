@@ -21,7 +21,7 @@ class _Player(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name='play', description='Play music from YouTube using a search term or URL')
-    async def _play(self, interaction: discord.Interaction, query: str):
+    async def _play(self, interaction: discord.Interaction, query: str= None):
         # Ensure the interaction is acknowledged only once
         if not interaction.response.is_done():
             await interaction.response.defer(thinking=True)  # Acknowledge the interaction with a "thinking" state
@@ -29,7 +29,7 @@ class _Player(commands.Cog):
         await self.play_song(interaction, query)
 
     ### START PLAYING SONG FUNCTION ###
-    async def play_song(self, interaction, query):
+    async def play_song(self, interaction, query=None):
         if interaction.guild:
             voice_client = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
             if voice_client is None:
@@ -60,7 +60,11 @@ class _Player(commands.Cog):
 
         ctx = await self.bot.get_context(interaction)
         try:
-            info = musicplayer.get_info(query)
+
+            if query is None:
+                info = musicplayer.get_info(Queues.next_song(ctx.guild.id)['url'])
+            else:
+                info = musicplayer.get_info(query)
             video_url = info['url']
             if is_windows:
                 audio_source = discord.FFmpegPCMAudio(video_url,executable=config.FFMPEG_PATH,**config.ffmpeg_options)
@@ -130,8 +134,8 @@ class _Player(commands.Cog):
         if not ctx.guild:
             await interaction.response.send_message(":x: This command can only be used in a server.", ephemeral=True)
             return
-        if not ctx.author.guild_permissions.manage_guild:
-            await interaction.response.send_message(":x: You must have the `Manage Server` permission to use this command.", ephemeral=True)
+        if not ctx.author.guild_permissions.administrator and not ctx.author.get_role(Settings.get_dj_role(ctx.guild.id)):
+            await interaction.response.send_message(":x: You must have the `Administrator` permission to use this command.", ephemeral=True)
             return
         player_cog = ctx.bot.get_cog('Player')
         await player_cog._volume(ctx,volume if volume is not None else None)
@@ -188,6 +192,31 @@ class _Player(commands.Cog):
             embed.description = f"An error occurred: {str(e)}"
             await interaction.followup.send(embed=embed)
 
+        ### SET DJ ROLE COMMAND ###
+    @app_commands.command(name='setdj', description='Set the DJ role for the server')
+    @commands.guild_only()
+    async def set_dj(self, interaction: discord.Interaction , role: discord.Role = None):
+        if not interaction.guild:
+            await interaction.response.send_message(":x: This command can only be used in a server.", ephemeral=True)
+            return
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message(":x: You must have the `Administrator` permission to use this command.", ephemeral=True)
+            return
+        ctx = await self.bot.get_context(interaction)
+        player_cog = ctx.bot.get_cog('Player')
+        await player_cog.set_dj(ctx, role=role)
+
+    @app_commands.command(name='queue', description='Display the current queue')
+    async def _queue(self, interaction: discord.Interaction):
+        ctx = await self.bot.get_context(interaction)
+        player_cog = ctx.bot.get_cog('Player')
+        await player_cog.queue(ctx)
+
+    @app_commands.command(name='shuffle', description='Shuffle the queue')
+    async def _shuffle(self, interaction: discord.Interaction):
+        ctx = await self.bot.get_context(interaction)
+        player_cog = ctx.bot.get_cog('Player')
+        await player_cog.shuffle(ctx)
 
 
 async def setup(bot: commands.Bot):
