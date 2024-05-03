@@ -17,25 +17,28 @@ class Playlist(commands.Cog):
     
     
         
-    @commands.group(name='playlist', aliases=['pl'], invoke_without_command=True)
+    @commands.group(name='playlist', aliases=['pl'], help="!help playlist", invoke_without_command=True)
     #index or name of playlist to load
     async def playlist(self, ctx, playlist_name: str=None):
         embed = discord.Embed(title=f"Available playlists", description="", color=discord.Color.dark_magenta())
         message = await ctx.send(embed=embed)
         if playlist_name is None:
-            async with ctx.typing():
+                embed.color = discord.Color.blurple()
                 for i, playlist in enumerate(os.listdir(playlist_dir(ctx.guild.id)), start=1):
                     embed.description += f'{i}: {playlist[:-5]}\n'
                 await message.edit(embed=embed)
-            return
+                return
         if playlist_name.isnumeric():
-            playlist_name = os.listdir(playlist_dir(ctx.guild.id))[int(playlist_name)-1]
+            playlist_name = os.listdir(playlist_dir(ctx.guild.id))[int(playlist_name)-1][:-5]
             try:
                 playlist = get_playlist(ctx.guild.id, playlist_name)
                 embed.title = f"Playlist {playlist_name}"
                 embed.description = ""
-                for i, song in enumerate(playlist, start=1):
-                    embed.description += f'{i}: {song["title"]}\n'
+                if len(playlist) == 0:
+                    embed.description = "Playlist is empty"
+                else:
+                    for i, song in enumerate(playlist, start=1):
+                        embed.description += f'{i}: {song["title"]}\n'
                 await message.edit(embed=embed)
             except FileNotFoundError:
                 await message.edit(content='Playlist not found')
@@ -44,8 +47,11 @@ class Playlist(commands.Cog):
                 playlist = get_playlist(ctx.guild.id, playlist_name)
                 embed.title = f"Playlist {playlist_name}"
                 embed.description = ""
-                for i, song in enumerate(playlist, start=1):
-                    embed.description += f'{i}: {song["title"]}\n'
+                if len(playlist) == 0:
+                    embed.description = "Playlist is empty"
+                else:
+                    for i, song in enumerate(playlist, start=1):
+                        embed.description += f'{i}: {song["title"]}\n'
                 await message.edit(embed=embed)
             except FileNotFoundError:
                 await message.edit(content='Playlist not found')
