@@ -119,7 +119,7 @@ class Player(commands.Cog):
             return
         
         elif volume < 0 or volume > 100:
-            await ctx.send(":loud_sound: Volume must be between 0 and 100 you dummy...")
+            await ctx.send(":loud_sound: Volume must be between `0-100` you dummy...")
             return
 
         current_volume = settings['volume'] * 100
