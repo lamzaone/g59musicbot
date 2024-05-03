@@ -21,7 +21,7 @@ class _Player(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name='play', description='Play music from YouTube using a search term or URL')
-    async def _play(self, interaction: discord.Interaction, query: str):
+    async def _play(self, interaction: discord.Interaction, query: str= None):
         # Ensure the interaction is acknowledged only once
         if not interaction.response.is_done():
             await interaction.response.defer(thinking=True)  # Acknowledge the interaction with a "thinking" state
@@ -29,7 +29,7 @@ class _Player(commands.Cog):
         await self.play_song(interaction, query)
 
     ### START PLAYING SONG FUNCTION ###
-    async def play_song(self, interaction, query):
+    async def play_song(self, interaction, query=None):
         if interaction.guild:
             voice_client = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
             if voice_client is None:
@@ -60,7 +60,11 @@ class _Player(commands.Cog):
 
         ctx = await self.bot.get_context(interaction)
         try:
-            info = musicplayer.get_info(query)
+
+            if query is None:
+                info = musicplayer.get_info(Queues.next_song(ctx.guild.id)['url'])
+            else:
+                info = musicplayer.get_info(query)
             video_url = info['url']
             if is_windows:
                 audio_source = discord.FFmpegPCMAudio(video_url,executable=config.FFMPEG_PATH,**config.ffmpeg_options)

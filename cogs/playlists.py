@@ -27,34 +27,21 @@ class Playlist(commands.Cog):
                 for i, playlist in enumerate(os.listdir(playlist_dir(ctx.guild.id)), start=1):
                     embed.description += f'{i}: {playlist[:-5]}\n'
                 await message.edit(embed=embed)
-                return
-        if playlist_name.isnumeric():
-            playlist_name = os.listdir(playlist_dir(ctx.guild.id))[int(playlist_name)-1][:-5]
-            try:
-                playlist = get_playlist(ctx.guild.id, playlist_name)
-                embed.title = f"Playlist {playlist_name}"
-                embed.description = ""
-                if len(playlist) == 0:
-                    embed.description = "Playlist is empty"
-                else:
-                    for i, song in enumerate(playlist, start=1):
-                        embed.description += f'{i}: {song["title"]}\n'
-                await message.edit(embed=embed)
-            except FileNotFoundError:
-                await message.edit(content='Playlist not found')
-        else:
-            try:
-                playlist = get_playlist(ctx.guild.id, playlist_name)
-                embed.title = f"Playlist {playlist_name}"
-                embed.description = ""
-                if len(playlist) == 0:
-                    embed.description = "Playlist is empty"
-                else:
-                    for i, song in enumerate(playlist, start=1):
-                        embed.description += f'{i}: {song["title"]}\n'
-                await message.edit(embed=embed)
-            except FileNotFoundError:
-                await message.edit(content='Playlist not found')
+                return    
+        try:
+            if playlist_name.isnumeric():
+                playlist_name = os.listdir(playlist_dir(ctx.guild.id))[int(playlist_name)-1][:-5]
+            playlist = get_playlist(ctx.guild.id, playlist_name)
+            embed.title = f"Playlist `{playlist_name}`"
+            embed.description = ""
+            if len(playlist) == 0:
+                embed.description = "Playlist is empty"
+            else:
+                for i, song in enumerate(playlist, start=1):
+                    embed.description += f'{i}: {song["title"]}\n'
+            await message.edit(embed=embed)
+        except FileNotFoundError:
+            await message.edit(content='Playlist not found')
 
 
 
@@ -62,15 +49,17 @@ class Playlist(commands.Cog):
     async def create(self, ctx, name: str):
         try: 
             create_playlist(ctx.guild.id, name)
-            await ctx.send(f'Playlist {name} created successfully')
+            await ctx.send(f'Playlist `{name}` created successfully')
         except Exception as e:
             await ctx.send(f'Error creating playlist: {e}')
     
     @playlist.command(name='delete', aliases=['d'], brief='Delete a playlist')
-    async def delete(self, ctx, name: str):
+    async def delete(self, ctx, playlist_name: str):
         try:
-            os.remove(os.path.join(playlist_dir(ctx.guild.id), f'{name}.json'))
-            await ctx.send(f'Playlist {name} removed successfully')
+            if playlist_name.isnumeric() and int(playlist_name) <= len(os.listdir(playlist_dir(ctx.guild.id))):
+                playlist_name = os.listdir(playlist_dir(ctx.guild.id))[int(playlist_name)-1][:-5]
+            os.remove(os.path.join(playlist_dir(ctx.guild.id), f'{playlist_name}.json'))
+            await ctx.send(f'Playlist `{playlist_name}` removed successfully')
         except FileNotFoundError:
             await ctx.send('Playlist not found')
         except Exception as e:
@@ -78,6 +67,8 @@ class Playlist(commands.Cog):
         
     @playlist.command(name='add', aliases=['a'], brief='Add a song to a playlist')
     async def add(self, ctx, playlist_name: str, query: str=None):
+        if playlist_name.isnumeric() and int(playlist_name) <= len(os.listdir(playlist_dir(ctx.guild.id))):
+                playlist_name = os.listdir(playlist_dir(ctx.guild.id))[int(playlist_name)-1][:-5]
         if query is None:
             if not hasattr(ctx, 'voice_client') and ctx.voice_client.is_playing():
                 await ctx.send('No song playing, please provide a query')
@@ -106,12 +97,14 @@ class Playlist(commands.Cog):
 
     @playlist.command(name='remove', aliases=['r'], brief='Remove a song from a playlist')
     async def remove(self, ctx, playlist_name: str, song_name: str):
+        if playlist_name.isnumeric() and int(playlist_name) <= len(os.listdir(playlist_dir(ctx.guild.id))):
+                playlist_name = os.listdir(playlist_dir(ctx.guild.id))[int(playlist_name)-1][:-5]
         try:
             removed_song = remove_from_playlist(ctx.guild.id, playlist_name, song_name)
             if removed_song is not None:
-                await ctx.send(f'Song {removed_song} removed from playlist {playlist_name}')
+                await ctx.send(f'Song `{removed_song}` removed from playlist `{playlist_name}`')
             else:
-                await ctx.send(f'Song {song_name} not found in playlist {playlist_name}')
+                await ctx.send(f'Song `{song_name}` not found in playlist `{playlist_name}`')
         except FileNotFoundError:
             await ctx.send('Playlist not found')
 
@@ -123,7 +116,9 @@ class Playlist(commands.Cog):
         if not ctx.voice_client:
             await ctx.author.voice.channel.connect()
 
-        try:            
+        try:
+            if playlist_name.isnumeric() and int(playlist_name) <= len(os.listdir(playlist_dir(ctx.guild.id))):
+                playlist_name = os.listdir(playlist_dir(ctx.guild.id))[int(playlist_name)-1][:-5]            
             playlist = get_playlist(ctx.guild.id, playlist_name)
             print(playlist)
             queue = Queues.get_queue(ctx.guild.id)

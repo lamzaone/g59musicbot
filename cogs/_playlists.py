@@ -47,6 +47,8 @@ class _Playlist(commands.Cog):
     @group.command(name='load', description='Load a playlist into the queue')
     async def load(self, interaction: discord.Interaction, playlist_name: str):
         ctx = await self.bot.get_context(interaction)
+        if playlist_name.isnumeric() and int(playlist_name) <= len(os.listdir(playlist_dir(ctx.guild.id))):
+                playlist_name = os.listdir(playlist_dir(ctx.guild.id))[int(playlist_name)-1][:-5]
         if not ctx.author.voice:
             await ctx.send('You are not connected to a voice channel')
             return
@@ -55,20 +57,17 @@ class _Playlist(commands.Cog):
 
         try:            
             playlist = get_playlist(ctx.guild.id, playlist_name)
-            print(playlist)
             queue = Queues.get_queue(ctx.guild.id)
             for song in playlist:
                 queue_item = {}
                 queue_item['title'] = song['title']
                 queue_item['url'] = song['url']
                 queue.append(queue_item)
-                
-            await ctx.send(f'Playlist {playlist_name} loaded {len(playlist)} songs into the queue')
+            
             
             Queues.update_queue(ctx.guild.id, queue)
             if not ctx.voice_client.is_playing():
                 player_cog = ctx.bot.get_cog('Player')
-                song_url = queue.pop(0).get('url')
                 await player_cog.play(ctx)
         except Exception as e:
             await ctx.send(f'Error loading playlist: {e}')
