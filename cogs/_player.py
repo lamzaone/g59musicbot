@@ -40,7 +40,7 @@ class _Player(commands.Cog):
                     await interaction.followup.send(":x: You must be in a voice channel.", ephemeral=False)
                     return            
             #get voice channel again after connecting
-            voice_client = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
+            voice_client = discord.utils.get(self.bot.voice_clients, guild= interaction.guild)
             if voice_client.is_playing() or voice_client.is_paused():
                     try:
                         info = musicplayer.get_info(query)

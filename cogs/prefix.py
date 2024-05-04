@@ -7,7 +7,7 @@ class Prefix(commands.Cog):
         self.bot = bot
 
 
-    @commands.command(name='prefix', help='Change the command prefix for the bot')
+    @commands.hybrid_command(name='prefix', help='Change the command prefix for the bot')
     @commands.guild_only()
     @commands.has_permissions(administrator=True)
     async def prefix(self, ctx, new_prefix: str):
