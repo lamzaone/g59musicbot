@@ -7,6 +7,7 @@ import asyncio
 import json
 import sys
 import nacl
+import subprocess
 
 
 
@@ -35,26 +36,21 @@ async def check_for_updates():
         message = await owner.send(embed=embed)
         #add reaction to the message to allow the owner to update the bot
         await message.add_reaction('✅')
-        await message.add_reaction('❌')            
-        
+        await message.add_reaction('❌')
         try:
             reaction, _ = await bot.wait_for('reaction_add', timeout=12*3600.0, check=lambda reaction, user: user == owner and reaction.message == message)
             if reaction.emoji == '✅':
-                await owner.send('[+] Update accepted. Updating bot...')
-                send_update(is_windows)
+                owner.send('[-] Update accepted. Bot will be updated.')                
+                update.update(is_windows)
+                await bot.close()
+                sys.exit(0)
             elif reaction.emoji == '❌':
                 await owner.send('[-] Update declined. Bot will not be updated.')
         except asyncio.TimeoutError:
             await owner.send('[-] Update declined. Bot will not be updated.')
-        except Exception as e:
-            pass
-        else:
-            await message.delete()
-        
+        except Exception as e:     
+            pass       
 
-def send_update():
-    update.update(is_windows)                    
-    sys.exit(0)
 
 @bot.event
 async def on_ready():
