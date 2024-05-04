@@ -24,15 +24,7 @@ def check_for_updates(on_windows: bool):
         left, right = map(int, ahead_behind_check.split())
         if right > 0:
             print(f"[+] {right} updates available.")
-            while True:
-                confirmation = input("Do you want to update the bot now? (yes/no or y/n): ").lower()
-                if confirmation in ['yes', 'y']:
-                    return True
-                elif confirmation in ['no', 'n']:
-                    print('[+] Bot is not updated.')
-                    return False
-                else:
-                    print("Please enter 'yes' or 'no' or 'y' or 'n'.")
+            return True
         else:
             print('[+] Bot is up to date')
             print('[+] Launching bot...')
@@ -50,22 +42,28 @@ def update(on_windows: bool):
     try:
         script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         git_command_base = ['git', '-C', script_dir]
+        while True:
+            confirmation = input("Do you want to update the bot now? (yes/no or y/n): ").lower()
+            if confirmation in ['yes', 'y']:
+                try:
+                    subprocess.call(git_command_base + ['reset', '--hard', 'HEAD'])
+                    subprocess.call(git_command_base + ['pull'])
+                    print('[+] Successfully updated the bot')
 
-        try:
-            subprocess.call(git_command_base + ['reset', '--hard', 'HEAD'])
-            subprocess.call(git_command_base + ['pull'])
-            print('[+] Successfully updated the bot')
+                    # Restart the bot if successfully updated
+                    print('[+] Restarting bot...')
+                    python_exe = 'python3' if not on_windows else 'python'
+                    restart_command = [python_exe, 'main.py', 'updated']
+                    subprocess.Popen(restart_command, cwd=script_dir)
+                    os._exit(0)  # Ensuring parent process is killed
 
-            # Restart the bot if successfully updated
-            print('[+] Restarting bot...')
-            python_exe = 'python3' if not on_windows else 'python'
-            restart_command = [python_exe, 'main.py', 'updated']
-            subprocess.Popen(restart_command, cwd=script_dir)
-            os._exit(0)  # Ensuring parent process is killed
-
-        except subprocess.CalledProcessError as cpe:
-            print(f'[-] Git command failed: {cpe.output.strip()}')
-        except Exception as e:
-            print(f'[-] An error occurred while updating: {e}')
+                except subprocess.CalledProcessError as cpe:
+                    print(f'[-] Git command failed: {cpe.output.strip()}')
+                except Exception as e:
+                    print(f'[-] An error occurred while updating: {e}')
+            elif confirmation in ['no', 'n']:
+                print('[+] Bot is not updated.')
+            else:
+                print("Please enter 'yes' or 'no' or 'y' or 'n'.")
     except Exception as e:
         print(f'[-] An error occurred while attempting to update: {e}')
