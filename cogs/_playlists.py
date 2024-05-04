@@ -5,6 +5,7 @@ from utils import queues as Queues
 from config import config
 import os
 import json
+import asyncio
 
 class _Playlist(commands.Cog):
     def __init__(self, bot):
@@ -55,6 +56,7 @@ class _Playlist(commands.Cog):
             return
         if not ctx.voice_client:
             await ctx.author.voice.channel.connect()
+        
 
         try:            
             playlist = get_playlist(ctx.guild.id, playlist_name)
@@ -67,9 +69,11 @@ class _Playlist(commands.Cog):
             
             
             Queues.update_queue(ctx.guild.id, queue)
+            embed = discord.Embed(title=f'Loaded playlist {playlist_name}', description=f'Loaded {len(playlist)} songs into the queue', color=discord.Color.green())
+            await interaction.response.send_message(embed=embed)
             if not ctx.voice_client.is_playing():
-                player_cog = ctx.bot.get_cog('Player')
-                await player_cog.play(ctx)
+                play_cog = self.bot.get_cog('_Player')
+                await play_cog.play_song(interaction=interaction, query=None)
         except Exception as e:
             await ctx.send(f'Error loading playlist: {e}')
 

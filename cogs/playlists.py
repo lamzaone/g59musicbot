@@ -120,15 +120,14 @@ class Playlist(commands.Cog):
             if playlist_name.isnumeric() and int(playlist_name) <= len(os.listdir(playlist_dir(ctx.guild.id))):
                 playlist_name = os.listdir(playlist_dir(ctx.guild.id))[int(playlist_name)-1][:-5]            
             playlist = get_playlist(ctx.guild.id, playlist_name)
-            print(playlist)
             queue = Queues.get_queue(ctx.guild.id)
             for song in playlist:
                 queue_item = {}
                 queue_item['title'] = song['title']
                 queue_item['url'] = song['url']
                 queue.append(queue_item)
-                
-            await ctx.send(f'Playlist {playlist_name} loaded {len(playlist)} songs into the queue')
+            embed = discord.Embed(title=f'Loaded playlist {playlist_name}', description=f'Loaded {len(playlist)} songs into the queue', color=discord.Color.green())    
+            await ctx.send(embed=embed)
             
             Queues.update_queue(ctx.guild.id, queue)
             if not ctx.voice_client.is_playing():
