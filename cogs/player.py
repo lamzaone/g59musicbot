@@ -165,23 +165,23 @@ class Player(commands.Cog):
     ### YOUTUBE SEARCH ###
     @commands.command(name='search', help='Search for a song on YouTube')
     @commands.guild_only()
-    async def search(self, ctx, *, query:str):
+    async def search(self, ctx, query:str, limit:int=4):
         embed = discord.Embed(title=f"Searching for `{query}`", color=discord.Color.blurple())
         message = await ctx.send(embed=embed)
         reactions = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
 
         try:
-            search_results = []
-            for i in range (4):
-                OPTS = config.YTDL_OPTS.copy()
-                OPTS['extract_flat'] = True
-                with yt_dlp.YoutubeDL(OPTS) as ydl:
-                    OPTS['playlist_items'] = str(i + 1)
-                    search_result = ydl.extract_info(f"ytsearch4:{query}", download=False)['entries'][0]
-                    embed.title = f"Search results for `{query}`"
-                    embed.add_field(name=f"{i + 1}. {search_result['title']}", value=search_result['url'], inline=False)
-                    await message.edit(embed=embed)
-                    search_results.append(search_result)
+            
+            OPTS = config.YTDL_OPTS.copy()
+            OPTS['extract_flat'] = True
+            with yt_dlp.YoutubeDL(OPTS) as ydl:
+                search_results = ydl.extract_info(f"ytsearch{limit}:{query}", download=False)['entries']
+                embed.title = f"Search results for `{query}`"
+                embed.description = ""
+                
+            for i, result in enumerate(search_results):
+                embed.description += f"{i+1}: [{result['title']}]({result['url']})\n"
+                await message.edit(embed=embed)
 
             for i in range(len(search_results)):
                 await message.add_reaction(reactions[i])

@@ -149,8 +149,8 @@ class _Player(commands.Cog):
 
 
     @app_commands.command(name='search', description='Search for a song on YouTube')
-    async def _search(self, interaction: discord.Interaction, query: str, results: int = 4):
-        if results > 10:
+    async def _search(self, interaction: discord.Interaction, query: str, limit: int = 4):
+        if limit > 10:
             await interaction.response.send_message(":x: You can only search for a maximum of 10 results.", ephemeral=True)
             return
         # Initial response to acknowledge the command
@@ -161,19 +161,16 @@ class _Player(commands.Cog):
         reactions = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
 
         try:
-            search_results = []
-            embed.title = f"Search results for `{query}`"
-            embed.description = ""
-            for i in range (results):
-                OPTS = config.YTDL_OPTS.copy()
-                OPTS['extract_flat'] = True
-                with yt_dlp.YoutubeDL(OPTS) as ydl:
-                    OPTS['playlist_items'] = str(i + 1)
-                    search_result = ydl.extract_info(f"ytsearch{results}:{query}", download=False)['entries'][0]
-                    embed.title = f"Search results for `{query}`"
-                    embed.add_field(name=f"{i + 1}. {search_result['title']}", value=search_result['url'], inline=False)
-                    await message.edit(embed=embed)
-                    search_results.append(search_result)
+            OPTS = config.YTDL_OPTS.copy()
+            OPTS['extract_flat'] = True
+            with yt_dlp.YoutubeDL(OPTS) as ydl:
+                search_results = ydl.extract_info(f"ytsearch{limit}:{query}", download=False)['entries']
+                embed.title = f"Search results for `{query}`"
+                embed.description = ""
+                
+            for i, result in enumerate(search_results):
+                embed.description += f"{i+1}: [{result['title']}]({result['url']})\n"
+                await message.edit(embed=embed)
 
             for i in range(min(len(search_results), len(reactions))):
                 await message.add_reaction(reactions[i])
