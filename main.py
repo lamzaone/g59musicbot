@@ -40,7 +40,7 @@ async def check_for_updates():
         try:
             reaction, _ = await bot.wait_for('reaction_add', timeout=12*3600.0, check=lambda reaction, user: user == owner and reaction.message == message)
             if reaction.emoji == '✅':
-                owner.send('[-] Update accepted. Bot will be updated.')                
+                owner.send('[+] Update accepted. Bot will be updated.')                
                 update.update(is_windows)
                 await bot.close()
                 sys.exit(0)

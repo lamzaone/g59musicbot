@@ -54,31 +54,6 @@ def check_upd(on_windows: bool):
         return False
     
 
-async def check_for_updates(bot ,on_windows: bool):
-    while True:
-        updates = check_upd(on_windows)
-        if updates:
-            app_info = await bot.application_info()
-            owner = app_info.owner
-            embed = discord.Embed(title="Updates are available", description=updates, color=discord.Color.green())
-            message = await owner.send(embed=embed)
-            #add reaction to the message to allow the owner to update the bot
-            await message.add_reaction('✅')
-            await message.add_reaction('❌')            
-            
-            try:
-                reaction, _ = await bot.wait_for('reaction_add', timeout=12*3600.0, check=lambda reaction, user: user == owner and reaction.message == message)
-                if reaction.emoji == '✅':
-                    await owner.send('[+] Update accepted. Updating bot...')
-                    update(on_windows)                    
-                    sys.exit(0)
-                elif reaction.emoji == '❌':
-                    await owner.send('[-] Update declined. Bot will not be updated.')
-            except asyncio.TimeoutError:
-                await owner.send('[-] Update declined. Bot will not be updated.')
-        await asyncio.sleep(12*3600)
-        
-
 
 def update(on_windows: bool):
     
