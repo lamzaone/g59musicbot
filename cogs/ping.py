@@ -8,7 +8,7 @@ class Ping(commands.Cog):
 
     @commands.hybrid_command(name='ping', help='Check the bot\'s latency')
     async def ping(self, ctx):
-        await ctx.send(f'ping: `{round(self.bot.latency * 1000)}ms` | websocket: `{round(self.bot.ws.latency * 1000)}ms`')
+        await ctx.send(f'!ping: `{round(self.bot.latency * 1000)}ms` | websocket: `{round(self.bot.ws.latency * 1000)}ms`')
 
 
 
