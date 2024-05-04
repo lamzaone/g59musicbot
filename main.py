@@ -26,7 +26,7 @@ async def load_cogs():
             print(f"[-] An error occurred while loading {cog}: {e}")
 
 
-@tasks.loop(seconds=20)
+@tasks.loop(hours=12)
 async def check_for_updates():
     updates = update.check_upd(is_windows)
     if updates:
@@ -155,11 +155,9 @@ def main(*args):
         if args[0] == 'updated':
             print("[+] Successfully updated to the latest version!")
     else:
-        if update.check_upd(is_windows):
-            upd = input('UPDATE? Y/N:')
-            if upd.lower()=='y':
-                update.update(is_windows)
-                sys.exit(0)
+        if update.check_upd(is_windows):        
+            update.update(is_windows)
+            sys.exit(0)
 
     # Initialize the bot        
     try:

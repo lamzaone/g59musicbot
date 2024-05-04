@@ -11,16 +11,10 @@ git_command_base = ['git', '-C', script_dir]
 def check_upd(on_windows: bool):
     try:
         print('[+] Checking for updates...')
-        # Get the directory of the current script
-        
-
         # Ensure Git is installed
         if subprocess.call(['git', '--version']) != 0:
             print("[-] Git is not installed or not in the system's PATH.")
             return
-
-        # Base command for Git with directory context
-        
 
         # Fetch latest information from the remote repository
         fetch_result = subprocess.call(git_command_base + ['fetch'])
@@ -41,8 +35,7 @@ def check_upd(on_windows: bool):
             # fetch the commit messages between the local and remote branches
             commit_messages = subprocess.check_output(git_command_base + ['log', '--pretty=format:%s', f'HEAD..{upstream}'], text=True).strip() 
             print(f"[+] Latest commit messages:\n{commit_messages}")
-            
-            return commit_messages
+            return commit_messages # Return them to be displayed in the bot message
         else:
             print('[+] Bot is up to date')
             return False
