@@ -1,14 +1,18 @@
 import subprocess
 import os
 import sys
+import discord
+import asyncio
+import time
 
+script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+git_command_base = ['git', '-C', script_dir]
 
-# TODO: weird stuff happening when bot updates and restarts (parent process is not killed)
-
-def check_for_updates(on_windows: bool):
+def check_upd(on_windows: bool):
     try:
+        print('[+] Checking for updates...')
         # Get the directory of the current script
-        script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        
 
         # Ensure Git is installed
         if subprocess.call(['git', '--version']) != 0:
@@ -16,7 +20,7 @@ def check_for_updates(on_windows: bool):
             return
 
         # Base command for Git with directory context
-        git_command_base = ['git', '-C', script_dir]
+        
 
         # Fetch latest information from the remote repository
         fetch_result = subprocess.call(git_command_base + ['fetch'])
@@ -33,8 +37,12 @@ def check_for_updates(on_windows: bool):
         ahead_behind_check = subprocess.check_output(git_command_base + ['rev-list', '--count', '--left-right', 'HEAD...@{u}'], text=True).strip()
         left, right = map(int, ahead_behind_check.split())
         if right > 0:
-            print(f"[+] {right} updates available. Attempting to update...")
-            return True
+            print(f"[+] {right} updates available.")
+            # fetch the commit messages between the local and remote branches
+            commit_messages = subprocess.check_output(git_command_base + ['log', '--pretty=format:%s', f'HEAD..{upstream}'], text=True).strip() 
+            print(f"[+] Latest commit messages:\n{commit_messages}")
+            
+            return commit_messages
         else:
             print('[+] Bot is up to date')
             print('[+] Launching bot...')
@@ -45,10 +53,33 @@ def check_for_updates(on_windows: bool):
     except Exception as e:
         print(f'[-] An error occurred while checking for update: {e}')
         return False
+    
+
+async def check_for_updates(bot ,on_windows: bool):
+    while True:
+        updates = check_upd(on_windows)
+        if updates:
+            app_info = await bot.application_info()
+            owner = app_info.owner
+            embed = discord.Embed(title="Updates are available", description=updates, color=discord.Color.green())
+            message = await owner.send(embed=embed)
+            #add reaction to the message to allow the owner to update the bot
+            await message.add_reaction('✅')
+            await message.add_reaction('❌')            
+            
+            reaction, _ = await bot.wait_for('reaction_add', timeout=30.0, check=lambda reaction, user: user == owner and reaction.message == message)
+            print("REACTED")
+            if reaction.emoji == '✅':
+                await owner.send('[+] Update accepted. Updating bot...')
+                update(on_windows)
+            elif reaction.emoji == '❌':
+                await owner.send('[-] Update declined. Bot will not be updated.')
+        await asyncio.sleep(120)
+        
 
 
 def update(on_windows: bool):
-    print('[+] Checking for updates...')
+    
     try:
         # Get the directory of the current script
         script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

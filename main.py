@@ -11,7 +11,7 @@ import nacl
 
 
 # Initialize Discord bot with command prefix and intents
-bot = commands.Bot(command_prefix=commands.when_mentioned_or(""), intents=config.intents)
+bot = commands.Bot(command_prefix=commands.when_mentioned_or(""), intents=discord.Intents.all())
 tree = bot.tree
 is_windows = os.name == 'nt'
 
@@ -30,6 +30,7 @@ async def load_cogs():
 @bot.event
 async def on_ready():
     await load_cogs()
+    await update.check_for_updates(bot, is_windows)
     print(f'[+] Booted {bot.user}...')
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="/play <song>"), status=discord.Status.dnd)
     # Reset queues and fetch settings for all guilds
@@ -128,9 +129,11 @@ def main(*args):
         if args[0] == 'updated':
             print("[+] Successfully updated to the latest version!")
     else:
-        if update.check_for_updates(is_windows):
-            update.update(is_windows)
-            sys.exit(0)
+        if update.check_upd(is_windows):
+            upd = input('UPDATE? Y/N:')
+            if upd.lower()=='y':
+                update.update(is_windows)
+                sys.exit(0)
 
     # Initialize the bot        
     try:

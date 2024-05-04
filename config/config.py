@@ -170,9 +170,3 @@ YTDL_AUTO = {
     'bitdepth': 24,
     
 }
-
-
-intents = discord.Intents.default()
-intents.message_content = True
-intents.voice_states = True
-intents.presences = True
