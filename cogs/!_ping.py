@@ -8,7 +8,7 @@ class _Ping(commands.Cog):
 
     @app_commands.command(name='ping', description='Check the bot\'s latency')
     async def ping(self, interaction: discord.Interaction):
-        await interaction.response.send_message(f'ping: `{round(self.bot.latency * 1000)}ms` | websocket: `{round(self.bot.ws.latency * 1000)}ms`', ephemeral=False)
+        await interaction.response.send_message(f'ping: `{round(self.bot.latency * 1000)} ms` | websocket:`{round(self.bot.ws.latency * 1000)} ms`', ephemeral=False)
 
 
 async def setup(bot):

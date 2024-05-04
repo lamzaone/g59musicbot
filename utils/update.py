@@ -1,22 +1,20 @@
 import subprocess
 import os
 import sys
+import discord
+import asyncio
+import time
 
+script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+git_command_base = ['git', '-C', script_dir]
 
-# TODO: weird stuff happening when bot updates and restarts (parent process is not killed)
-
-def check_for_updates(on_windows: bool):
+def check_upd(on_windows: bool):
     try:
-        # Get the directory of the current script
-        script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
+        print('[+] Checking for updates...')
         # Ensure Git is installed
         if subprocess.call(['git', '--version']) != 0:
             print("[-] Git is not installed or not in the system's PATH.")
             return
-
-        # Base command for Git with directory context
-        git_command_base = ['git', '-C', script_dir]
 
         # Fetch latest information from the remote repository
         fetch_result = subprocess.call(git_command_base + ['fetch'])
@@ -33,11 +31,13 @@ def check_for_updates(on_windows: bool):
         ahead_behind_check = subprocess.check_output(git_command_base + ['rev-list', '--count', '--left-right', 'HEAD...@{u}'], text=True).strip()
         left, right = map(int, ahead_behind_check.split())
         if right > 0:
-            print(f"[+] {right} updates available. Attempting to update...")
-            return True
+            print(f"[+] {right} updates available.")
+            # fetch the commit messages between the local and remote branches
+            commit_messages = subprocess.check_output(git_command_base + ['log', '--pretty=format:%s', f'HEAD..{upstream}'], text=True).strip() 
+            print(f"[+] Latest commit messages:\n{commit_messages}")
+            return commit_messages # Return them to be displayed in the bot message
         else:
             print('[+] Bot is up to date')
-            print('[+] Launching bot...')
             return False
     except subprocess.CalledProcessError as cpe:
         print(f'[-] Git command failed: {cpe.output.strip()}')
@@ -45,10 +45,11 @@ def check_for_updates(on_windows: bool):
     except Exception as e:
         print(f'[-] An error occurred while checking for update: {e}')
         return False
+    
 
 
 def update(on_windows: bool):
-    print('[+] Checking for updates...')
+    
     try:
         # Get the directory of the current script
         script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
