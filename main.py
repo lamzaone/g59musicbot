@@ -14,6 +14,8 @@ import nacl
 bot = commands.Bot(command_prefix=commands.when_mentioned_or(""), intents=config.intents)
 tree = bot.tree
 is_windows = os.name == 'nt'
+bot.update=update.update()
+bot.check_for_updates=update.check_for_updates()
 
 async def load_cogs():
     cogs = config.get_cogs()
@@ -25,13 +27,13 @@ async def load_cogs():
             print(f"[-] An error occurred while loading {cog}: {e}")
 
 
-
-
 @bot.event
 async def on_ready():
+    app_info = await bot.application_info()
+    bot.owner_id = app_info.owner.id
     await load_cogs()
     print(f'[+] Booted {bot.user}...')
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="/play <song>"), status=discord.Status.dnd)
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="/play <name/link>"), status=discord.Status.dnd)
     # Reset queues and fetch settings for all guilds
     queues = {}
     settings = Settings.get_settings_all()
@@ -120,6 +122,11 @@ async def on_command_error(ctx, error):
 
     raise error
 
+#@bot.command()
+#async def update():
+#  	if update.check_for_updates(is_windows):
+#        update.update(is_windows)
+#        sys.exit(0)
 
 def main(*args):
 
