@@ -41,13 +41,20 @@ async def check_for_updates():
             reaction, _ = await bot.wait_for('reaction_add', timeout=12*3600.0, check=lambda reaction, user: user == owner and reaction.message == message)
             if reaction.emoji == '✅':
                 await owner.send('[+] Update accepted. Updating bot...')
-                update.update(is_windows)                    
-                sys.exit(0)
+                send_update(is_windows)
             elif reaction.emoji == '❌':
                 await owner.send('[-] Update declined. Bot will not be updated.')
         except asyncio.TimeoutError:
             await owner.send('[-] Update declined. Bot will not be updated.')
+        except Exception as e:
+            pass
+        else:
+            await message.delete()
         
+
+def send_update():
+    update.update(is_windows)                    
+    sys.exit(0)
 
 @bot.event
 async def on_ready():
