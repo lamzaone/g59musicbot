@@ -45,7 +45,6 @@ def check_upd(on_windows: bool):
             return commit_messages
         else:
             print('[+] Bot is up to date')
-            print('[+] Launching bot...')
             return False
     except subprocess.CalledProcessError as cpe:
         print(f'[-] Git command failed: {cpe.output.strip()}')
