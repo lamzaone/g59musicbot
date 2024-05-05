@@ -33,7 +33,7 @@ def check_upd(on_windows: bool):
         if right > 0:
             print(f"[+] {right} updates available.")
             # fetch the commit messages between the local and remote branches
-            commit_messages = subprocess.check_output(git_command_base + ['log', '--pretty=format:%s', f'HEAD..{upstream}'], text=True).strip() 
+            commit_messages = subprocess.check_output(git_command_base + ['log', '--pretty=format:%b', f'HEAD..{upstream}'], text=True).strip() 
             print(f"[+] Latest commit messages:\n{commit_messages}")
             return commit_messages # Return them to be displayed in the bot message
         else:
