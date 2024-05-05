@@ -26,7 +26,7 @@ async def load_cogs():
             print(f"[-] An error occurred while loading {cog}: {e}")
 
 
-@tasks.loop(hours=12)
+@tasks.loop(hours=1)
 async def check_for_updates():
     updates = update.check_upd(is_windows)
     if updates:
@@ -46,6 +46,7 @@ async def check_for_updates():
                 sys.exit(0)
             elif reaction.emoji == '❌':
                 await owner.send('[-] Update declined. Bot will not be updated.')
+                asyncio.sleep(60*60*24)
         except asyncio.TimeoutError:
             await owner.send('[-] Update declined. Bot will not be updated.')
         except Exception as e:     
@@ -142,7 +143,7 @@ async def on_command_error(ctx, error):
         await ctx.send(f":x: Command on cooldown. Try again in {error.retry_after:.2f} seconds.")
         return
     if isinstance(error, commands.CommandInvokeError):
-        await ctx.send(":x: An error occurred while executing the command.")
+        await ctx.send(f":x: An error occurred while executing the command.: {error}")
         return
 
     raise error
