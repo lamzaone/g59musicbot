@@ -38,10 +38,49 @@ class _Player(commands.Cog):
                     await interaction.user.voice.channel.connect()
                 else:
                     await interaction.followup.send(":x: You must be in a voice channel.", ephemeral=False)
-                    return            
+                    return  
+                
+            try:
+                if "list=" in query:
+                    OPTS={
+                        'extract_flat': True,
+                        'noplaylist': False,                        
+                        'no_warnings': True,                   
+                    }
+                    if "watch?v=" in query:
+                        message = await interaction.followup.send("The link contains a playlist, do you wish to add the whole playlist to the queue?", ephemeral=False)
+                        await message.add_reaction("✅")
+                        await message.add_reaction("❌")
+                    def check(reaction, user):
+                        return user == interaction.user and reaction.message.id == message.id
+                    reaction, _ = await self.bot.wait_for('reaction_add', timeout=30.0, check=check)
+                    if reaction.emoji == "✅":
+                        aux_query = query
+                        query = query.split("list=")[1]
+                        query = f"https://www.youtube.com/playlist?list={query}"
+                        with yt_dlp.YoutubeDL(OPTS) as ydl:
+                            try:
+                                search_results = ydl.extract_info(query, download=False)['entries']                                                        
+                                queue = Queues.get_queue(interaction.guild.id)
+                                for video in search_results:
+                                    queue.append({'title': video['title'], 'url': video['url']})
+                                Queues.update_queue(interaction.guild.id, queue)
+                                await interaction.followup.send(f":white_check_mark: Added `{len(search_results)}` songs to the queue.")
+                                query=None
+                            except yt_dlp.DownloadError:                            
+                                query = aux_query
+                    else:
+                        pass
+                    await message.delete()
+                    
+            except Exception as e:
+                print("error"+e)         
+
             #get voice channel again after connecting
             voice_client = discord.utils.get(self.bot.voice_clients, guild= interaction.guild)
             if voice_client.is_playing() or voice_client.is_paused():
+                    if query is None:
+                        return
                     try:
                         info = musicplayer.get_info(query)
                         queue = Queues.get_queue(interaction.guild.id)

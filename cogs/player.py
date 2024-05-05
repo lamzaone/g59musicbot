@@ -31,10 +31,77 @@ class Player(commands.Cog):
                 await ctx.send(":x: You are not connected to a voice channel.")
                 return
         
+            try:
+                if "list=" in query:
+                    OPTS={
+                        'extract_flat': True,
+                        'noplaylist': False,                        
+                        'no_warnings': True,                   
+                    }
+                    if "watch?v=" in query:
+                        message = await ctx.send("This song is part of a playlist. Do you want to add the entire playlist to the queue?")
+                        await message.add_reaction("✅")
+                        await message.add_reaction("❌")
+                        reaction, _ = await self.bot.wait_for('reaction_add', timeout=30.0, check=lambda reaction, user: user == ctx.author and reaction.message == message)
+                        if reaction.emoji == "✅":
+                            aux_query = query
+                            query = query.split("list=")[1]
+                            query = f"https://www.youtube.com/playlist?list={query}"
+                            with yt_dlp.YoutubeDL(OPTS) as ydl:
+                                try:
+                                    search_results = ydl.extract_info(query, download=False)['entries']
+                                                                
+                                    queue = Queues.get_queue(ctx.guild.id)
+                                    for video in search_results:
+                                        queue.append({'title': video['title'], 'url': video['url']})
+                                    Queues.update_queue(ctx.guild.id, queue)
+                                    await ctx.send(f":white_check_mark: Added `{len(search_results)}` songs to the queue.")
+                                    query=None
+                                except yt_dlp.DownloadError:                            
+                                    query = aux_query
+                        else:
+                            pass
+                    
+            except Exception as e:
+                print("error"+e)
+        
         async with ctx.typing():
             if ctx.voice_client.is_playing() or ctx.voice_client.is_paused():
+                try:
+                    if "list=" in query:
+                        OPTS={
+                            'extract_flat': True,
+                            'noplaylist': False,                        
+                            'no_warnings': True,                   
+                        }
+                        if "watch?v=" in query:
+                            message = await ctx.send("This song is part of a playlist. Do you want to add the entire playlist to the queue?")
+                            await message.add_reaction("✅")
+                            await message.add_reaction("❌")
+                            reaction, _ = await self.bot.wait_for('reaction_add', timeout=30.0, check=lambda reaction, user: user == ctx.author and reaction.message == message)
+                            if reaction.emoji == "✅":
+                                aux_query = query
+                                query = query.split("list=")[1]
+                                query = f"https://www.youtube.com/playlist?list={query}"
+                                with yt_dlp.YoutubeDL(OPTS) as ydl:
+                                    try:
+                                        search_results = ydl.extract_info(query, download=False)['entries']
+                                                                    
+                                        queue = Queues.get_queue(ctx.guild.id)
+                                        for video in search_results:
+                                            queue.append({'title': video['title'], 'url': video['url']})
+                                        Queues.update_queue(ctx.guild.id, queue)
+                                        await ctx.send(f":white_check_mark: Added `{len(search_results)}` songs to the queue.")
+                                        query=None
+                                    except yt_dlp.DownloadError:                            
+                                        query = aux_query
+                            else:
+                                pass
+                        
+                except Exception as e:
+                    print("error"+e)
+            
                 if query is None:
-                    await ctx.send(":x: Music is already playing. Use `/skip` to play the next song.")
                     return
                 try:
                     if ctx.voice_client.is_paused():
