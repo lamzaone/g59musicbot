@@ -10,9 +10,6 @@ Not only this music bot can be customised to your liking, but it's very easy to 
 
 ---
 ### TODOs
-- Implement Search function
-- Handle playlist  links (add every song to the queue)
-- Create custom playlists
 - Add Spotify support
 
 
@@ -104,6 +101,16 @@ sudo reboot
 ---
 ---
 ## CHANGELOG:
+### Version 0.3
+- **Music player now supports most sources (excluding Spotify)**
+- **Added Playlists - you can now create custom playlists, that can be loaded at any time into the queue**
+- **`/play` now can load youtube playlists into the queue**
+- **Improved updater**
+    - Now checks for updates every hour
+    - Sends a message to the Bot owner that allows you to update the bot
+- **Added `/queue` to display the queue**
+- **Added `/shuffle` to shuffle the queue**
+
 ### Version 0.2
 - **ADDED SOUNDCLOUD SUPPORT!**
 - **ADDED SLASH (/) COMMANDS SUPPORT!**
