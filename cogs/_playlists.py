@@ -17,9 +17,80 @@ class _Playlist(commands.Cog):
     @group.command(name='list', description='Manage playlists')
     async def list(self, interaction: discord.Interaction, playlist_name: str=None):
         ctx = await self.bot.get_context(interaction)
-        playlist_cog = self.bot.get_cog('Playlist')
-        await interaction.response.defer()
-        await playlist_cog.playlist(ctx, playlist_name)
+        if playlist_name is None:
+            playlist_cog = self.bot.get_cog('Playlist')
+            await interaction.response.defer()
+            await playlist_cog.playlist(ctx, playlist_name)
+        else:
+            try:
+                await interaction.response.defer()
+                embed = discord.Embed(title=f"Available playlists", description="", color=discord.Color.dark_magenta())
+                message = await interaction.followup.send(embed=embed)
+                if playlist_name.isnumeric():
+                    playlist_name = os.listdir(playlist_dir(interaction.guild.id))[int(playlist_name)-1][:-5]
+                playlist = get_playlist(interaction.guild.id, playlist_name)
+                embed.title = f"Playlist `{playlist_name}`"
+                embed.description = ""
+                if len(playlist) == 0:
+                    embed.description = "Playlist is empty"
+                elif len(playlist) <= 20:
+                    for i, song in enumerate(playlist, start=1):
+                        embed.description += f'{i}: {song["title"]}\n'
+                else:
+                    def get_chunk(playlist, page):
+                        return playlist[page*20:(page+1)*20]
+                    page = 0
+                    for i, song in enumerate(get_chunk(playlist, page), start=1):
+                        embed.description += f'{i}: {song["title"]}\n'
+                    embed.set_footer(text=f'Page {page+1}/{len(playlist)//20+1}')
+                    await message.edit(embed=embed)
+                    await message.add_reaction('⬅️')
+                    await message.add_reaction('➡️')
+                    await message.add_reaction('🔀')
+                    await message.add_reaction('🔊')
+                    await message.add_reaction('❌')
+                    while True:
+                        reaction, user = await self.bot.wait_for('reaction_add', timeout=60.0, check=lambda reaction, user: user == interaction.user and reaction.message.id == message.id and reaction.emoji in ['⬅️', '➡️', '🔀', '🔊', '❌'])
+                        if reaction.emoji == '⬅️':
+                            page -= 1
+                            if page < 0:
+                                page = len(playlist)//20
+                        elif reaction.emoji == '➡️':
+                            page += 1
+                            if page > len(playlist)//20:
+                                page = 0
+                        elif reaction.emoji == '🔀':
+                            import random
+                            random.shuffle(playlist)
+                        elif reaction.emoji == '🔊':
+                            queue = Queues.get_queue(interaction.guild.id)
+                            for song in playlist:
+                                queue.append(song)
+                            Queues.update_queue(interaction.guild.id, queue)
+                            ctx = await self.bot.get_context(interaction)
+                            player_cog = ctx.bot.get_cog('_Player')
+                            if not ctx.author.voice:
+                                await ctx.send('You are not connected to a voice channel')
+                                return
+                            if ctx.voice_client is None:
+                                await ctx.author.voice.channel.connect()
+                            if not ctx.voice_client.is_playing():
+                                message.delete()
+                                await player_cog.play_song(interaction=interaction, query=None)
+                                return
+                            message
+                        elif reaction.emoji == '❌':
+                            await message.delete()
+                            return
+                        await message.remove_reaction(reaction, user)
+                        embed.description = ""
+                        embed.set_footer(text=f'Page {page+1}/{len(playlist)//20+1}')
+                        for i, song in enumerate(get_chunk(playlist, page), start=1):
+                            embed.description += f'{i+(page*20)}: {song["title"]}\n'
+                        await message.edit(embed=embed)
+                await message.edit(embed=embed)
+            except FileNotFoundError:
+                await message.edit(content='Playlist not found')
 
     @group.command(name='create', description='Create a new playlist')
     async def create(self, interaction: discord.Interaction, name: str):
@@ -48,8 +119,8 @@ class _Playlist(commands.Cog):
     @group.command(name='load', description='Load a playlist into the queue')
     async def load(self, interaction: discord.Interaction, playlist_name: str):
         ctx = await self.bot.get_context(interaction)
-        if playlist_name.isnumeric() and int(playlist_name) <= len(os.listdir(playlist_dir(ctx.guild.id))):
-                playlist_name = os.listdir(playlist_dir(ctx.guild.id))[int(playlist_name)-1][:-5]
+        if playlist_name.isnumeric() and int(playlist_name) <= len(os.listdir(playlist_dir(interaction.guild.id))):
+                playlist_name = os.listdir(playlist_dir(interaction.guild.id))[int(playlist_name)-1][:-5]
         if not ctx.author.voice:
             await ctx.send('You are not connected to a voice channel')
             return
@@ -58,8 +129,8 @@ class _Playlist(commands.Cog):
         
 
         try:            
-            playlist = get_playlist(ctx.guild.id, playlist_name)
-            queue = Queues.get_queue(ctx.guild.id)
+            playlist = get_playlist(interaction.guild.id, playlist_name)
+            queue = Queues.get_queue(interaction.guild.id)
             for song in playlist:
                 queue_item = {}
                 queue_item['title'] = song['title']
@@ -67,7 +138,7 @@ class _Playlist(commands.Cog):
                 queue.append(queue_item)
             
             
-            Queues.update_queue(ctx.guild.id, queue)
+            Queues.update_queue(interaction.guild.id, queue)
             embed = discord.Embed(title=f'Loaded playlist {playlist_name}', description=f'Loaded {len(playlist)} songs into the queue', color=discord.Color.green())
             await interaction.response.send_message(embed=embed)
             if not ctx.voice_client.is_playing():

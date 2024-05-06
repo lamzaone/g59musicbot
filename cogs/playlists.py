@@ -5,6 +5,7 @@ from config import config
 import json
 from utils import queues as Queues, musicplayer
 from cogs import player
+import asyncio
 
 class Playlist(commands.Cog):
     def __init__(self, bot):
@@ -24,9 +25,40 @@ class Playlist(commands.Cog):
         message = await ctx.send(embed=embed)
         if playlist_name is None:
                 embed.color = discord.Color.blurple()
-                for i, playlist in enumerate(os.listdir(playlist_dir(ctx.guild.id)), start=1):
-                    embed.description += f'{i}: {playlist[:-5]}\n'
-                await message.edit(embed=embed)
+                embed.title = "Available playlists"
+                playlists = os.listdir(playlist_dir(ctx.guild.id))
+                if len(playlists) == 0:
+                    embed.description = "No playlists found"
+                    message.edit(embed=embed)
+                elif len(playlists) <= 7:
+                    embed.description = '\n'.join([f'{i+1}: {playlist[:-5]}' for i, playlist in enumerate(playlists)])
+                    await message.edit(embed=embed)
+                else:
+                    page = 0
+                    def get_chunk(playlists, page):
+                        return playlists[page*7:(page+1)*7]
+                    embed.description = '\n'.join([f'{i+1}: {playlist[:-5]}' for i, playlist in enumerate(get_chunk(playlists, page))])
+                    await message.edit(embed=embed)
+                    await message.add_reaction('⬅️')
+                    await message.add_reaction('➡️')
+                    while True:
+                        try:
+                            reaction, user = await self.bot.wait_for('reaction_add', timeout=60.0, check=lambda reaction, user: user == ctx.author and reaction.message.id == message.id and reaction.emoji in ['⬅️', '➡️'])
+                            if reaction.emoji == '⬅️':
+                                page = max(0, page-1)
+                            elif reaction.emoji == '➡️':
+                                page = min(len(playlists)//7, page+1)
+                            embed.description = '\n'.join([f'{i+1+page*7}: {playlist[:-5]}' for i, playlist in enumerate(get_chunk(playlists, page))])
+                            await message.edit(embed=embed)
+                            await message.remove_reaction(reaction.emoji, user)
+                        except asyncio.TimeoutError:
+                            break
+                            
+                        except asyncio.TimeoutError:
+                            break
+                    
+
+                
                 return    
         try:
             if playlist_name.isnumeric():
@@ -36,9 +68,60 @@ class Playlist(commands.Cog):
             embed.description = ""
             if len(playlist) == 0:
                 embed.description = "Playlist is empty"
-            else:
+            elif len(playlist) <= 20:
                 for i, song in enumerate(playlist, start=1):
                     embed.description += f'{i}: {song["title"]}\n'
+            else:
+                def get_chunk(playlist, page):
+                    return playlist[page*20:(page+1)*20]
+                page = 0
+                for i, song in enumerate(get_chunk(playlist, page), start=1):
+                    embed.description += f'{i}: {song["title"]}\n'
+                embed.set_footer(text=f'Page {page+1}/{len(playlist)//20+1}')
+                await message.edit(embed=embed)
+                await message.add_reaction('⬅️')
+                await message.add_reaction('➡️')
+                await message.add_reaction('🔀')
+                await message.add_reaction('🔊')
+                await message.add_reaction('❌')
+                while True:
+                    reaction, user = await self.bot.wait_for('reaction_add', timeout=60.0, check=lambda reaction, user: user == ctx.author and reaction.message.id == message.id and reaction.emoji in ['⬅️', '➡️', '🔀', '🔊', '❌'])
+                    if reaction.emoji == '⬅️':
+                        page -= 1
+                        if page < 0:
+                            page = len(playlist)//20
+                    elif reaction.emoji == '➡️':
+                        page += 1
+                        if page > len(playlist)//20:
+                            page = 0
+                    elif reaction.emoji == '🔀':
+                        import random
+                        random.shuffle(playlist)
+                    elif reaction.emoji == '🔊':
+                        queue = Queues.get_queue(ctx.guild.id)
+                        for song in playlist:
+                            queue.append(song)
+                        Queues.update_queue(ctx.guild.id, queue)
+                        player_cog = ctx.bot.get_cog('Player')
+                        if not ctx.author.voice:
+                            await ctx.send('You are not connected to a voice channel')
+                            return
+                        if ctx.voice_client is None:
+                            await ctx.author.voice.channel.connect()
+                        if not ctx.voice_client.is_playing():
+                            message.delete()
+                            await player_cog.play(ctx)
+                            return
+                        message
+                    elif reaction.emoji == '❌':
+                        await message.delete()
+                        return
+                    await message.remove_reaction(reaction, user)
+                    embed.description = ""
+                    embed.set_footer(text=f'Page {page+1}/{len(playlist)//20+1}')
+                    for i, song in enumerate(get_chunk(playlist, page), start=1):
+                        embed.description += f'{i+(page*20)}: {song["title"]}\n'
+                    await message.edit(embed=embed)
             await message.edit(embed=embed)
         except FileNotFoundError:
             await message.edit(content='Playlist not found')
