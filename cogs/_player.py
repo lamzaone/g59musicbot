@@ -41,37 +41,38 @@ class _Player(commands.Cog):
                     return  
                 
             try:
-                if "list=" in query:
-                    OPTS={
-                        'extract_flat': True,
-                        'noplaylist': False,                        
-                        'no_warnings': True,                   
-                    }
-                    if "watch?v=" in query:
-                        message = await interaction.followup.send("The link contains a playlist, do you wish to add the whole playlist to the queue?", ephemeral=False)
-                        await message.add_reaction("✅")
-                        await message.add_reaction("❌")
-                    def check(reaction, user):
-                        return user == interaction.user and reaction.message.id == message.id
-                    reaction, _ = await self.bot.wait_for('reaction_add', timeout=30.0, check=check)
-                    if reaction.emoji == "✅":
-                        aux_query = query
-                        query = query.split("list=")[1]
-                        query = f"https://www.youtube.com/playlist?list={query}"
-                        with yt_dlp.YoutubeDL(OPTS) as ydl:
-                            try:
-                                search_results = ydl.extract_info(query, download=False)['entries']                                                        
-                                queue = Queues.get_queue(interaction.guild.id)
-                                for video in search_results:
-                                    queue.append({'title': video['title'], 'url': video['url']})
-                                Queues.update_queue(interaction.guild.id, queue)
-                                await interaction.followup.send(f":white_check_mark: Added `{len(search_results)}` songs to the queue.")
-                                query=None
-                            except yt_dlp.DownloadError:                            
-                                query = aux_query
-                    else:
-                        pass
-                    await message.delete()
+                if query is not None:
+                    if "list=" in query:
+                        OPTS={
+                            'extract_flat': True,
+                            'noplaylist': False,                        
+                            'no_warnings': True,                   
+                        }
+                        if "watch?v=" in query:
+                            message = await interaction.followup.send("The link contains a playlist, do you wish to add the whole playlist to the queue?", ephemeral=False)
+                            await message.add_reaction("✅")
+                            await message.add_reaction("❌")
+                        def check(reaction, user):
+                            return user == interaction.user and reaction.message.id == message.id
+                        reaction, _ = await self.bot.wait_for('reaction_add', timeout=30.0, check=check)
+                        if reaction.emoji == "✅":
+                            aux_query = query
+                            query = query.split("list=")[1]
+                            query = f"https://www.youtube.com/playlist?list={query}"
+                            with yt_dlp.YoutubeDL(OPTS) as ydl:
+                                try:
+                                    search_results = ydl.extract_info(query, download=False)['entries']                                                        
+                                    queue = Queues.get_queue(interaction.guild.id)
+                                    for video in search_results:
+                                        queue.append({'title': video['title'], 'url': video['url']})
+                                    Queues.update_queue(interaction.guild.id, queue)
+                                    await interaction.followup.send(f":white_check_mark: Added `{len(search_results)}` songs to the queue.")
+                                    query=None
+                                except yt_dlp.DownloadError:                            
+                                    query = aux_query
+                        else:
+                            pass
+                        await message.delete()
                     
             except Exception as e:
                 print("error"+e)         
@@ -140,10 +141,10 @@ class _Player(commands.Cog):
 
     @app_commands.command(name='skip', description='Skip the current song and play the next one in the queue')
     @commands.guild_only()
-    async def _skip(self, interaction: discord.Interaction):
+    async def _skip(self, interaction: discord.Interaction, to: int = 1):
         ctx = await self.bot.get_context(interaction)
         player_cog = ctx.bot.get_cog('Player')
-        await player_cog.skip(ctx)
+        await player_cog.skip(ctx, to=to)
             
 
 
