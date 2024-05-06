@@ -45,7 +45,6 @@ class _Playlist(commands.Cog):
         playlist_cog = self.bot.get_cog('Playlist')
         await playlist_cog.remove(ctx, name, song_name)
 
-    # FIXME: This command is not working as I intend to, cba to fix now but it's not a big deal. Works fine but won't display how many songs were loaded.
     @group.command(name='load', description='Load a playlist into the queue')
     async def load(self, interaction: discord.Interaction, playlist_name: str):
         ctx = await self.bot.get_context(interaction)

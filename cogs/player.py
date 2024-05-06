@@ -6,6 +6,7 @@ import os
 import asyncio
 import yt_dlp
 import json
+import random
 
 is_windows = os.name == 'nt'
 
@@ -150,12 +151,23 @@ class Player(commands.Cog):
         ### SKIP COMMAND ###
     @commands.command(name='skip', help='Skip the current song and play the next one in the queue')
     @commands.guild_only()
-    async def skip(self, ctx):
+    async def skip(self, ctx, to: int = 1):
         if ctx.voice_client and ctx.voice_client.is_playing():
+            if to > 0:
+                queue = Queues.get_queue(ctx.guild.id)
+                if len(queue) >= to:
+                    queue[0], queue[to-1] = queue[to-1], queue[0]
+                    Queues.update_queue(ctx.guild.id, queue)
+                    ctx.voice_client.stop()
+                    return await ctx.send(f":fast_forward: Skipped to song `{to}` in the queue.")
+                else:
+                    await ctx.send(":x: Invalid song number.")
             ctx.voice_client.stop()
             await ctx.send(":fast_forward: Skipped the current song.")
         else:
             await ctx.send(":x: No music is currently playing.")
+
+
     ### STOP COMMAND ###
     @commands.command(name='stop', help='Stop playing music and disconnect from voice channel')
     @commands.guild_only()
@@ -166,6 +178,8 @@ class Player(commands.Cog):
             await ctx.send(":octagonal_sign: Music stopped and queue has been cleared.")
         else:
             await ctx.send(":x: No music is currently playing.")
+
+            
     ### PAUSE COMMAND ###
     @commands.command(name='pause', help='Pause the currently playing music')
     @commands.guild_only()
@@ -176,6 +190,8 @@ class Player(commands.Cog):
         elif ctx.voice_client and ctx.voice_client.is_paused():
             ctx.voice_client.resume()
             await ctx.send(":arrow_forward: Music resumed.")
+
+
     ### VOLUME COMMAND ###
     @commands.command(name='volume', help='Set the volume of the music')
     @commands.guild_only()
@@ -332,8 +348,9 @@ class Player(commands.Cog):
                             await message.edit(embed=embed)
                             await message.remove_reaction(reaction.emoji, ctx.author)
                         elif reaction.emoji == '🔄':
-                            await self.shuffle(ctx)
-                            queue = Queues.get_queue(ctx.guild.id)
+                            import random
+                            random.shuffle(queue)
+                            Queues.update_queue(ctx.guild.id, queue)
                             chunk = get_chunk(queue, page)
                             embed.description = ""
                             for i, song in enumerate(chunk):
@@ -344,6 +361,31 @@ class Player(commands.Cog):
                         elif reaction.emoji == '❌':
                             await message.delete()
                             break
+                else:
+                    # if the queue is less than 20 songs, display the entire queue
+                    embed.description = ""
+                    for i, song in enumerate(queue):
+                        embed.description += f"{i+1}: [{song['title']}]({song['url']})\n"
+                    message = await ctx.send(embed=embed)
+                    await message.add_reaction('🔄')
+                    await message.add_reaction('❌')
+                    def check(reaction, user):
+                        return user == ctx.author and reaction.message == message
+                    
+                    while True:
+                        reaction, _ = await self.bot.wait_for('reaction_add', timeout=3600.0, check=check)
+                        if reaction.emoji == '🔄':
+                            import random
+                            random.shuffle(queue)
+                            Queues.update_queue(ctx.guild.id, queue)
+                            embed.description = ""
+                            for i, song in enumerate(queue):
+                                embed.description += f"{i+1}: [{song['title']}]({song['url']})\n"
+                            await message.edit(embed=embed)
+                            await message.remove_reaction(reaction.emoji, ctx.author)
+                        
+                        elif reaction.emoji == '❌':
+                            await message.delete()
 
             else:
                 await ctx.send(":x: The queue is empty.")
