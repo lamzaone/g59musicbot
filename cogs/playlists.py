@@ -6,6 +6,8 @@ import json
 from utils import queues as Queues, musicplayer
 from cogs import player
 import asyncio
+import yt_dlp
+import math
 
 class Playlist(commands.Cog):
     def __init__(self, bot):
@@ -45,9 +47,13 @@ class Playlist(commands.Cog):
                         try:
                             reaction, user = await self.bot.wait_for('reaction_add', timeout=60.0, check=lambda reaction, user: user == ctx.author and reaction.message.id == message.id and reaction.emoji in ['⬅️', '➡️'])
                             if reaction.emoji == '⬅️':
-                                page = max(0, page-1)
+                                page -= 1
+                                if page < 0:
+                                    page = len(playlists)//7
                             elif reaction.emoji == '➡️':
-                                page = min(len(playlists)//7, page+1)
+                                page += 1
+                                if page > len(playlists)//7:
+                                    page = 0
                             embed.description = '\n'.join([f'{i+1+page*7}: {playlist[:-5]}' for i, playlist in enumerate(get_chunk(playlists, page))])
                             await message.edit(embed=embed)
                             await message.remove_reaction(reaction.emoji, user)
@@ -77,7 +83,7 @@ class Playlist(commands.Cog):
                 page = 0
                 for i, song in enumerate(get_chunk(playlist, page), start=1):
                     embed.description += f'{i}: {song["title"]}\n'
-                embed.set_footer(text=f'Page {page+1}/{len(playlist)//20+1}')
+                embed.set_footer(text=f'Page {page+1}/{math.ceil(len(playlist)/20)}')
                 await message.edit(embed=embed)
                 await message.add_reaction('⬅️')
                 await message.add_reaction('➡️')
@@ -89,10 +95,10 @@ class Playlist(commands.Cog):
                     if reaction.emoji == '⬅️':
                         page -= 1
                         if page < 0:
-                            page = len(playlist)//20
+                            page = math.ceil(len(playlist)/20)-1
                     elif reaction.emoji == '➡️':
-                        page += 1
-                        if page > len(playlist)//20:
+                        page += 1                        
+                        if page > math.ceil(len(playlist)/20)-1:
                             page = 0
                     elif reaction.emoji == '🔀':
                         import random
@@ -118,7 +124,7 @@ class Playlist(commands.Cog):
                         return
                     await message.remove_reaction(reaction, user)
                     embed.description = ""
-                    embed.set_footer(text=f'Page {page+1}/{len(playlist)//20+1}')
+                    embed.set_footer(text=f'Page {page+1}/{math.ceil(len(playlist)/20)}')
                     for i, song in enumerate(get_chunk(playlist, page), start=1):
                         embed.description += f'{i+(page*20)}: {song["title"]}\n'
                     await message.edit(embed=embed)
@@ -159,7 +165,6 @@ class Playlist(commands.Cog):
             else:
                 try:
                     info = ctx.bot.video_info
-                    print(info)
                     title = info['title']
                     url = info['original_url']
                     print(title, url)
@@ -168,6 +173,41 @@ class Playlist(commands.Cog):
                 except Exception as e:
                     await ctx.send(f'Error adding song to playlist: {e}')
         else:
+            try:
+                if "list=" in query:
+                    OPTS={
+                        'extract_flat': True,
+                        'noplaylist': False,                        
+                        'no_warnings': True,                   
+                    }
+                    if "watch?v=" in query:
+                        message = await ctx.send("This song is part of a youtube playlist. Do you want to add the entire playlist to your playlist?")
+                        await message.add_reaction("✅")
+                        await message.add_reaction("❌")
+                        reaction, _ = await self.bot.wait_for('reaction_add', timeout=30.0, check=lambda reaction, user: user == ctx.author and reaction.message == message)
+                        if reaction.emoji == "✅":
+                            aux_query = query
+                            query = query.split("list=")[1]
+                            query = f"https://www.youtube.com/playlist?list={query}"
+                            with yt_dlp.YoutubeDL(OPTS) as ydl:
+                                try:
+                                    search_results = ydl.extract_info(query, download=False)['entries']
+                                                                
+                                    for search_result in search_results:
+                                        title = search_result['title']
+                                        url = search_result['url']
+                                        add_to_playlist(ctx.guild.id, playlist_name, title, url)                                    
+                                    await ctx.send(f'Added {len(search_results)} songs to playlist `{playlist_name}`')
+                                except yt_dlp.DownloadError:                            
+                                    query = aux_query
+                            return
+                        else:
+                            pass
+                    
+            except Exception as e:
+                print("error"+e)
+
+
             info=musicplayer.get_info(query)
             if info is None:
                 await ctx.send('No results found')
