@@ -21,6 +21,8 @@ class Player(commands.Cog):
         return role in ctx.author.roles or ctx.author.guild_permissions.administrator
 
 
+
+
     @commands.command(name='play', help='Play music from YouTube using a search term or URL')
     @commands.guild_only()
     async def play(self, ctx, *, query: str = None):
@@ -283,10 +285,66 @@ class Player(commands.Cog):
             queue = Queues.get_queue(ctx.guild.id)
             if len(queue) > 0:
                 embed = discord.Embed(title="Queue", color=discord.Color.blurple())
-                embed.description = ""
-                for i, song in enumerate(queue, start=1):
-                    embed.description += f"{i}: {song['title']}\n"
-                await ctx.send(embed=embed)
+                
+                if len(queue) >= 20:
+                    page = 0
+                    # get the queue in chunks of 20
+                    def get_chunk(queue, page):
+                        return queue[page*20:page*20+20]        
+                    chunk = get_chunk(queue, page)
+
+                    embed.description = ""
+                    for i, song in enumerate(chunk):
+                        embed.description += f"{i+1}: [{song['title']}]({song['url']})\n"
+                    embed.set_footer(text=f"Page {page+1} of {len(queue)//20+1}")
+                    message = await ctx.send(embed=embed)
+                    await message.add_reaction('◀️')
+                    await message.add_reaction('▶️')
+                    await message.add_reaction('🔄')
+                    await message.add_reaction('❌')
+
+                    def check(reaction, user):
+                        return user == ctx.author and reaction.message == message
+                    
+                    while True:
+                        reaction, _ = await self.bot.wait_for('reaction_add', timeout=3600.0, check=check)
+
+                        if reaction.emoji == '▶️':
+                            page += 1
+                            if page > len(queue)//20:
+                                page = 0
+                            chunk = get_chunk(queue, page)
+                            embed.description = ""
+                            for i, song in enumerate(chunk):
+                                embed.description += f"{i+1+(page*20)}: [{song['title']}]({song['url']})\n"
+                            embed.set_footer(text=f"Page {page+1} of {len(queue)//20+1}")
+                            await message.edit(embed=embed)
+                            await message.remove_reaction(reaction.emoji, ctx.author)
+                        elif reaction.emoji == '◀️':
+                            page -= 1
+                            if page < 0:
+                                page = len(queue)//20
+                            chunk = get_chunk(queue, page)
+                            embed.description = ""
+                            for i, song in enumerate(chunk):
+                                embed.description += f"{i+1+(page*20)}: [{song['title']}]({song['url']})\n"
+                            embed.set_footer(text=f"Page {page+1} of {len(queue)//20+1}")
+                            await message.edit(embed=embed)
+                            await message.remove_reaction(reaction.emoji, ctx.author)
+                        elif reaction.emoji == '🔄':
+                            await self.shuffle(ctx)
+                            queue = Queues.get_queue(ctx.guild.id)
+                            chunk = get_chunk(queue, page)
+                            embed.description = ""
+                            for i, song in enumerate(chunk):
+                                embed.description += f"{i+1+(page*20)}: [{song['title']}]({song['url']})\n"
+                            embed.set_footer(text=f"Page {page+1} of {len(queue)//20+1}")
+                            await message.edit(embed=embed)
+                            await message.remove_reaction(reaction.emoji, ctx.author)
+                        elif reaction.emoji == '❌':
+                            await message.delete()
+                            break
+
             else:
                 await ctx.send(":x: The queue is empty.")
         except Exception as e:
