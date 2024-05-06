@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands, tasks
 from utils import serversettings as Settings, queues as Queues, update
 import os
-from config import config  # Make sure this import points to your bot's configuration
+from config import config 
 import asyncio
 import json
 import sys
@@ -16,6 +16,7 @@ bot = commands.Bot(command_prefix=commands.when_mentioned_or(""), intents=discor
 tree = bot.tree
 is_windows = os.name == 'nt'
 
+### LOAD COGS ###
 async def load_cogs():
     cogs = config.get_cogs()
     for cog in cogs:
@@ -25,16 +26,17 @@ async def load_cogs():
         except Exception as e:
             print(f"[-] An error occurred while loading {cog}: {e}")
 
-
+### CHECK FOR UPDATES EVERY HOUR ###
 @tasks.loop(hours=1)
-async def check_for_updates():
+async def check_for_updates():    
     updates = update.check_upd(is_windows)
+    # If updates are available, send a message to the bot owner
     if updates:
         app_info = await bot.application_info()
         owner = app_info.owner
         embed = discord.Embed(title="Updates are available", description=updates, color=discord.Color.green())
         message = await owner.send(embed=embed)
-        #add reaction to the message to allow the owner to update the bot
+        # add reaction to the message to allow the owner to update the bot
         await message.add_reaction('✅')
         await message.add_reaction('❌')
         try:
@@ -52,9 +54,10 @@ async def check_for_updates():
         except Exception as e:     
             pass       
 
-
+### ON READY EVENT ###
 @bot.event
 async def on_ready():
+    # Load cogs
     await load_cogs()
     print(f'[+] Booted {bot.user}...')
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="/play <song>"), status=discord.Status.dnd)
@@ -83,13 +86,14 @@ async def on_ready():
     playlist_cog = bot.get_cog('Playlist')
     if playlist_cog is not None:
         print('[+] Playlists cog found, initializing playlists')
-        
+
         try:
             playlist_cog.initialize_playlists(bot.guilds)
             print('[+] Successfully initialized playlists')
         except Exception as e:
             print('[!] Error initializing playlists: ', e)
 
+    # Sync the tree for all guilds
     for guild in bot.guilds:
         try:
             await tree.sync(guild=guild)
@@ -113,6 +117,7 @@ async def on_guild_join(guild):
     print(f'[+] Successfully initialized config/serversettings.json for {guild.name}')
     print(f'[+] Successfully initialized config/queues.json for {guild.name}')
 
+### HANDLE ON MESSAGE EVENT ###
 @bot.event
 async def on_message(message):
     if message.guild is not None:
@@ -123,6 +128,7 @@ async def on_message(message):
     else:
         await bot.process_commands(message)
 
+### HANDLE ON COMMAND ERROR EVENT ###
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
