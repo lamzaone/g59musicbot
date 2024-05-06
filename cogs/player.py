@@ -1,3 +1,4 @@
+import math
 import discord
 from discord.ext import commands
 from config import config
@@ -312,7 +313,7 @@ class Player(commands.Cog):
                     embed.description = ""
                     for i, song in enumerate(chunk):
                         embed.description += f"{i+1}: [{song['title']}]({song['url']})\n"
-                    embed.set_footer(text=f"Page {page+1} of {len(queue)//20+1}")
+                    embed.set_footer(text=f"Page {page+1} of {math.ceil(len(queue)/20)}")
                     message = await ctx.send(embed=embed)
                     await message.add_reaction('◀️')
                     await message.add_reaction('▶️')
@@ -327,24 +328,24 @@ class Player(commands.Cog):
 
                         if reaction.emoji == '▶️':
                             page += 1
-                            if page > len(queue)//20:
+                            if page > math.ceil(len(queue)/20)-1:
                                 page = 0
                             chunk = get_chunk(queue, page)
                             embed.description = ""
                             for i, song in enumerate(chunk):
                                 embed.description += f"{i+1+(page*20)}: [{song['title']}]({song['url']})\n"
-                            embed.set_footer(text=f"Page {page+1} of {len(queue)//20+1}")
+                            embed.set_footer(text=f"Page {page+1} of {math.ceil(len(queue)/20)}")
                             await message.edit(embed=embed)
                             await message.remove_reaction(reaction.emoji, ctx.author)
                         elif reaction.emoji == '◀️':
                             page -= 1
                             if page < 0:
-                                page = len(queue)//20
+                                page = math.ceil(len(queue)/20)-1
                             chunk = get_chunk(queue, page)
                             embed.description = ""
                             for i, song in enumerate(chunk):
                                 embed.description += f"{i+1+(page*20)}: [{song['title']}]({song['url']})\n"
-                            embed.set_footer(text=f"Page {page+1} of {len(queue)//20+1}")
+                            embed.set_footer(text=f"Page {page+1} of {math.ceil(len(queue)/20)}")
                             await message.edit(embed=embed)
                             await message.remove_reaction(reaction.emoji, ctx.author)
                         elif reaction.emoji == '🔄':
@@ -355,7 +356,7 @@ class Player(commands.Cog):
                             embed.description = ""
                             for i, song in enumerate(chunk):
                                 embed.description += f"{i+1+(page*20)}: [{song['title']}]({song['url']})\n"
-                            embed.set_footer(text=f"Page {page+1} of {len(queue)//20+1}")
+                            embed.set_footer(text=f"Page {page+1} of {math.ceil(len(queue)/20)}")
                             await message.edit(embed=embed)
                             await message.remove_reaction(reaction.emoji, ctx.author)
                         elif reaction.emoji == '❌':
