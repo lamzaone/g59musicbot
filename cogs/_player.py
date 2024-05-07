@@ -53,7 +53,7 @@ class _Player(commands.Cog):
                             await message.add_reaction("✅")
                             await message.add_reaction("❌")
                         def check(reaction, user):
-                            return user == interaction.user and reaction.message.id == message.
+                            return user == interaction.user and reaction.message.id == message.id
                         try:
                             reaction, _ = await self.bot.wait_for('reaction_add', timeout=30.0, check=check)
                             if reaction.emoji == "✅":
