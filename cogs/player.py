@@ -42,7 +42,7 @@ class Player(commands.Cog):
                         'noplaylist': False,                        
                         'no_warnings': True,                   
                     }
-                    if "watch?v=" in query:
+                    if "watch?v=" in query or 'youtu.be' in query or "youtube.com" in query:
                         message = await ctx.send("This song is part of a playlist. Do you want to add the entire playlist to the queue?")
                         await message.add_reaction("✅")
                         await message.add_reaction("❌")
@@ -78,7 +78,7 @@ class Player(commands.Cog):
                             'noplaylist': False,                        
                             'no_warnings': True,                   
                         }
-                        if "watch?v=" in query:
+                        if "watch?v=" in query or 'youtu.be' in query or "youtube.com" in query:
                             message = await ctx.send("This song is part of a playlist. Do you want to add the entire playlist to the queue?")
                             await message.add_reaction("✅")
                             await message.add_reaction("❌")
