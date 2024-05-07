@@ -122,12 +122,17 @@ class Player(commands.Cog):
                     return
                 except TypeError:
                     pass
-            if query is None:
-                info = musicplayer.get_info(Queues.next_song(ctx.guild.id)['url'])
-            else:
-                info = musicplayer.get_info(query)
+            info = None
+            while info is None:
+                if query is None:
+                    info = musicplayer.get_info(Queues.next_song(ctx.guild.id)['url'])
+                else:
+                    info = musicplayer.get_info(query)
+                if info is None:
+                    info = musicplayer.get_info(Queues.next_song(ctx.guild.id)['url'])
             ctx.bot.video_info = info
             ctx.bot.video_url = info['url']
+            
             if is_windows:
                 audio_source = discord.FFmpegPCMAudio(info['url'], executable=config.FFMPEG_PATH, **config.ffmpeg_options)
             else:

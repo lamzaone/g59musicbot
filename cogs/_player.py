@@ -101,10 +101,14 @@ class _Player(commands.Cog):
         ctx = await self.bot.get_context(interaction)
         try:
 
-            if query is None:
-                info = musicplayer.get_info(Queues.next_song(ctx.guild.id)['url'])
-            else:
-                info = musicplayer.get_info(query)
+            info = None
+            while info is None:
+                if query is None:
+                    info = musicplayer.get_info(Queues.next_song(ctx.guild.id)['url'])
+                else:
+                    info = musicplayer.get_info(query)
+                if info is None:
+                    info = musicplayer.get_info(Queues.next_song(ctx.guild.id)['url'])
             video_url = info['url']
             if is_windows:
                 audio_source = discord.FFmpegPCMAudio(video_url,executable=config.FFMPEG_PATH,**config.ffmpeg_options)
