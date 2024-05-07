@@ -101,6 +101,20 @@ sudo reboot
 ---
 ---
 ## CHANGELOG:
+### Version 0.3.1
+- Improved playlists
+    - Better playlist display (`/playlist list` or `!playlist`)
+        - Can now display the whole playlist (with pages)
+        - Can now shuffle the playlist before loading into queue
+        - Can now load into queue straight form this embed
+    - Can now load a YouTube playlist into your custom playlist all at once! just use `/playlist add <playlist_name / index> <playlist url>`
+- Improved Queue
+    - Better queue display
+        - Can now see the whole queue on pages of 20
+        - Can shuffle the queue
+        - `/queue` or `!queue`
+    - Can load a whole YouTube playlist into the queue!
+        - Just use `/play <playlist url>` or `!play <playlist_url>?`
 ### Version 0.3
 - **Music player now supports most sources (excluding Spotify)**
 - **Added Playlists - you can now create custom playlists, that can be loaded at any time into the queue**
