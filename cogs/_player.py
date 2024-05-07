@@ -48,7 +48,7 @@ class _Player(commands.Cog):
                             'noplaylist': False,                        
                             'no_warnings': True,                   
                         }
-                        if "watch?v=" in query:
+                        if "watch?v=" in query or 'youtu.be' in query or "youtube.com" in query:
                             message = await interaction.followup.send("The link contains a playlist, do you wish to add the whole playlist to the queue?", ephemeral=False)
                             await message.add_reaction("✅")
                             await message.add_reaction("❌")

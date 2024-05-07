@@ -213,7 +213,7 @@ class Playlist(commands.Cog):
                         'noplaylist': False,                        
                         'no_warnings': True,                   
                     }
-                    if "watch?v=" in query:
+                    if "watch?v=" in query or 'youtu.be' in query or "youtube.com" in query:
                         message = await ctx.send("This song is part of a youtube playlist. Do you want to add the entire playlist to your playlist?")
                         await message.add_reaction("✅")
                         await message.add_reaction("❌")
