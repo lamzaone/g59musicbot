@@ -23,9 +23,12 @@ def extract_music_info(query:str):
             else:
                 info = ydl.extract_info(query, download=False)['entries'][0]
             return info
+    except yt_dlp.DownloadError as e:
+        print(f"[-] An error occurred while downloading the video: {e}") 
+        return None
     except Exception as e:
         print(f"[-] An error occurred while extracting info: {e}")
-        return None
+
     
 
 def extract_soundcloud_info(query:str):

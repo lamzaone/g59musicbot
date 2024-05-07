@@ -58,7 +58,7 @@ class Playlist(commands.Cog):
                             await message.edit(embed=embed)
                             await message.remove_reaction(reaction.emoji, user)
                         except asyncio.TimeoutError:
-                            break
+                            pass
                             
                         except asyncio.TimeoutError:
                             break
