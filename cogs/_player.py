@@ -54,25 +54,32 @@ class _Player(commands.Cog):
                             await message.add_reaction("❌")
                         def check(reaction, user):
                             return user == interaction.user and reaction.message.id == message.id
-                        reaction, _ = await self.bot.wait_for('reaction_add', timeout=30.0, check=check)
-                        if reaction.emoji == "✅":
-                            aux_query = query
-                            query = query.split("list=")[1]
-                            query = f"https://www.youtube.com/playlist?list={query}"
-                            with yt_dlp.YoutubeDL(OPTS) as ydl:
-                                try:
-                                    search_results = ydl.extract_info(query, download=False)['entries']                                                        
-                                    queue = Queues.get_queue(interaction.guild.id)
-                                    for video in search_results:
-                                        queue.append({'title': video['title'], 'url': video['url']})
-                                    Queues.update_queue(interaction.guild.id, queue)
-                                    await interaction.followup.send(f":white_check_mark: Added `{len(search_results)}` songs to the queue.")
-                                    query=None
-                                except yt_dlp.DownloadError:                            
-                                    query = aux_query
-                        else:
-                            pass
-                        await message.delete()
+                        try:
+                            reaction, _ = await self.bot.wait_for('reaction_add', timeout=30.0, check=check)
+                            if reaction.emoji == "✅":
+                                aux_query = query
+                                query = query.split("list=")[1]
+                                query = f"https://www.youtube.com/playlist?list={query}"
+                                with yt_dlp.YoutubeDL(OPTS) as ydl:
+                                    try:
+                                        search_results = ydl.extract_info(query, download=False)['entries']                                                        
+                                        queue = Queues.get_queue(interaction.guild.id)
+                                        for video in search_results:
+                                            queue.append({'title': video['title'], 'url': video['url']})
+                                        Queues.update_queue(interaction.guild.id, queue)
+                                        await interaction.followup.send(f":white_check_mark: Added `{len(search_results)}` songs to the queue.")
+                                        query=None
+                                    except yt_dlp.DownloadError:                            
+                                        query = aux_query
+                            else:
+                                pass
+                            await message.delete()
+                        except asyncio.CancelledError:
+                            await message.delete()
+                            return
+                        except asyncio.TimeoutError:
+                            await message.delete()
+                            return
                     
             except Exception as e:
                 print("error"+e)         
@@ -221,13 +228,24 @@ class _Player(commands.Cog):
 
             def reaction_check(reaction, user):
                 return user == interaction.user and reaction.message.id == message.id
-            reaction, _ = await self.bot.wait_for('reaction_add', timeout=30.0, check=reaction_check)
-            index = reactions.index(reaction.emoji)
-            await message.delete()
-            await self.play_song(interaction=interaction, query=search_results[index]['url'])
-        except asyncio.TimeoutError:
-            await interaction.followup.send("Reaction timeout, please try again.")
+            try:
+                reaction, _ = await self.bot.wait_for('reaction_add', timeout=30.0, check=reaction_check)
+                index = reactions.index(reaction.emoji)
+                await message.delete()
+                await self.play_song(interaction=interaction, query=search_results[index]['url'])
+            except asyncio.CancelledError:
+                await message.delete()
+                return
+            except asyncio.TimeoutError:
+                await message.delete()
+                return
 
+        except asyncio.CancelledError:
+            await message.delete()
+            return
+        except asyncio.TimeoutError:
+            await message.delete()
+            return
         except Exception as e:
             embed.title = "Error"
             embed.description = f"An error occurred: {str(e)}"
