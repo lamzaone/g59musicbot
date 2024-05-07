@@ -240,7 +240,12 @@ class _Player(commands.Cog):
                 await message.delete()
                 return
 
-
+        except asyncio.CancelledError:
+            await message.delete()
+            return
+        except asyncio.TimeoutError:
+            await message.delete()
+            return
         except Exception as e:
             embed.title = "Error"
             embed.description = f"An error occurred: {str(e)}"
