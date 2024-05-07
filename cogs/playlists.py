@@ -77,6 +77,39 @@ class Playlist(commands.Cog):
             elif len(playlist) <= 20:
                 for i, song in enumerate(playlist, start=1):
                     embed.description += f'{i}: {song["title"]}\n'
+                await message.edit(embed=embed)
+                await message.add_reaction('🔀')
+                await message.add_reaction('🔊')
+                await message.add_reaction('❌')
+                while True:
+                    reaction, user = await self.bot.wait_for('reaction_add', check=lambda reaction, user: user == ctx.author and reaction.message.id == message.id and reaction.emoji in ['🔀', '🔊', '❌'])
+                    if reaction.emoji == '🔀':
+                        import random
+                        random.shuffle(playlist)
+                    elif reaction.emoji == '🔊':
+                        queue = Queues.get_queue(ctx.guild.id)
+                        for song in playlist:
+                            queue.append(song)
+                        Queues.update_queue(ctx.guild.id, queue)
+                        player_cog = ctx.bot.get_cog('Player')
+                        if not ctx.author.voice:
+                            await ctx.send('You are not connected to a voice channel')
+                            return
+                        if ctx.voice_client is None:
+                            await ctx.author.voice.channel.connect()
+                        if not ctx.voice_client.is_playing():
+                            message.delete()
+                            await player_cog.play(ctx)
+                            return
+                        message
+                    elif reaction.emoji == '❌':
+                        await message.delete()
+                        return
+                    await message.remove_reaction(reaction, user)
+                    embed.description = ""
+                    for i, song in enumerate(playlist, start=1):
+                        embed.description += f'{i}: {song["title"]}\n'
+                    await message.edit(embed=embed)
             else:
                 def get_chunk(playlist, page):
                     return playlist[page*20:(page+1)*20]
