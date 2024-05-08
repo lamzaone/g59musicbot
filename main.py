@@ -52,7 +52,7 @@ async def check_for_updates():
         await message.add_reaction('✅')
         await message.add_reaction('❌')
         try:
-            reaction, _ = await bot.wait_for('reaction_add', timeout=24*3600.0, check=lambda reaction, user: user == owner and reaction.message == message)
+            reaction, _ = await bot.wait_for('reaction_add', check=lambda reaction, user: user == owner and reaction.message == message)
             if reaction.emoji == '✅':                
                 await message.clear_reactions()
                 update.update(is_windows)
