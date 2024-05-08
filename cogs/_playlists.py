@@ -27,15 +27,31 @@ class _Playlist(commands.Cog):
                 embed = discord.Embed(title=f"Available playlists", description="", color=discord.Color.dark_magenta())
                 message = await interaction.followup.send(embed=embed)
                 if playlist_name.isnumeric():
-                    playlist_name = os.listdir(playlist_dir(interaction.guild.id))[int(playlist_name)-1][:-5]
-                playlist = get_playlist(interaction.guild.id, playlist_name)
+                    try:
+                        playlist_name = os.listdir(playlist_dir(interaction.guild.id))[int(playlist_name)-1][:-5]
+                    except IndexError:
+                        embed.title = ""
+                        embed.description = "Playlist not found"
+                        await message.edit(embed=embed)
+                        return
+                if type(get_playlist(interaction.guild.id, playlist_name)) == tuple:
+                    playlist_name, playlist = get_playlist(interaction.guild.id, playlist_name)
+                else:
+                    playlist = get_playlist(interaction.guild.id, playlist_name)
+                if playlist is None:
+                    embed.title = ""
+                    embed.description = "Playlist not found"
+                    await message.edit(embed=embed)
+                    return
                 embed.title = f"Playlist `{playlist_name}`"
                 embed.description = ""
                 if len(playlist) == 0:
-                    embed.description = "Playlist is empty"
+                    embed.description = "Playlist is empty"                    
+                    await message.edit(embed=embed)
                 elif len(playlist) <= 20:
                     for i, song in enumerate(playlist, start=1):
-                        embed.description += f'{i}: {song["title"]}\n'
+                        embed.description += f'{i}: {song["title"]}\n'                        
+                    await message.edit(embed=embed)
                     await message.add_reaction('🔀')
                     await message.add_reaction('🔊')
                     await message.add_reaction('❌')
@@ -213,5 +229,29 @@ def playlist_dir(guild_id):
     return os.path.join(config.playlists_folder, str(guild_id))
 
 def get_playlist(guild_id, playlist_name):
-    with open(os.path.join(playlist_dir(guild_id), f'{playlist_name}.json'), 'r') as f:
-        return json.load(f)
+    try:
+        with open(os.path.join(playlist_dir(guild_id), f'{playlist_name}.json'), 'r') as f:
+            return json.load(f)        
+    except FileNotFoundError:
+        try:
+            #get all playlists in the guild and look for the one that matches the name the most
+            playlists = os.listdir(playlist_dir(guild_id))
+            closest_match = None
+            closest_match_score = 0
+            for playlist in playlists:
+                score = 0
+                for i in range(min(len(playlist), len(playlist_name))):
+                    if playlist[i].lower() == playlist_name[i].lower():
+                        score += 1
+                if score > closest_match_score:
+                    closest_match = playlist
+                    closest_match_score = score
+            if closest_match_score/len(playlist) > 0.5:
+                with open(os.path.join(playlist_dir(guild_id), closest_match), 'r') as f:
+                    return closest_match[:-5], json.load(f)
+            else:
+                return None
+        except FileNotFoundError:
+            return None
+        except TypeError:
+            return None

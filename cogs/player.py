@@ -350,7 +350,7 @@ class Player(commands.Cog):
                     
                     while True:
                         try:
-                            reaction, _ = await self.bot.wait_for('reaction_add', timeout=3600.0, check=check)
+                            reaction, _ = await self.bot.wait_for('reaction_add', timeout=60.0, check=check)
 
                             if reaction.emoji == '▶️':
                                 page += 1

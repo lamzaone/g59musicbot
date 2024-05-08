@@ -101,6 +101,18 @@ sudo reboot
 ---
 ---
 ## CHANGELOG:
+### Version 0.3.2
+- Tweaked updater
+  - Update message set to no timeout
+- Tweaked playlists
+  - Better error handling
+  - Using `!playlist <partial_name>` or `/playlist list <partial_name>` will now show results if your query matches an existing playlist by a certain threshold
+- **Added Avatar/Banner changer!**
+  - You can now change your bot's avatar and banner by simply executing a command!
+  - You can use animated .GIF files!
+  - `!avatar, !banner` and `/avatar, /banner`
+  - You can use both URLs and local files (attachments)
+  - MAX 10MB
 ### Version 0.3.1
 - Improved playlists
     - Better playlist display (`/playlist list` or `!playlist`)

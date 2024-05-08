@@ -31,7 +31,7 @@ class Playlist(commands.Cog):
                 playlists = os.listdir(playlist_dir(ctx.guild.id))
                 if len(playlists) == 0:
                     embed.description = "No playlists found"
-                    message.edit(embed=embed)
+                    await message.edit(embed=embed)
                 elif len(playlists) <= 7:
                     embed.description = '\n'.join([f'{i+1}: {playlist[:-5]}' for i, playlist in enumerate(playlists)])
                     await message.edit(embed=embed)
@@ -69,8 +69,22 @@ class Playlist(commands.Cog):
                 return    
         try:
             if playlist_name.isnumeric():
-                playlist_name = os.listdir(playlist_dir(ctx.guild.id))[int(playlist_name)-1][:-5]
-            playlist = get_playlist(ctx.guild.id, playlist_name)
+                try:
+                    playlist_name = os.listdir(playlist_dir(ctx.guild.id))[int(playlist_name)-1][:-5]
+                except IndexError:
+                    embed.title = ""
+                    embed.description = "Playlist not found"
+                    await message.edit(embed=embed)
+                    return
+            if type(get_playlist(ctx.guild.id, playlist_name)) == tuple:
+                playlist_name, playlist = get_playlist(ctx.guild.id, playlist_name)
+            else:
+                playlist = get_playlist(ctx.guild.id, playlist_name)
+            if playlist is None:
+                    embed.title = ""
+                    embed.description = "Playlist not found"
+                    await message.edit(embed=embed)
+                    return
             embed.title = f"Playlist `{playlist_name}`"
             embed.description = ""
             if len(playlist) == 0:
@@ -84,7 +98,7 @@ class Playlist(commands.Cog):
                 await message.add_reaction('❌')
                 while True:
                     try:
-                        reaction, user = await self.bot.wait_for('reaction_add', check=lambda reaction, user: user == ctx.author and reaction.message.id == message.id and reaction.emoji in ['🔀', '🔊', '❌'])
+                        reaction, user = await self.bot.wait_for('reaction_add', timeout=60.0, check=lambda reaction, user: user == ctx.author and reaction.message.id == message.id and reaction.emoji in ['🔀', '🔊', '❌'])
                         if reaction.emoji == '🔀':
                             import random
                             random.shuffle(playlist)
@@ -358,8 +372,32 @@ def add_to_playlist(guild_id, playlist_name, song_name, song_url):
         json.dump(playlist, f, indent=4)
 
 def get_playlist(guild_id, playlist_name):
-    with open(os.path.join(playlist_dir(guild_id), f'{playlist_name}.json'), 'r') as f:
-        return json.load(f)
+    try:
+        with open(os.path.join(playlist_dir(guild_id), f'{playlist_name}.json'), 'r') as f:
+            return json.load(f)        
+    except FileNotFoundError:
+        try:
+            #get all playlists in the guild and look for the one that matches the name the most
+            playlists = os.listdir(playlist_dir(guild_id))
+            closest_match = None
+            closest_match_score = 0
+            for playlist in playlists:
+                score = 0
+                for i in range(min(len(playlist), len(playlist_name))):
+                    if playlist[i].lower() == playlist_name[i].lower():
+                        score += 1
+                if score > closest_match_score:
+                    closest_match = playlist
+                    closest_match_score = score
+            if closest_match_score/len(playlist) > 0.5:
+                with open(os.path.join(playlist_dir(guild_id), closest_match), 'r') as f:
+                    return closest_match[:-5], json.load(f)
+            else:
+                return None
+        except FileNotFoundError:
+            return None
+        except TypeError:
+            return None
     
 def remove_from_playlist(guild_id, playlist_name, song_name):
     playlist = get_playlist(guild_id, playlist_name)
