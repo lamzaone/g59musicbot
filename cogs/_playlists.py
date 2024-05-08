@@ -36,6 +36,50 @@ class _Playlist(commands.Cog):
                 elif len(playlist) <= 20:
                     for i, song in enumerate(playlist, start=1):
                         embed.description += f'{i}: {song["title"]}\n'
+                    await message.add_reaction('🔀')
+                    await message.add_reaction('🔊')
+                    await message.add_reaction('❌')
+                    while True:
+                        try:
+                            reaction, user = await self.bot.wait_for('reaction_add', timeout=60.0, check=lambda reaction, user: user == interaction.user and reaction.message.id == message.id and reaction.emoji in ['🔀', '🔊', '❌'])
+                            if reaction.emoji == '🔀':
+                                import random
+                                random.shuffle(playlist)
+                            elif reaction.emoji == '🔊':
+                                queue = Queues.get_queue(interaction.guild.id)
+                                for song in playlist:
+                                    queue.append(song)
+                                Queues.update_queue(interaction.guild.id, queue)
+                                ctx = await self.bot.get_context(interaction)
+                                player_cog = ctx.bot.get_cog('_Player')
+                                if not ctx.author.voice:
+                                    await ctx.send(':x: You are not connected to a voice channel')
+                                    return
+                                if ctx.voice_client is None:
+                                    await ctx.author.voice.channel.connect()
+                                if not ctx.voice_client.is_playing():
+                                    await message.delete()
+                                    await ctx.send(f'Playlist `{playlist_name}` loaded {len(playlist)} songs to queue and started playing')
+                                    await player_cog.play_song(interaction=interaction, query=None)
+                                    return
+                                else:
+                                    await message.delete()
+                                    await ctx.send(f'Playlist `{playlist_name}` loaded {len(playlist)} songs to queue')
+                                    return
+                            elif reaction.emoji == '❌':
+                                await message.delete()
+                                return
+                            await message.remove_reaction(reaction, user)
+                            embed.description = ""
+                            for i, song in enumerate(playlist, start=1):
+                                embed.description += f'{i}: {song["title"]}\n'
+                            await message.edit(embed=embed)
+                        except asyncio.CancelledError:
+                            await message.delete()
+                            return
+                        except asyncio.TimeoutError:
+                            await message.delete()
+                            return
                 else:
                     def get_chunk(playlist, page):
                         return playlist[page*20:(page+1)*20]

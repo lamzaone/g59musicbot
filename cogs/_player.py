@@ -253,7 +253,7 @@ class _Player(commands.Cog):
 
         ### SET DJ ROLE COMMAND ###
     @app_commands.command(name='setdj', description='Set the DJ role for the server')
-    @commands.guild_only()
+    @app_commands.guild_only()
     async def set_dj(self, interaction: discord.Interaction , role: discord.Role = None):
         if not interaction.guild:
             await interaction.response.send_message(":x: This command can only be used in a server.", ephemeral=True)
