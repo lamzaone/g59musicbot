@@ -218,8 +218,19 @@ class Playlist(commands.Cog):
     @playlist.command(name='delete', aliases=['d'], brief='Delete a playlist')
     async def delete(self, ctx, playlist_name: str):
         try:
-            if playlist_name.isnumeric() and int(playlist_name) <= len(os.listdir(playlist_dir(ctx.guild.id))):
-                playlist_name = os.listdir(playlist_dir(ctx.guild.id))[int(playlist_name)-1][:-5]
+            if playlist_name.isnumeric():
+                try:
+                    playlist_name = os.listdir(playlist_dir(ctx.guild.id))[int(playlist_name)-1][:-5]
+                except IndexError:
+                    await ctx.send('Playlist not found')
+                    return
+            if type(get_playlist(ctx.guild.id, playlist_name)) == tuple:
+                playlist_name, playlist = get_playlist(ctx.guild.id, playlist_name)
+            else:
+                playlist = get_playlist(ctx.guild.id, playlist_name)
+            if playlist is None:
+                await ctx.send('Playlist not found')
+                return
             os.remove(os.path.join(playlist_dir(ctx.guild.id), f'{playlist_name}.json'))
             await ctx.send(f'Playlist `{playlist_name}` removed successfully')
         except FileNotFoundError:
@@ -229,8 +240,19 @@ class Playlist(commands.Cog):
         
     @playlist.command(name='add', aliases=['a'], brief='Add a song to a playlist')
     async def add(self, ctx, playlist_name: str, query: str=None):
-        if playlist_name.isnumeric() and int(playlist_name) <= len(os.listdir(playlist_dir(ctx.guild.id))):
-                playlist_name = os.listdir(playlist_dir(ctx.guild.id))[int(playlist_name)-1][:-5]
+        if playlist_name.isnumeric():
+                try:
+                    playlist_name = os.listdir(playlist_dir(ctx.guild.id))[int(playlist_name)-1][:-5]
+                except IndexError:
+                    await ctx.send('Playlist not found')
+                    return
+        if type(get_playlist(ctx.guild.id, playlist_name)) == tuple:
+            playlist_name, playlist = get_playlist(ctx.guild.id, playlist_name)
+        else:
+            playlist = get_playlist(ctx.guild.id, playlist_name)
+        if playlist is None:
+            await ctx.send('Playlist not found')
+            return
         if query is None:
             if not hasattr(ctx, 'voice_client') and ctx.voice_client.is_playing():
                 await ctx.send('No song playing, please provide a query')
@@ -300,8 +322,19 @@ class Playlist(commands.Cog):
 
     @playlist.command(name='remove', aliases=['r'], brief='Remove a song from a playlist')
     async def remove(self, ctx, playlist_name: str, song_name: str):
-        if playlist_name.isnumeric() and int(playlist_name) <= len(os.listdir(playlist_dir(ctx.guild.id))):
-                playlist_name = os.listdir(playlist_dir(ctx.guild.id))[int(playlist_name)-1][:-5]
+        if playlist_name.isnumeric():
+                try:
+                    playlist_name = os.listdir(playlist_dir(ctx.guild.id))[int(playlist_name)-1][:-5]
+                except IndexError:
+                    await ctx.send('Playlist not found')
+                    return
+        if type(get_playlist(ctx.guild.id, playlist_name)) == tuple:
+            playlist_name, playlist = get_playlist(ctx.guild.id, playlist_name)
+        else:
+            playlist = get_playlist(ctx.guild.id, playlist_name)
+        if playlist is None:
+            await ctx.send('Playlist not found')
+            return
         try:
             removed_song = remove_from_playlist(ctx.guild.id, playlist_name, song_name)
             if removed_song is not None:
@@ -320,9 +353,19 @@ class Playlist(commands.Cog):
             await ctx.author.voice.channel.connect()
 
         try:
-            if playlist_name.isnumeric() and int(playlist_name) <= len(os.listdir(playlist_dir(ctx.guild.id))):
-                playlist_name = os.listdir(playlist_dir(ctx.guild.id))[int(playlist_name)-1][:-5]            
-            playlist = get_playlist(ctx.guild.id, playlist_name)
+            if playlist_name.isnumeric():
+                try:
+                    playlist_name = os.listdir(playlist_dir(ctx.guild.id))[int(playlist_name)-1][:-5]
+                except IndexError:
+                    await ctx.send('Playlist not found')
+                    return
+            if type(get_playlist(ctx.guild.id, playlist_name)) == tuple:
+                playlist_name, playlist = get_playlist(ctx.guild.id, playlist_name)
+            else:
+                playlist = get_playlist(ctx.guild.id, playlist_name)
+            if playlist is None:
+                await ctx.send('Playlist not found')
+                return
             queue = Queues.get_queue(ctx.guild.id)
             for song in playlist:
                 queue_item = {}

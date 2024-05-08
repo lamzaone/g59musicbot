@@ -190,8 +190,6 @@ class _Playlist(commands.Cog):
     @group.command(name='load', description='Load a playlist into the queue')
     async def load(self, interaction: discord.Interaction, playlist_name: str):
         ctx = await self.bot.get_context(interaction)
-        if playlist_name.isnumeric() and int(playlist_name) <= len(os.listdir(playlist_dir(interaction.guild.id))):
-                playlist_name = os.listdir(playlist_dir(interaction.guild.id))[int(playlist_name)-1][:-5]
         if not ctx.author.voice:
             await ctx.send('You are not connected to a voice channel')
             return
@@ -200,7 +198,19 @@ class _Playlist(commands.Cog):
         
 
         try:            
-            playlist = get_playlist(interaction.guild.id, playlist_name)
+            if playlist_name.isnumeric():
+                try:
+                    playlist_name = os.listdir(playlist_dir(interaction.guild.id))[int(playlist_name)-1][:-5]
+                except IndexError:
+                    await ctx.send('Playlist not found')
+                    return
+            if type(get_playlist(interaction.guild.id, playlist_name)) == tuple:
+                playlist_name, playlist = get_playlist(interaction.guild.id, playlist_name)
+            else:
+                playlist = get_playlist(interaction.guild.id, playlist_name)
+            if playlist is None:
+                await ctx.send('Playlist not found')
+                return
             queue = Queues.get_queue(interaction.guild.id)
             for song in playlist:
                 queue_item = {}
