@@ -53,8 +53,7 @@ async def check_for_updates():
         await message.add_reaction('❌')
         try:
             reaction, _ = await bot.wait_for('reaction_add', check=lambda reaction, user: user == owner and reaction.message == message)
-            if reaction.emoji == '✅':                
-                await message.clear_reactions()
+            if reaction.emoji == '✅':
                 update.update(is_windows)
                 await bot.close()
                 sys.exit(0)
@@ -178,7 +177,7 @@ def main(*args):
         if args[0] == 'updated':
             print("[+] Successfully updated to the latest version!")
     else:
-        if update.check_upd(is_windows):        
+        if update.check_upd(is_windows): 
             update.update(is_windows)
             sys.exit(0)
 
