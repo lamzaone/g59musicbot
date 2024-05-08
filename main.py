@@ -27,8 +27,20 @@ async def load_cogs():
             print(f"[-] An error occurred while loading {cog}: {e}")
 
 ### CHECK FOR UPDATES EVERY HOUR ###
+async def update_msg():
+        if len(sys.argv) > 1:
+            if sys.argv[1] == 'updated':
+                try:
+                    embed = discord.Embed(title="Update complete!", description="Your bot has been updated to the latest version.", color=discord.Color.blue())
+                    app_info = await bot.application_info()
+                    owner = app_info.owner
+                    await owner.send(embed=embed)
+                except Exception as e:
+                    print(f"[-] An error occurred while sending the update message: {e}")   
+
 @tasks.loop(hours=1)
-async def check_for_updates():    
+async def check_for_updates(): 
+    
     updates = update.check_upd(is_windows)
     # If updates are available, send a message to the bot owner
     if updates:
@@ -40,17 +52,20 @@ async def check_for_updates():
         await message.add_reaction('✅')
         await message.add_reaction('❌')
         try:
-            reaction, _ = await bot.wait_for('reaction_add', timeout=24*3600.0, check=lambda reaction, user: user == owner and reaction.message == message)
-            if reaction.emoji == '✅':
-                await owner.send('[+] Update accepted. Bot will be updated.')                
+            reaction, _ = await bot.wait_for('reaction_add', check=lambda reaction, user: user == owner and reaction.message == message)
+            if reaction.emoji == '✅':                
+                await message.clear_reactions()
                 update.update(is_windows)
                 await bot.close()
                 sys.exit(0)
             elif reaction.emoji == '❌':
                 await owner.send('[-] Update declined. Bot will not be updated.')
                 await asyncio.sleep(24*3600.0)
+        except asyncio.CancelledError:
+            pass
         except asyncio.TimeoutError:
-            await owner.send('[-] Update declined. Bot will not be updated.')
+            await owner.send('[-] Update declined. Bot will not be updated.')            
+            await asyncio.sleep(24*3600.0)
         except Exception as e:     
             pass       
 
@@ -59,6 +74,7 @@ async def check_for_updates():
 async def on_ready():
     # Load cogs
     await load_cogs()
+    await update_msg()
     print(f'[+] Booted {bot.user}...')
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="/play <song>"), status=discord.Status.dnd)
     # Reset queues and fetch settings for all guilds
