@@ -62,4 +62,18 @@ def get_info(query:str):
         print("is auto")
         return extract_auto_info(query)
     
+def format_duration(duration:int):
+    # Convert seconds to hours, minutes and seconds
+    hours = duration // 3600
+    minutes = (duration % 3600) // 60
+    seconds = duration % 60
+    return f"{hours}:{minutes}:{seconds}" if hours > 0 else f"{minutes}:{seconds}"
+
+def format_upload_date(_date:str):
+    _date = _date.split('T')[0]
+    y = _date[:4]
+    m = _date[4:6]
+    d = _date[6:8]
+    return f"{d}/{m}/{y}"
+
 

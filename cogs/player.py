@@ -167,6 +167,19 @@ class Player(commands.Cog):
         except Exception as e:
             print(f"[-] An error occurred while playing music: {e}")
 
+    @commands.hybrid_command(name='nowplaying', help='Display the currently playing song', aliases=['np', 'playing'])
+    @commands.guild_only()
+    async def nowplaying(self, ctx):
+        if ctx.voice_client and ctx.voice_client.is_playing():
+            info = ctx.bot.video_info
+            embed = discord.Embed(title="Now Playing", color=discord.Color.blurple())
+            duration = musicplayer.format_duration(info['duration'])
+            uploaded = musicplayer.format_upload_date(info['upload_date'])
+            embed.description = f"### [:loud_sound: {info['title']}]({info['original_url']})\nDuration: `{duration}` | Likes: `{info['like_count']}` | Uploaded: `{uploaded}`"
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send(":x: No music is currently playing.")
+
 
         ### SKIP COMMAND ###
     @commands.command(name='skip', help='Skip the current song and play the next one in the queue')
