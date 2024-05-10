@@ -4,6 +4,7 @@
 ###########################################
 ###########################################
 
+import datetime
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -125,7 +126,8 @@ class _Player(commands.Cog):
             ctx.bot.video_info = info
             ctx.bot.video_url = video_url
             audio_source = discord.PCMVolumeTransformer(audio_source, Settings.get_settings(interaction.guild.id)['volume'])
-            voice_client.play(audio_source)
+            voice_client.play(audio_source)            
+            ctx.bot.audio_start_time = datetime.datetime.now()
             await interaction.followup.send(f":arrow_forward: Now playing `{info['title']}` \n{info['original_url']}")
             while voice_client.is_playing() or voice_client.is_paused():
                 await asyncio.sleep(1)
