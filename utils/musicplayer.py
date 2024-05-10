@@ -63,10 +63,13 @@ def get_info(query:str):
         return extract_auto_info(query)
     
 def format_duration(duration:int):
-    # Convert seconds to hours, minutes and seconds
     hours = duration // 3600
     minutes = (duration % 3600) // 60
     seconds = duration % 60
+    if seconds < 10:
+        seconds = f"0{seconds}"
+    if minutes < 10:
+        minutes = f"0{minutes}"
     return f"{hours}:{minutes}:{seconds}" if hours > 0 else f"{minutes}:{seconds}"
 
 def format_upload_date(_date:str):
@@ -76,4 +79,14 @@ def format_upload_date(_date:str):
     d = _date[6:8]
     return f"{d}/{m}/{y}"
 
-
+def get_elapsed(start:int, current:int):
+    elapsed = current-start
+    elapsed = int(elapsed.total_seconds())
+    hours, remainder = divmod(elapsed, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    if seconds < 10:
+        seconds = f"0{seconds}"
+    if minutes < 10 & hours > 0:
+        minutes = f"0{minutes}"
+    elapsed = f"{hours}:{minutes}:{seconds}" if hours > 0 else f"{minutes}:{seconds}"
+    return elapsed

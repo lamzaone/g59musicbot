@@ -1,3 +1,4 @@
+import datetime
 import math
 import discord
 from discord.ext import commands
@@ -153,6 +154,7 @@ class Player(commands.Cog):
                 audio_source = discord.FFmpegPCMAudio(info['url'], **config.ffmpeg_options)
             audio_source = discord.PCMVolumeTransformer(audio_source, Settings.get_settings(ctx.guild.id)['volume'])
             ctx.voice_client.play(audio_source)
+            ctx.bot.audio_start_time = datetime.datetime.now()
             await ctx.send(f":arrow_forward: Now playing `{info['title']}` \n{info['original_url']}")
         
         try:
@@ -172,11 +174,28 @@ class Player(commands.Cog):
     async def nowplaying(self, ctx):
         if ctx.voice_client and ctx.voice_client.is_playing():
             info = ctx.bot.video_info
-            embed = discord.Embed(title="Now Playing", color=discord.Color.blurple())
+            embed = discord.Embed(color=discord.Color.blurple())
             duration = musicplayer.format_duration(info['duration'])
             uploaded = musicplayer.format_upload_date(info['upload_date'])
             embed.description = f"### [:loud_sound: {info['title']}]({info['original_url']})\nDuration: `{duration}` | Likes: `{info['like_count']}` | Uploaded: `{uploaded}`"
-            await ctx.send(embed=embed)
+            embed.set_thumbnail(url=info['thumbnail'])
+            embed.description += f"\n**Uploaded by:** {info['uploader']}"
+            message = await ctx.send(embed=embed)
+            try:
+                while ctx.voice_client.is_playing():
+                    startTime=ctx.bot.audio_start_time
+                    currentTime=datetime.datetime.now()
+                    elapsed = musicplayer.get_elapsed(startTime, currentTime)
+                    embed.set_footer(text=f"{elapsed}/{duration}")
+                    await message.edit(embed=embed)
+                    await asyncio.sleep(1)
+            except asyncio.CancelledError:
+                await message.delete()
+                return
+            except Exception as e:
+                print(f"[-] An error occurred while updating the now playing message: {e}")
+                await message.delete()
+                return
         else:
             await ctx.send(":x: No music is currently playing.")
 
@@ -266,6 +285,7 @@ class Player(commands.Cog):
                     async with ctx.typing():
                         if is_windows:
                             audio_source = discord.FFmpegPCMAudio(ctx.bot.video_url, executable=config.FFMPEG_PATH , **ffmpeg_opts)
+                            ctx.bot.audio_start_time = datetime.datetime.now() - datetime.timedelta(seconds=seconds)
                         else:
                             audio_source = discord.FFmpegPCMAudio(ctx.bot.video_url, **ffmpeg_opts)
                         audio_source = discord.PCMVolumeTransformer(audio_source, settings['volume'])
