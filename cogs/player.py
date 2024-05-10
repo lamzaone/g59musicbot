@@ -29,6 +29,9 @@ class Player(commands.Cog):
     @commands.command(name='play', help='Play music from YouTube using a search term or URL')
     @commands.guild_only()
     async def play(self, ctx, *, query: str = None):
+        #TODO: implement repeat
+        if not hasattr(ctx.bot, 'repeat'):
+            ctx.bot.repeat = "no"
         if ctx.voice_client is None:
             if ctx.author.voice:
                 await ctx.author.voice.channel.connect()
@@ -145,6 +148,7 @@ class Player(commands.Cog):
                     info = musicplayer.get_info(query)
                 if info is None:
                     info = musicplayer.get_info(Queues.next_song(ctx.guild.id)['url'])
+            
             ctx.bot.video_info = info
             ctx.bot.video_url = info['url']
             
@@ -161,13 +165,76 @@ class Player(commands.Cog):
             while ctx.voice_client.is_playing() or ctx.voice_client.is_paused():
                 await asyncio.sleep(1)
             queue = Queues.get_queue(ctx.guild.id)
-            if len(queue) > 0:
-                next_song = Queues.next_song(ctx.guild.id)
-                await self.play(ctx, query=next_song['url'])
+            if len(queue) > 0 or ctx.bot.repeat != "no":
+                try:
+                    if ctx.bot.repeat == "song":                    
+                        next_song = ctx.bot.video_info['original_url']
+                    elif ctx.bot.repeat == "queue":
+                        next_song = Queues.repeat_queue(ctx.guild.id, ctx.bot.video_info)['url']
+                    else:
+                        next_song = Queues.next_song(ctx.guild.id)['url']
+                    await self.play(ctx, query=next_song)
+                except UnboundLocalError:
+                    await ctx.voice_client.disconnect()
+                    pass
             else:
                 await ctx.voice_client.disconnect()
         except Exception as e:
             print(f"[-] An error occurred while playing music: {e}")
+
+    @commands.hybrid_group(name='repeat', fallback='queue', help='repeat the current song or the entire queue', invoke_without_command=True, aliases=['loop'])
+    async def repeat(self, ctx):
+        if ctx.voice_client and ctx.voice_client.is_playing():
+            if ctx.bot.repeat == "queue":
+                ctx.bot.repeat = "no"
+                await ctx.send(":repeat: repeating has been disabled.")
+            elif len(Queues.get_queue(ctx.guild.id)) > 0:
+                ctx.bot.repeat = "queue"
+                await ctx.send(":repeat: repeating the queue.")
+            else:
+                ctx.bot.repeat = "song"
+                await ctx.send(":repeat: repeating the current song.")
+        else:
+            await ctx.send(":x: No music is currently playing.")
+
+    @repeat.command(name='song', help='repeat the current song')
+    async def repeat_song(self, ctx):
+        if ctx.voice_client and ctx.voice_client.is_playing():
+            if ctx.bot.repeat == "song":
+                ctx.bot.repeat = "no"
+                await ctx.send(":repeat: repeating has been disabled.")
+            else:
+                ctx.bot.repeat = "song"
+                await ctx.send(":repeat: repeating the current song.")
+        else:
+            await ctx.send(":x: No music is currently playing.")
+
+
+    # @commands.group(name='repeat', help='repeat the current song or the entire queue', invoke_without_command=True)
+    # @commands.guild_only()
+    # async def repeat(self, ctx):
+    #     if ctx.voice_client and ctx.voice_client.is_playing():
+    #         if ctx.bot.repeat == "queue":
+    #             ctx.bot.repeat = "no"
+    #             await ctx.send(":repeat: repeating has been disabled.")
+    #         else:
+    #             ctx.bot.repeat = "queue"
+    #             await ctx.send(":repeat: repeating the queue.")
+    #     else:
+    #         await ctx.send(":x: No music is currently playing.")
+
+    # @repeat.command(name='song', help='repeat the current song')
+    # @commands.guild_only()
+    # async def repeat_song(self, ctx):
+    #     if ctx.voice_client and ctx.voice_client.is_playing():
+    #         if ctx.bot.repeat == "song":
+    #             ctx.bot.repeat = "no"
+    #             await ctx.send(":repeat: repeating has been disabled.")
+    #         else:
+    #             ctx.bot.repeat = "song"
+    #             await ctx.send(":repeat: repeating the current song.")
+    #     else:
+    #         await ctx.send(":x: No music is currently playing.")
 
     @commands.hybrid_command(name='nowplaying', help='Display the currently playing song', aliases=['np', 'playing'])
     @commands.guild_only()

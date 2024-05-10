@@ -31,6 +31,8 @@ class _Player(commands.Cog):
 
     ### START PLAYING SONG FUNCTION ###
     async def play_song(self, interaction, query=None):
+        if not hasattr(self.bot, 'repeat'):
+            self.bot.repeat = "no"
         if interaction.guild:
             voice_client = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
             if voice_client is None:
@@ -141,12 +143,21 @@ class _Player(commands.Cog):
         voice_client = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
         if voice_client and voice_client.is_connected():
             queue = Queues.get_queue(interaction.guild.id)
-
-            if queue:
-                next_song = Queues.next_song(interaction.guild.id)
-                await self.play_song(interaction, next_song['url'])
+            ctx = await self.bot.get_context(interaction)
+            if len(queue) > 0 or ctx.bot.repeat != "no":
+                try:
+                    if ctx.bot.repeat == "song":                    
+                        next_song = ctx.bot.video_info['original_url']
+                    elif ctx.bot.repeat == "queue":
+                        next_song = Queues.repeat_queue(ctx.guild.id, ctx.bot.video_info)['url']
+                    else:
+                        next_song = Queues.next_song(ctx.guild.id)['url']
+                    await self.play_song(interaction, query=next_song)
+                except UnboundLocalError:
+                        await ctx.voice_client.disconnect()
+                        pass
             else:
-                await voice_client.disconnect()
+                await ctx.voice_client.disconnect()
 
 
 
