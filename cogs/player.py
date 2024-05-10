@@ -187,13 +187,13 @@ class Player(commands.Cog):
         if ctx.voice_client and ctx.voice_client.is_playing():
             if ctx.bot.repeat == "queue":
                 ctx.bot.repeat = "no"
-                await ctx.send(":repeat: repeating has been disabled.")
+                await ctx.send(":repeat: Repeating has been disabled.")
             elif len(Queues.get_queue(ctx.guild.id)) > 0:
                 ctx.bot.repeat = "queue"
-                await ctx.send(":repeat: repeating the queue.")
+                await ctx.send(":repeat: Repeating the queue.")
             else:
                 ctx.bot.repeat = "song"
-                await ctx.send(":repeat: repeating the current song.")
+                await ctx.send(":repeat: Repeating the current song.")
         else:
             await ctx.send(":x: No music is currently playing.")
 
@@ -202,10 +202,10 @@ class Player(commands.Cog):
         if ctx.voice_client and ctx.voice_client.is_playing():
             if ctx.bot.repeat == "song":
                 ctx.bot.repeat = "no"
-                await ctx.send(":repeat: repeating has been disabled.")
+                await ctx.send(":repeat: Repeating has been disabled.")
             else:
                 ctx.bot.repeat = "song"
-                await ctx.send(":repeat: repeating the current song.")
+                await ctx.send(":repeat: Repeating the current song.")
         else:
             await ctx.send(":x: No music is currently playing.")
 
@@ -216,10 +216,10 @@ class Player(commands.Cog):
     #     if ctx.voice_client and ctx.voice_client.is_playing():
     #         if ctx.bot.repeat == "queue":
     #             ctx.bot.repeat = "no"
-    #             await ctx.send(":repeat: repeating has been disabled.")
+    #             await ctx.send(":repeat: Repeating has been disabled.")
     #         else:
     #             ctx.bot.repeat = "queue"
-    #             await ctx.send(":repeat: repeating the queue.")
+    #             await ctx.send(":repeat: Repeating the queue.")
     #     else:
     #         await ctx.send(":x: No music is currently playing.")
 
@@ -229,10 +229,10 @@ class Player(commands.Cog):
     #     if ctx.voice_client and ctx.voice_client.is_playing():
     #         if ctx.bot.repeat == "song":
     #             ctx.bot.repeat = "no"
-    #             await ctx.send(":repeat: repeating has been disabled.")
+    #             await ctx.send(":repeat: Repeating has been disabled.")
     #         else:
     #             ctx.bot.repeat = "song"
-    #             await ctx.send(":repeat: repeating the current song.")
+    #             await ctx.send(":repeat: Repeating the current song.")
     #     else:
     #         await ctx.send(":x: No music is currently playing.")
 
