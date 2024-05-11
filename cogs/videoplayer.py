@@ -11,6 +11,9 @@ from requests import get
 import requests
 import json
 
+
+# port = int(str(ctx.guild.id)[-4:])
+port = 5000
 ip = get('https://api.ipify.org').content.decode('utf8')
 
 class VideoPlayer(commands.Cog):
@@ -35,34 +38,31 @@ class VideoPlayer(commands.Cog):
             'outtmpl': 'video_streaming/static/video.mp4',
             'default_search': 'auto',
         }
-        link = None
-        async with ctx.typing():
-            try:
-                # code start here
-                idname= "overlord-iv"
-                url = f"http://127.0.0.1:3000/anime/gogoanime/watch/overlord-iv-episode-3"
-                response = requests.get(url)
-                print(response)
-                data = response.json()
-                link = data['sources'][::-1][1]['url']
-            except Exception as e:
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    ydl.download([url])
-                pass
 
-        print(ip)
-        # port = int(str(ctx.guild.id)[-4:])
-        port = 5000
-        print(port)
+        async with ctx.typing():
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([url])
+
         await ctx.send(f'http://{ip}:{port}')
 
-        if link is not None:
-            subprocess.Popen(['python', 'video_streaming/stream.py', str(port), link])
-        else:
-            subprocess.Popen(['python', 'video_streaming/stream.py', str(port)])
+        subprocess.Popen(['python', 'video_streaming/stream.py', str(port)])
 
 
-
+    @commands.command(name='anime', aliases=['an']) 
+    async def anime(self, ctx, name, episode: int = 1):
+        link = None
+        url = f"http://127.0.0.1:3000/anime/gogoanime/watch/{name}-episode-{episode}"
+        try:
+            response = requests.get(url)
+            print(response)
+            data = response.json()
+            link = data['sources'][::-1][1]['url']
+            subprocess.Popen(['python', 'video_streaming/stream.py', str(port), link])            
+            await ctx.send(f'http://{ip}:{port}')
+        except Exception as e:
+            print(e)
+            await ctx.send('Anime not found')
+            return
 
 async def setup(bot):
     await bot.add_cog(VideoPlayer(bot))

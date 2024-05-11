@@ -14,34 +14,32 @@
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <video id="video" controls></video>
     <script>
-        if(Hls.isSupported())
-            {   
-                var url = "{{url}}";
-                console.log(url);
-                var video = document.getElementById('video');
+        var video = document.getElementById('video');
+        var url = "{{url}}";
+
+        if (url !== null && url !== "") {
+            if (Hls.isSupported()) {
                 var hls = new Hls();
                 hls.loadSource(url);
                 hls.attachMedia(video);
-                hls.on(Hls.Events.MANIFEST_PARSED,function()
-                {
+                hls.on(Hls.Events.MANIFEST_PARSED,function() {
                     video.play();
                 });
-            }
-        else if (video.canPlayType('application/vnd.apple.mpegurl'))
-            {   
-                var url = "{{url}}";
-                // print url
-                console.log(url);
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
                 video.src = url;
-                video.addEventListener('canplay',function()
-                {
+                video.addEventListener('canplay',function() {
                     video.play();
                 });
             }
-
+        } else {
+            // If url is None or empty, use the static video
+            video.src = "{{url_for('static', filename='video.webm')}}";
+            video.addEventListener('canplay', function() {
+                video.play();
+            });
+        }
 
         var socket = io.connect('http://' + document.domain + ':' + location.port);
-        var video = document.getElementById('video');
         var seeking = false; // Flag to track seeking action
         var playTimeout = null;
         var pauseTimeout = null;
@@ -96,10 +94,5 @@
             socket.emit('seek_video', { time: video.currentTime });
         });
     </script>
-
-
-    <!-- <script>
-        
-    </script> -->
 </body>
 </html>
