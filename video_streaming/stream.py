@@ -5,10 +5,10 @@ import sys
 
 app = Flask(__name__)
 socketio = SocketIO(app)
-
+url = ""
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', url=url)
 
 @socketio.on('update_video_state')
 def update_video_state(data):
@@ -29,6 +29,8 @@ def seek_video(data):
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         port = int(sys.argv[1])
+    if len(sys.argv) > 2:
+        url = sys.argv[2]
     else:
         port = 5000
     socketio.run(app, host='0.0.0.0', port=port)
