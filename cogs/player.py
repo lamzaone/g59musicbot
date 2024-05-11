@@ -29,7 +29,6 @@ class Player(commands.Cog):
     @commands.command(name='play', help='Play music from YouTube using a search term or URL')
     @commands.guild_only()
     async def play(self, ctx, *, query: str = None):
-        #TODO: implement repeat
         if not hasattr(ctx.bot, 'repeat'):
             ctx.bot.repeat = "no"
         if ctx.voice_client is None:
@@ -182,6 +181,8 @@ class Player(commands.Cog):
         except Exception as e:
             print(f"[-] An error occurred while playing music: {e}")
 
+
+    ### REPEAT COMMAND ###
     @commands.hybrid_group(name='repeat', fallback='queue', help='repeat the current song or the entire queue', invoke_without_command=True, aliases=['loop'])
     async def repeat(self, ctx):
         if ctx.voice_client and ctx.voice_client.is_playing():
@@ -210,32 +211,7 @@ class Player(commands.Cog):
             await ctx.send(":x: No music is currently playing.")
 
 
-    # @commands.group(name='repeat', help='repeat the current song or the entire queue', invoke_without_command=True)
-    # @commands.guild_only()
-    # async def repeat(self, ctx):
-    #     if ctx.voice_client and ctx.voice_client.is_playing():
-    #         if ctx.bot.repeat == "queue":
-    #             ctx.bot.repeat = "no"
-    #             await ctx.send(":repeat: Repeating has been disabled.")
-    #         else:
-    #             ctx.bot.repeat = "queue"
-    #             await ctx.send(":repeat: Repeating the queue.")
-    #     else:
-    #         await ctx.send(":x: No music is currently playing.")
-
-    # @repeat.command(name='song', help='repeat the current song')
-    # @commands.guild_only()
-    # async def repeat_song(self, ctx):
-    #     if ctx.voice_client and ctx.voice_client.is_playing():
-    #         if ctx.bot.repeat == "song":
-    #             ctx.bot.repeat = "no"
-    #             await ctx.send(":repeat: Repeating has been disabled.")
-    #         else:
-    #             ctx.bot.repeat = "song"
-    #             await ctx.send(":repeat: Repeating the current song.")
-    #     else:
-    #         await ctx.send(":x: No music is currently playing.")
-
+    ### NOW PLAYING COMMAND ###
     @commands.hybrid_command(name='nowplaying', help='Display the currently playing song', aliases=['np', 'playing'])
     @commands.guild_only()
     async def nowplaying(self, ctx):
@@ -267,7 +243,7 @@ class Player(commands.Cog):
             await ctx.send(":x: No music is currently playing.")
 
 
-        ### SKIP COMMAND ###
+    ### SKIP COMMAND ###
     @commands.command(name='skip', help='Skip the current song and play the next one in the queue')
     @commands.guild_only()
     async def skip(self, ctx, to: int = 1):
