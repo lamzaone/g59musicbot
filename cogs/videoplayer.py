@@ -16,21 +16,21 @@ import json
 port = 5000
 ip = get('https://api.ipify.org').content.decode('utf8')
 
+process = None
+
 class VideoPlayer(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command()
     async def playvideo(self, ctx, url):
+        global process
         if os.path.exists('video_streaming/static/video.mp4'):
             os.remove('video_streaming/static/video.mp4')            
 
-        for proc in psutil.process_iter():
-            try:
-                if proc.name() == 'python' and 'stream.py' in proc.cmdline():
-                    proc.terminate()
-            except psutil.NoSuchProcess:
-                pass
+        if process:
+            process.terminate()
+            process = None
 
 
         ydl_opts = {
@@ -45,19 +45,25 @@ class VideoPlayer(commands.Cog):
 
         await ctx.send(f'http://{ip}:{port}')
 
-        subprocess.Popen(['python', 'video_streaming/stream.py', str(port)])
+        process = subprocess.Popen(['python', 'video_streaming/stream.py', str(port)])
 
 
     @commands.command(name='anime', aliases=['an']) 
     async def anime(self, ctx, name, episode: int = 1):
+        global process
         link = None
         url = f"http://127.0.0.1:3000/anime/gogoanime/watch/{name}-episode-{episode}"
+        api = f"http://api.gogoanime.cloud/api/v1/search/{name}"
+        if process:
+            process.terminate()
+            process = None
+
         try:
             response = requests.get(url)
             print(response)
             data = response.json()
             link = data['sources'][::-1][1]['url']
-            subprocess.Popen(['python', 'video_streaming/stream.py', str(port), link])            
+            process = subprocess.Popen(['python', 'video_streaming/stream.py', str(port), link])            
             await ctx.send(f'http://{ip}:{port}')
         except Exception as e:
             print(e)

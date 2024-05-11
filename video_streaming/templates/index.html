@@ -32,7 +32,6 @@
                 });
             }
         } else {
-            // If url is None or empty, use the static video
             video.src = "{{url_for('static', filename='video.webm')}}";
             video.addEventListener('canplay', function() {
                 video.play();
@@ -40,7 +39,7 @@
         }
 
         var socket = io.connect('http://' + document.domain + ':' + location.port);
-        var seeking = false; // Flag to track seeking action
+        var seeking = false; 
         var playTimeout = null;
         var pauseTimeout = null;
 
@@ -49,7 +48,7 @@
             if (video.paused && !seeking) {
                 playTimeout = setTimeout(function() {
                     video.play();
-                }, 100); 
+                }, 200); 
             }
         });
 
@@ -58,7 +57,7 @@
             if (!video.paused && !seeking) {
                 pauseTimeout = setTimeout(function() {
                     video.pause();
-                }, 100);
+                }, 200);
             }
         });
 
