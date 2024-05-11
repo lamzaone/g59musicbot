@@ -19,15 +19,27 @@
         var socket = io.connect('http://' + document.domain + ':' + location.port);
         var videoPlayer = document.getElementById('videoPlayer');
         var seeking = false; // Flag to track seeking action
+        var playTimeout = null;
+        var pauseTimeout = null;
 
         // Listen for 'play_video' event from the server
         socket.on('play_video', function() {
-            videoPlayer.play();
+            clearTimeout(pauseTimeout);
+            if (videoPlayer.paused && !seeking) {
+                playTimeout = setTimeout(function() {
+                    videoPlayer.play();
+                }, 100); // Wait for 500 milliseconds before playing
+            }
         });
 
         // Listen for 'pause_video' event from the server
         socket.on('pause_video', function() {
-            videoPlayer.pause();
+            clearTimeout(playTimeout);
+            if (!videoPlayer.paused && !seeking) {
+                pauseTimeout = setTimeout(function() {
+                    videoPlayer.pause();
+                }, 100); // Wait for 500 milliseconds before pausing
+            }
         });
 
         // Listen for 'seek_video' event from the server
@@ -47,12 +59,18 @@
 
         // Listen for 'play' event on the video element
         videoPlayer.addEventListener('play', function() {
-            socket.emit('play_video');
+            clearTimeout(pauseTimeout);
+            if (!seeking) {
+                socket.emit('play_video');
+            }
         });
 
         // Listen for 'pause' event on the video element
         videoPlayer.addEventListener('pause', function() {
-            socket.emit('pause_video');
+            clearTimeout(playTimeout);
+            if (!seeking) {
+                socket.emit('pause_video');
+            }
         });
 
         // Listen for 'seeking' and 'seeked' events on the video element
@@ -60,7 +78,7 @@
             seeking = true;
             setTimeout(function() {
                 seeking = false;
-            }, 100); // Delay: 1 second
+            }, 100); // Delay: 300 milliseconds
         });
 
         videoPlayer.addEventListener('seeked', function() {
