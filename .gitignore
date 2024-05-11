@@ -9,3 +9,5 @@
 /utils/picchanger.py
 /cogs/__pycache__
 /playlists
+/video_streaming/__pycache__
+/video_streaming/static/video.webm

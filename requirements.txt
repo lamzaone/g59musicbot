@@ -2,3 +2,5 @@ discord
 yt_dlp
 ffmpeg
 PyNaCl
+psutil
+flask

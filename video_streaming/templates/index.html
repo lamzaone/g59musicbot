@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask Video Player</title>
+    <link rel="stylesheet" href="{{url_for('static', filename='styles.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.min.js"></script>
+</head>
+<body class="">
+    <h1>g59 video streaming</h1>
+    <video id="videoPlayer" controls>
+        <source src="{{ url_for('static', filename='video.webm') }}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <br>
+
+    <script>
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+        var videoPlayer = document.getElementById('videoPlayer');
+        var seeking = false; // Flag to track seeking action
+
+        // Listen for 'play_video' event from the server
+        socket.on('play_video', function() {
+            videoPlayer.play();
+        });
+
+        // Listen for 'pause_video' event from the server
+        socket.on('pause_video', function() {
+            videoPlayer.pause();
+        });
+
+        // Listen for 'seek_video' event from the server
+        socket.on('seek_video', function(data) {
+            // Check if the seek event is from another client
+            if (!seeking) {
+                videoPlayer.currentTime = data.time;
+            }
+        });
+
+        // Listen for 'timeupdate' event on the video element
+        videoPlayer.addEventListener('timeupdate', function() {
+            if (!seeking) {
+                socket.emit('update_video_state', { time: videoPlayer.currentTime, state: videoPlayer.paused ? 'paused' : 'playing' });
+            }
+        });
+
+        // Listen for 'play' event on the video element
+        videoPlayer.addEventListener('play', function() {
+            socket.emit('play_video');
+        });
+
+        // Listen for 'pause' event on the video element
+        videoPlayer.addEventListener('pause', function() {
+            socket.emit('pause_video');
+        });
+
+        // Listen for 'seeking' and 'seeked' events on the video element
+        videoPlayer.addEventListener('seeking', function() {
+            seeking = true;
+            setTimeout(function() {
+                seeking = false;
+            }, 100); // Delay: 1 second
+        });
+
+        videoPlayer.addEventListener('seeked', function() {
+            socket.emit('seek_video', { time: videoPlayer.currentTime });
+        });
+    </script>
+</body>
+</html>
