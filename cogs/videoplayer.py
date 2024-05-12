@@ -4,6 +4,7 @@ import psutil
 from video_streaming import stream
 import discord
 from discord.ext import commands
+from discord import app_commands
 import yt_dlp
 import asyncio
 import os
@@ -48,18 +49,39 @@ class VideoPlayer(commands.Cog):
         process = subprocess.Popen(['python', 'video_streaming/stream.py', str(port)])
 
 
-    @commands.command(name='anime', aliases=['an']) 
-    async def anime(self, ctx, name, episode: int = 1):
+    @commands.hybrid_command(name='anime', aliases=['an']) 
+    @app_commands.choices(source=[
+        app_commands.Choice(name='GogoAnime',value="gogoanime"),
+        app_commands.Choice(name='AnimeFox',value="animefox"),
+        app_commands.Choice(name='Animepahe',value="animepahe"),
+        app_commands.Choice(name='Zoroxtv.to',value="zoro"),
+    ])
+    async def anime(self, ctx, source, name, episode: int = 1):
         global process
         link = None
-        url = f"http://127.0.0.1:3000/anime/gogoanime/watch/{name}-episode-{episode}"
-        api = f"http://api.gogoanime.cloud/api/v1/search/{name}"
+        if source == 'gogoanime':
+            url = f"http://127.0.0.1:3000/anime/gogoanime/watch/{name}-episode-{episode}"
+        elif source == 'animefox':
+            url = f"http://127.0.0.1:3000/anime/animefox/watch?episodeId={name}-episode-{episode}"
+        elif source == 'animepahe':
+            url = f"http://127.0.0.1:3000/anime/animepahe/watch/{name}"
+        elif source == 'zoro':
+            url = f"http://127.0.0.1:3000/anime/animeflix/watch/{name}"
         if process:
             process.terminate()
             process = None
 
+        print(url)
         try:
-            response = requests.get(url)
+            if source == 'animefox':
+                response = requests.get(url, params={"episodeId": f"{name}-episode-{episode}"})
+            elif source == 'zoro':
+                response = requests.get(url, params={
+                    "episodeId": f"{name}",
+                    "server": "vidcloud"
+                })
+            else:
+                response = requests.get(url)
             print(response)
             data = response.json()
             link = data['sources'][::-1][1]['url']
@@ -69,6 +91,11 @@ class VideoPlayer(commands.Cog):
             print(e)
             await ctx.send('Anime not found')
             return
+    #autocomplete "source" argument
+    # @anime.autocomplete('source')
+    # async def source_autocomplete(self, ctx, arg):
+    #     return ['gogoanime', 'animefox', 'animepahe', 'zoro']
 
+    
 async def setup(bot):
     await bot.add_cog(VideoPlayer(bot))
