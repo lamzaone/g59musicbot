@@ -38,11 +38,19 @@ class VideoPlayer(commands.Cog):
             'format': 'bestvideo+bestaudio/best',
             'outtmpl': 'video_streaming/static/video.mp4',
             'default_search': 'auto',
+            'forceurl': True,
         }
 
         async with ctx.typing():
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                ydl.download([url])
+                info = ydl.extract_info(url, download=False)
+                if 'entries' in info:
+                    video = info['entries'][0]
+                else:
+                    video = info
+                
+                print(info)
+                print(video)
 
         await ctx.send(f'http://{ip}:{port}')
 

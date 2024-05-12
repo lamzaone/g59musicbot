@@ -23,76 +23,76 @@
                 hls.loadSource(url);
                 hls.attachMedia(video);
                 hls.on(Hls.Events.MANIFEST_PARSED,function() {
-                    video.play();
+                    // video.play();
                 });
             } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
                 video.src = url;
                 video.addEventListener('canplay',function() {
-                    video.play();
+                    // video.play();
                 });
             }
         } else {
             video.src = "{{url_for('static', filename='video.webm')}}";
             video.addEventListener('canplay', function() {
-                video.play();
+                // video.play();
             });
         }
 
         var socket = io.connect('http://' + document.domain + ':' + location.port);
         var seeking = false; 
-        var playTimeout = null;
-        var pauseTimeout = null;
+        var playInProgress = false; // Flag to track whether a play event is in progress
+        var pauseInProgress = false; // Flag to track whether a pause event is in progress
+        var videoState = 'paused'; // Track the current video state ('playing' or 'paused')
+        var seeking = false; // Flag to track whether seeking is in progress
 
         socket.on('play_video', function() {
-            clearTimeout(pauseTimeout);
-            if (video.paused && !seeking) {
-                playTimeout = setTimeout(function() {
-                    video.play();
-                }, 200); 
+            if (videoState === 'paused') {
+                playInProgress = true;
+                video.play().then(function() {
+                    playInProgress = false;
+                    videoState = 'playing';
+                }).catch(function(error) {
+                    console.error('Error while trying to play the video:', error);
+                    playInProgress = false;
+                });
             }
         });
 
         socket.on('pause_video', function() {
-            clearTimeout(playTimeout);
-            if (!video.paused && !seeking) {
-                pauseTimeout = setTimeout(function() {
-                    video.pause();
-                }, 200);
+            if (videoState === 'playing') {
+                pauseInProgress = true;
+                video.pause();
+                pauseInProgress = false;
+                videoState = 'paused';
             }
         });
 
         socket.on('seek_video', function(data) {
-            if (!seeking) {
+            if (!seeking && video.currentTime !== data.time) {
+                seeking = true;
+                video.pause(); // Pause the video during seeking
                 video.currentTime = data.time;
             }
         });
-        
-        video.addEventListener('timeupdate', function() {
-            if (!seeking) {
-                socket.emit('update_video_state', { time: video.currentTime, state: video.paused ? 'paused' : 'playing' });
-            }
+
+        video.addEventListener('seeked', function() {
+            socket.emit('seek_video', { time: video.currentTime });
+            seeking = false; // Seeking is complete
+            // Videos remain paused until someone presses play
         });
+
         video.addEventListener('play', function() {
-            clearTimeout(pauseTimeout);
-            if (!seeking) {
+            if (!playInProgress && videoState === 'paused' && !seeking) {
                 socket.emit('play_video');
             }
         });
+
         video.addEventListener('pause', function() {
-            clearTimeout(playTimeout);
-            if (!seeking) {
+            if (!pauseInProgress && videoState === 'playing' && !seeking) {
                 socket.emit('pause_video');
             }
         });
-        video.addEventListener('seeking', function() {
-            seeking = true;
-            setTimeout(function() {
-                seeking = false;
-            }, 100); 
-        });
-        video.addEventListener('seeked', function() {
-            socket.emit('seek_video', { time: video.currentTime });
-        });
+
     </script>
 </body>
 </html>
