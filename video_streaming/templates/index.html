@@ -39,7 +39,6 @@
         }
 
         var socket = io.connect('http://' + document.domain + ':' + location.port);
-        var seeking = false; 
         var playInProgress = false; // Flag to track whether a play event is in progress
         var pauseInProgress = false; // Flag to track whether a pause event is in progress
         var videoState = 'paused'; // Track the current video state ('playing' or 'paused')
@@ -69,16 +68,16 @@
 
         socket.on('seek_video', function(data) {
             if (!seeking && video.currentTime !== data.time) {
-                seeking = true;
-                video.pause(); // Pause the video during seeking
+                // skip seeking if difference is lower than 100ms
+                if (Math.abs(video.currentTime - data.time) < 0.1) {
+                    return;
+                }
                 video.currentTime = data.time;
             }
         });
 
         video.addEventListener('seeked', function() {
             socket.emit('seek_video', { time: video.currentTime });
-            seeking = false; // Seeking is complete
-            // Videos remain paused until someone presses play
         });
 
         video.addEventListener('play', function() {
