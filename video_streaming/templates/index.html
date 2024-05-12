@@ -66,6 +66,7 @@
                 video.currentTime = data.time;
             }
         });
+        
         video.addEventListener('timeupdate', function() {
             if (!seeking) {
                 socket.emit('update_video_state', { time: video.currentTime, state: video.paused ? 'paused' : 'playing' });

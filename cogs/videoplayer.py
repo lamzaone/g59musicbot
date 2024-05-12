@@ -56,15 +56,15 @@ class VideoPlayer(commands.Cog):
         app_commands.Choice(name='Animepahe',value="animepahe"),
         app_commands.Choice(name='Zoroxtv.to',value="zoro"),
     ])
-    async def anime(self, ctx, source, name, episode: int = 1):
+    async def anime(self, ctx, name , episode: int = 1, source="gogoanime",):
         global process
         link = None
         if source == 'gogoanime':
             url = f"http://127.0.0.1:3000/anime/gogoanime/watch/{name}-episode-{episode}"
-        elif source == 'animefox':
-            url = f"http://127.0.0.1:3000/anime/animefox/watch?episodeId={name}-episode-{episode}"
-        elif source == 'animepahe':
-            url = f"http://127.0.0.1:3000/anime/animepahe/watch/{name}"
+        # elif source == 'animefox':
+        #     url = f"http://127.0.0.1:3000/anime/animefox/watch?episodeId={name}-episode-{episode}"
+        # elif source == 'animepahe':
+        #     url = f"http://127.0.0.1:3000/anime/animepahe/watch/{name}"
         elif source == 'zoro':
             url = f"http://127.0.0.1:3000/anime/animeflix/watch/{name}"
         if process:
@@ -91,10 +91,7 @@ class VideoPlayer(commands.Cog):
             print(e)
             await ctx.send('Anime not found')
             return
-    #autocomplete "source" argument
-    # @anime.autocomplete('source')
-    # async def source_autocomplete(self, ctx, arg):
-    #     return ['gogoanime', 'animefox', 'animepahe', 'zoro']
+
 
     
 async def setup(bot):
