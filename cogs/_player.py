@@ -165,7 +165,7 @@ class _Player(commands.Cog):
 
     @app_commands.command(name='skip', description='Skip the current song and play the next one in the queue')
     @commands.guild_only()
-    async def _skip(self, interaction: discord.Interaction, to: int = 1):
+    async def _skip(self, interaction: discord.Interaction, to: int = 0):
         ctx = await self.bot.get_context(interaction)
         player_cog = ctx.bot.get_cog('Player')
         await player_cog.skip(ctx, to=to)

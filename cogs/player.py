@@ -246,7 +246,7 @@ class Player(commands.Cog):
     ### SKIP COMMAND ###
     @commands.command(name='skip', help='Skip the current song and play the next one in the queue')
     @commands.guild_only()
-    async def skip(self, ctx, to: int = 1):
+    async def skip(self, ctx, to: int = 0):
         if ctx.voice_client and ctx.voice_client.is_playing():
             if to > 0:
                 queue = Queues.get_queue(ctx.guild.id)
