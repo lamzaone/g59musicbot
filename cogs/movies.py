@@ -16,6 +16,7 @@ class Movies(commands.Cog):
     
     @commands.hybrid_command(name="movie", aliases=["m"])
     async def movie(self, ctx, movie_id:str):
+        master=""
         if hasattr(ctx.bot, 'process'):
             if ctx.bot.process is not None:
                 ctx.bot.process.kill()
@@ -103,12 +104,13 @@ class Movies(commands.Cog):
         # Close the WebDriver
         driver.quit()
 
-        await ctx.send(f'http://{ip}:{port}')
+        
 
-        if master:
+        if master != "":
+            await ctx.send(f'http://{ip}:{port}')
             ctx.bot.process = subprocess.Popen(['python', 'video_streaming/stream.py', str(port), master])
         else:
-            ctx.send("Movie not found!")
+            await ctx.send("Movie not found!")
 
 
 
