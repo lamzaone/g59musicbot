@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import requests
-
+import os
 
 port = 5000
 ip = requests.get('https://api.ipify.org').content.decode('utf8')
