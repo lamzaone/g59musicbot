@@ -4,3 +4,4 @@ ffmpeg
 PyNaCl
 psutil
 flask
+flask_cors

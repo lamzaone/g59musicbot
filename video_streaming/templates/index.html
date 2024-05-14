@@ -16,6 +16,8 @@
     <script>
         var video = document.getElementById('video');
         var url = "{{url}}";
+        // replace &amp; with & to avoid CORS issues
+        url = url.replace(/&amp;/g, '&');
 
         if (url !== null && url !== "") {
             if (Hls.isSupported()) {
