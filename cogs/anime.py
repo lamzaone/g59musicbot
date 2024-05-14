@@ -7,7 +7,7 @@ import requests
 
 port = 5000
 ip = requests.get('https://api.ipify.org').content.decode('utf8')
-
+is_windows = os.name == 'nt'
 
 #TODO: MAKE THIS NOT DEPENDENT ON THE API
 class Anime(commands.Cog):
@@ -44,7 +44,7 @@ class Anime(commands.Cog):
             print(response)
             data = response.json()
             link = data['sources'][::-1][0]['url']
-            ctx.bot.process = subprocess.Popen(['python', 'video_streaming/stream.py', str(port), link])            
+            ctx.bot.process = subprocess.Popen(['python' if is_windows else 'python3', 'video_streaming/stream.py', str(port), link])            
             await ctx.send(f'http://{ip}:{port}')
         except Exception as e:
             print(e)

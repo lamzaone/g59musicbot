@@ -12,6 +12,8 @@ from requests import get
 import requests
 import json
 
+is_windows = os.name == 'nt'
+
 #TODO: MAKE THIS WORK WITH DIRECT LINKS INSTEAD OF DOWNLOADING THE WHOLE SHIT
 
 # port = int(str(ctx.guild.id)[-4:])
@@ -54,7 +56,7 @@ class VideoPlayer(commands.Cog):
 
         await ctx.send(f'http://{ip}:{port}')
 
-        ctx.bot.process = subprocess.Popen(['python', 'video_streaming/stream.py', str(port)])
+        ctx.bot.process = subprocess.Popen(['python' if is_windows else 'python3', 'video_streaming/stream.py', str(port)])
 
 
 

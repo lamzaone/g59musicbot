@@ -165,7 +165,7 @@ class Movies(commands.Cog):
 
         if master != "":
             await ctx.send(f'http://{ip}:{port}')
-            ctx.bot.process = subprocess.Popen(['python', 'video_streaming/stream.py', str(port), master])
+            ctx.bot.process = subprocess.Popen(['python' if is_windows else 'python3', 'video_streaming/stream.py', str(port), master])
         else:
             await ctx.send("Movie not found!")
 
