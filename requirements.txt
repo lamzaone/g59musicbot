@@ -6,3 +6,4 @@ psutil
 flask
 flask_cors
 pyvirtualdisplay
+flask_socketio
