@@ -1,3 +1,4 @@
+import random
 import subprocess
 import requests
 from selenium import webdriver
@@ -54,21 +55,23 @@ class Movies(commands.Cog):
             import time
             #wait for the page to load
             driver.implicitly_wait(10)
+            #if there's an item with the z-index of 2147483647 click it
+            driver.execute_script("document.elementFromPoint(300, 200).click();")
             #check if more windows are opened and make sure it's on the first window
             if len(driver.window_handles) > 1:
                 driver.switch_to.window(driver.window_handles[0])
             #loop 3 times if recapcha is not found
-            for i in range(2):
-                try:
-                    #find the recaptcha
-                    frame = find_recaptcha(driver)
-                    #if found click it
-                    break
-                except Exception as e:
-                    driver.execute_script("document.elementFromPoint(300, 200).click();") 
-                    if len(driver.window_handles) > 1:
-                        driver.switch_to.window(driver.window_handles[0])
-                    pass
+            
+            try:
+                #find the recaptcha
+                frame = find_recaptcha(driver)
+                #if found click it
+            except Exception as e:
+                #click and hold the mouse button for 0.3 seconds        
+                driver.execute_script(f"document.elementFromPoint({random.randint(200,300)}, {random.randint(200,300)}).click();") 
+                if len(driver.window_handles) > 1:
+                    driver.switch_to.window(driver.window_handles[0])
+                pass
 
 
             driver.switch_to.frame(frame)
