@@ -54,13 +54,11 @@ class Movies(commands.Cog):
             import time
             #wait for the page to load
             driver.implicitly_wait(10)
-            #if there's an item with the z-index of 2147483647 click it
-            driver.execute_script("document.elementFromPoint(300, 200).click();")
             #check if more windows are opened and make sure it's on the first window
             if len(driver.window_handles) > 1:
                 driver.switch_to.window(driver.window_handles[0])
             #loop 3 times if recapcha is not found
-            for i in range(3):
+            for i in range(2):
                 try:
                     #find the recaptcha
                     frame = find_recaptcha(driver)
