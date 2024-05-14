@@ -1,11 +1,20 @@
-import json
 import subprocess
 import requests
 from selenium import webdriver
 import discord
 from discord.ext import commands
 
+import json
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from pyvirtualdisplay import Display
+import os
 
+is_windows = os.name == 'nt'
+# Start virtual display
+if not is_windows:
+    display = Display(visible=0, size=(1920, 1080))
+    display.start()
 
 port = 5000
 ip = requests.get('https://api.ipify.org').content.decode('utf8')
@@ -27,9 +36,37 @@ class Movies(commands.Cog):
         chrome_options.add_argument('--enable-logging')
         chrome_options.add_argument('--log-level=0')
         chrome_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
+        chrome_options.add_argument('--disable-dev-shm-usage')  # Disable /dev/shm usage
+        chrome_options.set_capability('goog:chromeOptions', {'args': ['disable-infobars']})  # Disable infobars
+        chrome_options.set_capability('goog:chromeOptions', {'args': ['disable-extensions']})  # Disable extensions
+        chrome_options.set_capability('goog:chromeOptions', {'args': ['disable-notifications']})  # Disable notifications
         driver = webdriver.Chrome(options=chrome_options)
+        #set the window size to 600x600
+        driver.set_window_size(1024, 1024)
+        #click on 300,200
+        driver.execute_script("document.elementFromPoint(300, 200).click();")        
         driver.get(url)
         log_entries = driver.get_log("performance")
+
+        try:
+            import time
+            #wait for the page to load
+            driver.implicitly_wait(10)
+            #check if more windows are opened and make sure it's on the first window
+            if len(driver.window_handles) > 1:
+                driver.switch_to.window(driver.window_handles[0])
+            frame = driver.find_element(By.XPATH, "//iframe[contains(@src, 'recaptcha/api2/anchor')]")
+            driver.switch_to.frame(frame)
+
+            # Click the checkbox
+            checkbox = driver.find_element(By.XPATH, "//div[@class='recaptcha-checkbox-border']")
+            checkbox.click()
+            time.sleep(5)
+
+        # Switch back to the main frame
+            driver.switch_to.default_content()
+        except Exception as e:
+            pass
 
         # Initialize variables to store the last known URL
         last_known_url = None
@@ -103,6 +140,10 @@ class Movies(commands.Cog):
 
         # Close the WebDriver
         driver.quit()
+
+        # Stop virtual display
+        if not is_windows:
+            display.stop()
 
         
 

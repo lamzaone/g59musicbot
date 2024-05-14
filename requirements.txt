@@ -5,3 +5,4 @@ PyNaCl
 psutil
 flask
 flask_cors
+pyvirtualdisplay
