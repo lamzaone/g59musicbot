@@ -12,6 +12,7 @@ from requests import get
 import requests
 import json
 
+#TODO: MAKE THIS WORK WITH DIRECT LINKS INSTEAD OF DOWNLOADING THE WHOLE SHIT
 
 # port = int(str(ctx.guild.id)[-4:])
 port = 5000

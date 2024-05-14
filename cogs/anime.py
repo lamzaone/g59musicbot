@@ -8,6 +8,8 @@ import requests
 port = 5000
 ip = requests.get('https://api.ipify.org').content.decode('utf8')
 
+
+#TODO: MAKE THIS NOT DEPENDENT ON THE API
 class Anime(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
