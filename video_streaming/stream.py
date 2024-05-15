@@ -2,6 +2,7 @@ from flask import Flask, Response, render_template
 from flask_socketio import SocketIO
 from flask_cors import CORS  # Import CORS
 from flask_cors import CORS
+from flask import jsonify
 
 
 import sys
@@ -17,6 +18,11 @@ url = ""
 @app.route('/')
 def index():
     return render_template('index.html', url=url)
+@app.route('/')
+def example():
+    response = jsonify({'message': 'Hello, CORS!'})
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 @socketio.on('update_video_state')
 def update_video_state(data):
