@@ -1,13 +1,15 @@
 from flask import Flask, Response, render_template
 from flask_socketio import SocketIO
 from flask_cors import CORS  # Import CORS
+from flask_cors import CORS
+
 
 import sys
 import requests
 
 app = Flask(__name__)
 socketio = SocketIO(app)
-CORS(app)  # Add this line to enable CORS for all routes
+cors = CORS(app, resources={r"/*": {"origins": "*"}})
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 url = ""
