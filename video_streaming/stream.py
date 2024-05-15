@@ -13,7 +13,7 @@ socketio = SocketIO(app)
 app.config['SECRET_KEY'] = 'the quick brown fox jumps over the lazy   dog'
 app.config['CORS_HEADERS'] = 'Content-Type'
 
-cors = CORS(app, resources={r"/foo": {"origins": "http://localhost:port"}})
+cors = CORS(app, resources={r"/*": {"origins": "http://localhost:port"}})
 
 @app.route('/foo', methods=['POST'])
 @cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
@@ -23,6 +23,22 @@ def foo():
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 url = ""
+
+def add_headers_to_fontawesome_static_files(response):
+    """
+    Fix for font-awesome files: after Flask static send_file() does its
+    thing, but before the response is sent, add an
+    Access-Control-Allow-Origin: *
+    HTTP header to the response (otherwise browsers complain).
+    """
+
+    if (request.path):
+        response.headers.add('Access-Control-Allow-Origin', '*')
+
+    return response
+
+if app.debug:
+    app.after_request(add_headers_to_fontawesome_static_files)
 
 @app.route('/')
 def index():
