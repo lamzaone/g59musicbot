@@ -520,8 +520,30 @@ class Player(commands.Cog):
         Settings.set_guild_settings(ctx.guild.id, settings)
         await ctx.send(f":white_check_mark: DJ role set to `{role.name}`")
 
-
-    ### DJ ROLE COMMAND CHECK ###
+    @commands.hybrid_command(name='remove', help='Remove a song (or multiple ex: 4-10 [from 4 to 10]) from the queue', aliases=['delete'])
+    @commands.guild_only()
+    async def remove(self, ctx, index: str):
+        try:
+            queue = Queues.get_queue(ctx.guild.id)
+            if len(queue) > 0:
+                if "-" in index:
+                    start, end = index.split("-")
+                    start = int(start)-1
+                    end = int(end)
+                    if start < 0 or end > len(queue):
+                        return await ctx.send(":x: Invalid range.")
+                    queue = queue[:start] + queue[end:]
+                else:
+                    index = int(index)-1
+                    if index < 0 or index > len(queue)-1:
+                        return await ctx.send(":x: Invalid song number.")
+                    queue.pop(index)
+                Queues.update_queue(ctx.guild.id, queue)
+                await ctx.send(":white_check_mark: Song(s) removed from the queue.")
+            else:
+                await ctx.send(":x: The queue is empty.")
+        except ValueError:
+            await ctx.send(":x: Invalid input.")
 
 
 async def setup(bot: commands.Bot):
