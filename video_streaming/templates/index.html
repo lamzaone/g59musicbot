@@ -20,16 +20,22 @@
         url = url.replace(/&amp;/g, '&');
 
         if (url !== null && url !== "") {
-            if (Hls.isSupported()) {
+            if (url.endsWith('.mp4')) {
+                // Handle .mp4 links directly
+                video.src = url;
+                video.addEventListener('canplay', function() {
+                    // video.play();
+                });
+            } else if (Hls.isSupported()) {
                 var hls = new Hls();
                 hls.loadSource(url);
                 hls.attachMedia(video);
-                hls.on(Hls.Events.MANIFEST_PARSED,function() {
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
                     // video.play();
                 });
             } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
                 video.src = url;
-                video.addEventListener('canplay',function() {
+                video.addEventListener('canplay', function() {
                     // video.play();
                 });
             }
