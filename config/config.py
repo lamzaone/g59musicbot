@@ -110,7 +110,6 @@ YTDL_OPTS = {
     'preferredcodec': 'mp3',
     'preferredquality': '256',
     'cachedir' : True,
-    'expiretime': 3600,
     "noprogress": True,
     'cookiefile': 'cookies.txt',
     'quality': 'highestaudio',
@@ -158,7 +157,6 @@ YTDL_AUTO = {
     'preferredcodec': 'mp3',
     'preferredquality': '256',
     'cachedir' : True,
-    'expiretime': 3600,
     "noprogress": True,
     'cookiefile': 'cookies.txt',
     'quality': 'highestaudio',
@@ -170,9 +168,3 @@ YTDL_AUTO = {
     'bitdepth': 24,
     
 }
-
-
-intents = discord.Intents.default()
-intents.message_content = True
-intents.voice_states = True
-intents.presences = True

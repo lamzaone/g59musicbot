@@ -1,22 +1,22 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from utils import serversettings as Settings, queues as Queues, update
 import os
-from config import config  # Make sure this import points to your bot's configuration
+from config import config 
 import asyncio
 import json
 import sys
 import nacl
+import subprocess
 
 
 
 # Initialize Discord bot with command prefix and intents
-bot = commands.Bot(command_prefix=commands.when_mentioned_or(""), intents=config.intents)
+bot = commands.Bot(command_prefix=commands.when_mentioned_or(""), intents=discord.Intents.all())
 tree = bot.tree
 is_windows = os.name == 'nt'
-bot.update=update.update()
-bot.check_for_updates=update.check_for_updates()
 
+### LOAD COGS ###
 async def load_cogs():
     cogs = config.get_cogs()
     for cog in cogs:
@@ -26,14 +26,56 @@ async def load_cogs():
         except Exception as e:
             print(f"[-] An error occurred while loading {cog}: {e}")
 
+### CHECK FOR UPDATES EVERY HOUR ###
+async def update_msg():
+        if len(sys.argv) > 1:
+            if sys.argv[1] == 'updated':
+                try:
+                    embed = discord.Embed(title="Update complete!", description="Your bot has been updated to the latest version.", color=discord.Color.blue())
+                    app_info = await bot.application_info()
+                    owner = app_info.owner
+                    await owner.send(embed=embed)
+                except Exception as e:
+                    print(f"[-] An error occurred while sending the update message: {e}")   
 
+@tasks.loop(hours=1)
+async def check_for_updates(): 
+    
+    updates = update.check_upd(is_windows)
+    # If updates are available, send a message to the bot owner
+    if updates:
+        app_info = await bot.application_info()
+        owner = app_info.owner
+        embed = discord.Embed(title="Updates are available", description=updates, color=discord.Color.green())
+        message = await owner.send(embed=embed)
+        # add reaction to the message to allow the owner to update the bot
+        await message.add_reaction('✅')
+        await message.add_reaction('❌')
+        try:
+            reaction, _ = await bot.wait_for('reaction_add', check=lambda reaction, user: user == owner and reaction.message == message)
+            if reaction.emoji == '✅':
+                update.update(is_windows)
+                await bot.close()
+                sys.exit(0)
+            elif reaction.emoji == '❌':
+                await owner.send('[-] Update declined. Bot will not be updated.')
+                await asyncio.sleep(24*3600.0)
+        except asyncio.CancelledError:
+            pass
+        except asyncio.TimeoutError:
+            await owner.send('[-] Update declined. Bot will not be updated.')            
+            await asyncio.sleep(24*3600.0)
+        except Exception as e:     
+            pass       
+
+### ON READY EVENT ###
 @bot.event
 async def on_ready():
-    app_info = await bot.application_info()
-    bot.owner_id = app_info.owner.id
+    # Load cogs
     await load_cogs()
+    await update_msg()
     print(f'[+] Booted {bot.user}...')
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="/play <name/link>"), status=discord.Status.dnd)
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="/play <song>"), status=discord.Status.dnd)
     # Reset queues and fetch settings for all guilds
     queues = {}
     settings = Settings.get_settings_all()
@@ -59,13 +101,14 @@ async def on_ready():
     playlist_cog = bot.get_cog('Playlist')
     if playlist_cog is not None:
         print('[+] Playlists cog found, initializing playlists')
-        
+
         try:
             playlist_cog.initialize_playlists(bot.guilds)
             print('[+] Successfully initialized playlists')
         except Exception as e:
             print('[!] Error initializing playlists: ', e)
 
+    # Sync the tree for all guilds
     for guild in bot.guilds:
         try:
             await tree.sync(guild=guild)
@@ -76,6 +119,8 @@ async def on_ready():
     # Print URL for inviting the bot to a server
     oauth_url = discord.utils.oauth_url(bot.application_id, permissions=discord.Permissions(permissions=8))
     print(f'[+] Invite URL: {oauth_url}')
+    
+    await check_for_updates.start()
 
 
 ### INITIALIZE GUILD SETTINGS AND QUEUES ON GUILD JOIN ###
@@ -87,6 +132,7 @@ async def on_guild_join(guild):
     print(f'[+] Successfully initialized config/serversettings.json for {guild.name}')
     print(f'[+] Successfully initialized config/queues.json for {guild.name}')
 
+### HANDLE ON MESSAGE EVENT ###
 @bot.event
 async def on_message(message):
     if message.guild is not None:
@@ -97,6 +143,7 @@ async def on_message(message):
     else:
         await bot.process_commands(message)
 
+### HANDLE ON COMMAND ERROR EVENT ###
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
@@ -117,16 +164,11 @@ async def on_command_error(ctx, error):
         await ctx.send(f":x: Command on cooldown. Try again in {error.retry_after:.2f} seconds.")
         return
     if isinstance(error, commands.CommandInvokeError):
-        await ctx.send(":x: An error occurred while executing the command.")
+        await ctx.send(f":x: An error occurred while executing the command.: {error}")
         return
 
     raise error
 
-#@bot.command()
-#async def update():
-#  	if update.check_for_updates(is_windows):
-#        update.update(is_windows)
-#        sys.exit(0)
 
 def main(*args):
 
@@ -135,7 +177,7 @@ def main(*args):
         if args[0] == 'updated':
             print("[+] Successfully updated to the latest version!")
     else:
-        if update.check_for_updates(is_windows):
+        if update.check_upd(is_windows): 
             update.update(is_windows)
             sys.exit(0)
 

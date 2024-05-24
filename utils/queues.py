@@ -22,3 +22,18 @@ def next_song(guild_id):
         song = queue.pop(0)
         update_queue(guild_id, queue)
     return song
+
+# def next_random_song(guild_id):
+#     queue = get_queue(guild_id)
+#     if len(queue) > 0:
+#         song = queue.pop(0)
+#         update_queue(guild_id, queue)
+#     return song
+def repeat_queue(guild_id, playing_song):
+    queue = get_queue(guild_id)
+    np_song = {'title': playing_song['title'], 'url': playing_song['original_url']}
+    if len(queue) > 0:
+        song = queue.pop(0)
+        queue.append(np_song)
+        update_queue(guild_id, queue)
+    return song

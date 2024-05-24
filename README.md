@@ -10,9 +10,6 @@ Not only this music bot can be customised to your liking, but it's very easy to 
 
 ---
 ### TODOs
-- Implement Search function
-- Handle playlist  links (add every song to the queue)
-- Create custom playlists
 - Add Spotify support
 
 
@@ -104,6 +101,42 @@ sudo reboot
 ---
 ---
 ## CHANGELOG:
+### Version 0.3.2
+- Tweaked updater
+  - Update message set to no timeout
+- Tweaked playlists
+  - Better error handling
+  - Using `!playlist <partial_name>` or `/playlist list <partial_name>` will now show results if your query matches an existing playlist by a certain threshold
+- **Added Avatar/Banner changer!**
+  - You can now change your bot's avatar and banner by simply executing a command!
+  - You can use animated .GIF files!
+  - `!avatar, !banner` and `/avatar, /banner`
+  - You can use both URLs and local files (attachments)
+  - MAX 10MB
+### Version 0.3.1
+- Improved playlists
+    - Better playlist display (`/playlist list` or `!playlist`)
+        - Can now display the whole playlist (with pages)
+        - Can now shuffle the playlist before loading into queue
+        - Can now load into queue straight form this embed
+    - Can now load a YouTube playlist into your custom playlist all at once! just use `/playlist add <playlist_name / index> <playlist url>`
+- Improved Queue
+    - Better queue display
+        - Can now see the whole queue on pages of 20
+        - Can shuffle the queue
+        - `/queue` or `!queue`
+    - Can load a whole YouTube playlist into the queue!
+        - Just use `/play <playlist url>` or `!play <playlist_url>?`
+### Version 0.3
+- **Music player now supports most sources (excluding Spotify)**
+- **Added Playlists - you can now create custom playlists, that can be loaded at any time into the queue**
+- **`/play` now can load youtube playlists into the queue**
+- **Improved updater**
+    - Now checks for updates every hour
+    - Sends a message to the Bot owner that allows you to update the bot
+- **Added `/queue` to display the queue**
+- **Added `/shuffle` to shuffle the queue**
+
 ### Version 0.2
 - **ADDED SOUNDCLOUD SUPPORT!**
 - **ADDED SLASH (/) COMMANDS SUPPORT!**
