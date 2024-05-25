@@ -17,11 +17,14 @@ class Player(commands.Cog):
         self.bot = bot
 
 
-    def has_dj_role(ctx):
+    async def has_dj_role(ctx):
         # Get the role from your settings
         dj_role = Settings.get_dj_role(ctx.guild.id)
         role = discord.utils.get(ctx.guild.roles, id=dj_role)
-        return role in ctx.author.roles or ctx.author.guild_permissions.administrator
+        app_info = await ctx.bot.application_info()
+        owner = app_info.owner
+        return role in ctx.author.roles or ctx.author.guild_permissions.administrator or ctx.author.id == owner.id
+
 
 
 

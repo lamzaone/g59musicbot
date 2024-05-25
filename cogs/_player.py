@@ -198,7 +198,9 @@ class _Player(commands.Cog):
         if not ctx.guild:
             await interaction.response.send_message(":x: This command can only be used in a server.", ephemeral=True)
             return
-        if not ctx.author.guild_permissions.administrator and not ctx.author.get_role(Settings.get_dj_role(ctx.guild.id)):
+        app_info = await ctx.bot.application_info()
+        owner = app_info.owner
+        if not ctx.author.guild_permissions.administrator and not ctx.author.get_role(Settings.get_dj_role(ctx.guild.id)) and not ctx.author.id == owner.id:
             await interaction.response.send_message(":x: You must have the `Administrator` permission to use this command.", ephemeral=True)
             return
         player_cog = ctx.bot.get_cog('Player')
@@ -271,7 +273,9 @@ class _Player(commands.Cog):
         if not interaction.guild:
             await interaction.response.send_message(":x: This command can only be used in a server.", ephemeral=True)
             return
-        if not interaction.user.guild_permissions.administrator:
+        app_info = await ctx.bot.application_info()
+        owner = app_info.owner
+        if not ctx.author.guild_permissions.administrator and not ctx.author.id == owner.id:
             await interaction.response.send_message(":x: You must have the `Administrator` permission to use this command.", ephemeral=True)
             return
         ctx = await self.bot.get_context(interaction)
