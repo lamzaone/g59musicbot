@@ -189,7 +189,7 @@ class Player(commands.Cog):
     @commands.hybrid_group(name='repeat', fallback='queue', help='repeat the current song or the entire queue', invoke_without_command=True, aliases=['loop'])
     async def repeat(self, ctx):
         if ctx.voice_client and ctx.voice_client.is_playing():
-            if ctx.bot.repeat == "queue":
+            if ctx.bot.repeat == "queue" or ctx.bot.repeat == "song":
                 ctx.bot.repeat = "no"
                 await ctx.send(":repeat: Repeating has been disabled.")
             elif len(Queues.get_queue(ctx.guild.id)) > 0:
