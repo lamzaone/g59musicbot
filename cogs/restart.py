@@ -16,7 +16,7 @@ class Restart(commands.Cog):
         python_exe = 'python3' if not on_windows else 'python'
         restart_command = [python_exe, 'main.py', 'updated']
         # Start the bot as a new process and kill parent process
-        script_dir = os.path.dirname(os.path.abspath(__file__))
+        script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         subprocess.Popen(restart_command, cwd=script_dir)        
         await self.bot.close()
         sys.exit(0)
