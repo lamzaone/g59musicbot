@@ -1,3 +1,5 @@
+# CURRENTLY BROKEN :(
+
 # Discord YouTube Music Bot in Python - Easy Set-up
 Fast and reliable music bot made in python that currently supports YouTube, Soundcloud, Vimeo, and more! - **Easy to set-up!**
 The bot doesn't currently support Spotify, but supports pretty much every other source.
