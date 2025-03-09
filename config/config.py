@@ -13,7 +13,7 @@ playlists_folder = os.path.join(os.path.dirname(current_folder), 'playlists')
 FFMPEG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'ffmpeg.exe')
 bot_token=''
 cogs_dir = os.path.join(os.path.dirname(current_folder), 'cogs')
-
+cache_dir = os.path.join(os.path.dirname(current_folder), 'cache')
 
 
 def init():
@@ -89,6 +89,9 @@ def get_cogs():
             cogs.append(file[:-3])
     return cogs
 
+
+os.makedirs(cache_dir, exist_ok=True)
+
 ffmpeg_options = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
     'options': '-vn',
@@ -107,16 +110,16 @@ YTDL_OPTS = {
     'default_search': 'ytsearch1',
     'source_address': '0.0.0.0',  
     'force-ipv4': True,
-    'preferredcodec': 'mp3',
-    'preferredquality': '256',
-    'cachedir' : True,
+    'preferredcodec': 'webm',
+    'preferredquality': '0',
+    'cachedir' : cache_dir,
     "noprogress": True,
     'cookiefile': 'cookies.txt',
-    'quality': 'highestaudio',
+    'quality': '0',
     'postprocessors': [{
         'key': 'FFmpegExtractAudio',
-        'preferredcodec': 'mp3',
-        'preferredquality': '256',
+        'preferredcodec': 'webm',
+        'preferredquality': '0',
     }],
     'bitdepth': 24,
     
@@ -133,9 +136,10 @@ YTDL_SOUNDCLOUD_OPTS = {
     'quiet': False,
     'no_warnings': True,
     'force-ipv4': True,
-    'preferredcodec': 'mp3',
-    'preferredquality': '256',
+    'preferredcodec': 'webm',
+    'preferredquality': '0',
     "noprogress": True,
+    'quality': '0',
     'default_search': 'soundcloud',
     'source_address': '0.0.0.0'
     }
@@ -154,16 +158,16 @@ YTDL_AUTO = {
     'default_search': 'auto',
     'source_address': '0.0.0.0',  
     'force-ipv4': True,
-    'preferredcodec': 'mp3',
-    'preferredquality': '256',
-    'cachedir' : True,
+    'preferredcodec': 'webm',
+    'preferredquality': '0',
+    'cachedir' : cache_dir,
     "noprogress": True,
     'cookiefile': 'cookies.txt',
-    'quality': 'highestaudio',
+    'quality': '0',
     'postprocessors': [{
         'key': 'FFmpegExtractAudio',
-        'preferredcodec': 'mp3',
-        'preferredquality': '256',
+        'preferredcodec': 'webm',
+        'preferredquality': '0',
     }],
     'bitdepth': 24,
     
