@@ -11,3 +11,5 @@
 /playlists
 /video_streaming/__pycache__
 /video_streaming/static/video.webm
+/.venv
+/venv
