@@ -26,6 +26,7 @@ class Cookies(commands.Cog):
                 with open(config.cookies_file, 'a') as f:  # append in text mode
                     f.write(cookies)
             await ctx.send("Cookies have been added.")
+            message.delete()
         except asyncio.TimeoutError:
             await ctx.send("[-] Timed out. Please try again.")
         except Exception as e:
