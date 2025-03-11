@@ -7,7 +7,7 @@ class Cookies(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command()
+    @commands.hybrid_command(name='cookies',  brief='Add youtube cookies', description='Add youtube cookies for bypassing youtube authentication')
     @commands.is_owner()
     async def cookies(self, ctx):
         # get message content without !cookies command
