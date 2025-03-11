@@ -82,7 +82,9 @@ class _Player(commands.Cog):
                             return
                         except asyncio.TimeoutError:
                             await message.delete()
-                            return
+                            return                        
+                        except UnboundLocalError:      
+                            await ctx.voice_client.disconnect()
                     
             except Exception as e:
                 print("error"+e)         
