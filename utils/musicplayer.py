@@ -28,6 +28,8 @@ def extract_music_info(query:str):
         return None
     except Exception as e:
         print(f"[-] An error occurred while extracting info: {e}")
+    except UnboundLocalError:      
+        return None
 
     
 
@@ -39,6 +41,8 @@ def extract_soundcloud_info(query:str):
     except Exception as e:
         print(f"[-] An error occurred while extracting info: {e}")
         return None
+    except UnboundLocalError:      
+        return None
 
 
 def extract_auto_info(query:str):
@@ -49,7 +53,8 @@ def extract_auto_info(query:str):
     except Exception as e:
         print(f"[-] An error occurred while extracting info: {e}")
         return None
-
+    except UnboundLocalError:      
+        return None
 
 def get_info(query:str):
     if is_youtube(query) or not is_link(query):
