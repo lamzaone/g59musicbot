@@ -165,6 +165,7 @@ async def on_command_error(ctx, error):
         return
     if isinstance(error, commands.CommandInvokeError):
         await ctx.send(f":x: An error occurred while executing the command.: {error}")
+        await ctx.bot.voice_clients[0].disconnect()
         return
 
     raise error
