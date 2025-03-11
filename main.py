@@ -165,13 +165,15 @@ async def on_command_error(ctx, error):
         return
     if isinstance(error, commands.CommandInvokeError):
         await ctx.send(f":x: An error occurred while executing the command.: {error}")
+        voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
+        if voice is not None:
+            await voice.disconnect()
         return
 
     raise error
 
 
 def main(*args):
-
     # Check for updates
     if args:
         if args[0] == 'updated':

@@ -70,6 +70,8 @@ class Player(commands.Cog):
                                         query=None
                                     except yt_dlp.DownloadError:                            
                                         query = aux_query
+                                    except UnboundLocalError:      
+                                        await ctx.voice_client.disconnect()
                             else:
                                 pass
                         except asyncio.CancelledError:
@@ -77,7 +79,9 @@ class Player(commands.Cog):
                             return
                         except asyncio.TimeoutError:
                             await message.delete()
-                            return
+                            return                        
+                        except UnboundLocalError:      
+                            await ctx.voice_client.disconnect()
                     
             except Exception as e:
                 print("error"+e)
@@ -112,7 +116,9 @@ class Player(commands.Cog):
                                             await ctx.send(f":white_check_mark: Added `{len(search_results)}` songs to the queue.")
                                             query=None
                                         except yt_dlp.DownloadError:                            
-                                            query = aux_query
+                                            query = aux_query                                            
+                                        except UnboundLocalError:      
+                                            await ctx.voice_client.disconnect()
                                 else:
                                     pass
                             except asyncio.CancelledError:
@@ -120,7 +126,9 @@ class Player(commands.Cog):
                                 return
                             except asyncio.TimeoutError:
                                 await message.delete()
-                                return
+                                return                            
+                            except UnboundLocalError:      
+                                await ctx.voice_client.disconnect()
                         
                 except Exception as e:
                     print("error"+e)
@@ -136,6 +144,9 @@ class Player(commands.Cog):
                     Queues.update_queue(ctx.guild.id, queue)
                     await ctx.send(f":white_check_mark: Added `{info['title']}` to the queue.")
                     return
+                
+                except UnboundLocalError:      
+                    await ctx.voice_client.disconnect()
                 except Exception as e:
                     print(f"[-] An error occurred while adding to queue: {e}")
                     await ctx.send(":x: An error occurred while adding the song to the queue.") 

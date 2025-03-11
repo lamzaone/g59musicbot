@@ -96,6 +96,10 @@ class _Playlist(commands.Cog):
                         except asyncio.TimeoutError:
                             await message.delete()
                             return
+                        except UnboundLocalError:      
+                            ctx.voice_client.stop()
+                            ctx.voice_client.disconnect()
+                            return None
                 else:
                     def get_chunk(playlist, page):
                         return playlist[page*20:(page+1)*20]
