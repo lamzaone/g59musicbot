@@ -18,13 +18,21 @@ class Cookies(commands.Cog):
             # check if cookies were sent as an attachment, or as text
             if message.attachments:
                 cookies = await message.attachments[0].read()
-                with open(config.cookies_file, 'ab') as f:  # append in binary mode
-                    f.write(cookies)
+                try:
+                    with open(config.cookies_file, 'ab') as f:  # append in binary mode
+                        f.write(cookies)
+                except Exception as e:
+                    await ctx.send(f"[-] An error occurred: {e}")
+                    return
             else:
                 cookies = message.content
                 # append the cookies to the cookies file
-                with open(config.cookies_file, 'a') as f:  # append in text mode
-                    f.write(cookies)
+                try:
+                    with open(config.cookies_file, 'a') as f:  # append in text mode
+                        f.write(cookies)
+                except Exception as e:
+                    await ctx.send(f"[-] An error occurred: {e}")
+                    return
             await ctx.send("Cookies have been added.")
             message.delete()
         except asyncio.TimeoutError:
