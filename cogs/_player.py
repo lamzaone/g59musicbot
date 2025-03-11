@@ -85,7 +85,9 @@ class _Player(commands.Cog):
                             return                        
                         except UnboundLocalError:      
                             await ctx.voice_client.disconnect()
-                    
+            
+            except UnboundLocalError:      
+                await ctx.voice_client.disconnect()     
             except Exception as e:
                 print("error"+e)         
 
@@ -136,6 +138,11 @@ class _Player(commands.Cog):
             while voice_client.is_playing() or voice_client.is_paused():
                 await asyncio.sleep(1)
             await self.on_song_end(interaction)
+        
+        except UnboundLocalError:      
+            await ctx.voice_client.disconnect()
+            await interaction.followup.send(":x: Error playing music. (please update Youtube cookies)", ephemeral=False)
+            print(f"Error playing music: {e}")
         except Exception as e:
             await interaction.followup.send(":x: Error playing music.", ephemeral=False)
             print(f"Error playing music: {e}")
