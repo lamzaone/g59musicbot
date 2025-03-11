@@ -109,11 +109,12 @@ sudo reboot
 
 ---
 ---
-## CHANGELOG:
+
 ### Version 0.3.3
 - HOTFIX:
   - Fixed configs Linux systems being unable to play music
   - Added youtube bot detection bypass method
+    - !cookies command now lets you easily add cookies to your bot straight from discord.
 ### Version 0.3.2
 - Tweaked updater
   - Update message set to no timeout
