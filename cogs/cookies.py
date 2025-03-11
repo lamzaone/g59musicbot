@@ -10,11 +10,24 @@ class Cookies(commands.Cog):
     @commands.command()
     @commands.is_owner()
     async def cookies(self, ctx):
-        # get message content
-        cookies = ctx.message.content
-        # place cookies into cookes.txt
+        # get message content without !cookies command
+        message = ctx.message.content[len(ctx.prefix)+len(ctx.invoked_with):].strip()
+        # check if the message is empty
+        if not message:
+            await ctx.send("No cookies provided")
+            return
+        # check if the message has an attachment (cookie file)
+        if ctx.message.attachments:
+            # get the first attachment
+            attachment = ctx.message.attachments[0]
+            # check if the attachment is a text file
+            if attachment.filename.endswith('.txt'):
+                # download the attachment
+                await attachment.save(config.cookies_file)
+                await ctx.send("Cookies saved")
+                return
         with open(config.cookies_file, 'w') as f:
-            f.write(cookies)
+            f.write(message)
         await ctx.send("Cookies saved")
 
 async def setup(bot):
