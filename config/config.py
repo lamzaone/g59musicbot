@@ -14,6 +14,7 @@ FFMPEG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 bot_token=''
 cogs_dir = os.path.join(os.path.dirname(current_folder), 'cogs')
 cache_dir = os.path.join(os.path.dirname(current_folder), 'cache')
+cookies_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'cookies.txt')
 
 
 def init():

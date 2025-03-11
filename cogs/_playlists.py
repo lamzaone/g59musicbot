@@ -97,6 +97,7 @@ class _Playlist(commands.Cog):
                             await message.delete()
                             return
                         except UnboundLocalError:      
+                            ctx.voice_client.stop()
                             ctx.voice_client.disconnect()
                             return None
                 else:
