@@ -12,6 +12,15 @@ Not only this music bot can be customised to your liking, but it's very easy to 
 ### TODOs
 - Add Spotify support
 
+## FOR VPS HOSTED BOTS!
+### Lately, youtube has been actively combatting bots, so your VPS ip is most likely blacklisted, therefore it asks you to login. **Here is how to bypass this for the bot:**
+- Get a youtube cookies extension on your main machine, and copy the cookies from youtube
+- Get to the bot's DM's and write "cookies" (without " ") and wait for the bot to request the cookies
+  - Alternatively, you can use the !cookies command in a server, the cookies will be deleted automatically from the chat after being added to the bot.
+- Paste the cookies as a message or upload them as a file
+
+**Note: this might be required to do once in a while**
+
 
 ---
 # Setup
@@ -67,8 +76,6 @@ python3 main.py
 5. Add your bot token when asked to
 6. Copy the invite-url and invite the bot to your server!
 
-## FOR VPS HOSTED BOTS!
-Lately, youtube has been actively combatting bots, so your VPS ip is most likely blacklisted, therefore it asks you to login. Here is how to bypass this for the bot!
 
 ### OPTIONAL: Make it automatically start on reboot for your VM
 
