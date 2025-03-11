@@ -17,10 +17,10 @@ class Cookies(commands.Cog):
             message = await self.bot.wait_for('message', check=check, timeout=60)
             # check if cookies were sent as an attachment, or as text
             if message.attachments:
-                cookies = await message.attachments[0].read()
+                cookies = await message.attachments[0].read().decode('utf-8')
                 try:
-                    with open(config.cookies_file, 'ab') as f:  # append in binary mode
-                        f.write(cookies.decode('utf-8'))
+                    with open(config.cookies_file, 'a') as f:  # append in binary mode
+                        f.write(cookies)
                 except Exception as e:
                     await ctx.send(f"[-] An error occurred: {e}")
                     return
