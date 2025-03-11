@@ -19,14 +19,16 @@ class Cookies(commands.Cog):
             if message.attachments:
                 cookies = await message.attachments[0].read()
                 cookies = cookies.decode('utf-8')
+                cookies = cookies.replace('\\t', '\t')  # replace \t with actual tab characters
                 try:
-                    with open(config.cookies_file, 'a') as f:  # append in binary mode
+                    with open(config.cookies_file, 'a') as f:  # append in text mode
                         f.write(cookies)
                 except Exception as e:
                     await ctx.send(f"[-] An error occurred: {e}")
                     return
             else:
                 cookies = message.content
+                cookies = cookies.replace('\\t', '\t')  # replace \t with actual tab characters
                 # append the cookies to the cookies file
                 try:
                     with open(config.cookies_file, 'a') as f:  # append in text mode
