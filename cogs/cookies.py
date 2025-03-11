@@ -37,7 +37,8 @@ class Cookies(commands.Cog):
                     await ctx.send(f"[-] An error occurred: {e}")
                     return
             await ctx.send("Cookies have been added.")
-            await message.delete()
+            if ctx.guild:
+                await message.delete()
         except asyncio.TimeoutError:
             await ctx.send("[-] Timed out. Please try again.")
         except Exception as e:
