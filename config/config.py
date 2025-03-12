@@ -5,15 +5,15 @@ import os
 
 ### CONFIGURATION FILES
 #get the full path for the current folder
-current_folder = os.path.dirname(os.path.abspath(__file__))
-serversettings = os.path.join(current_folder, 'serversettings.json')
-queues = os.path.join(current_folder, 'queues.json')
-token_file = os.path.join(current_folder, 'bot_token.txt')
-playlists_folder = os.path.join(os.path.dirname(current_folder), 'playlists')
+config_path = os.path.dirname(os.path.abspath(__file__))
+serversettings = os.path.join(config_path, 'serversettings.json')
+queues = os.path.join(config_path, 'queues.json')
+token_file = os.path.join(config_path, 'bot_token.txt')
+playlists_folder = os.path.join(os.path.dirname(config_path), 'playlists')
 FFMPEG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'ffmpeg.exe')
 bot_token=''
-cogs_dir = os.path.join(os.path.dirname(current_folder), 'cogs')
-cache_dir = os.path.join(os.path.dirname(current_folder), 'cache')
+cogs_dir = os.path.join(os.path.dirname(config_path), 'cogs')
+cache_dir = os.path.join(os.path.dirname(config_path), 'cache')
 cookies_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'cookies.txt')
 
 

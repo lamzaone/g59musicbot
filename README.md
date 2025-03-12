@@ -109,7 +109,12 @@ sudo reboot
 
 ---
 ---
-
+### Version 0.3.4
+- Small improvements to picchanger cog:
+  - Fixed !banner command
+  - Added default avatar
+  - Improved URL parsing, added "none" or "default" options.
+    - **NOTE:** On startup, if the bot detects no avatar, it will automatically update to the default one!
 ### Version 0.3.3
 - HOTFIX:
   - Fixed configs Linux systems being unable to play music
