@@ -29,7 +29,7 @@ class Player(commands.Cog):
 
 
 
-    @commands.command(name='play', help='Play music from YouTube using a search term or URL')
+    @commands.command(name='play', help='Play music from YouTube using a search term or URL', aliases=['p'])
     @commands.guild_only()
     async def play(self, ctx, *, query: str = None):
         if not hasattr(ctx.bot, 'repeat'):
